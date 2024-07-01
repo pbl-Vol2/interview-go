@@ -94,7 +94,7 @@ const Navbar = () => {
               </div>
               <TextInput
                 id="email"
-                placeholder="name@company.com"
+                placeholder="name@gmail.com"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 required
@@ -119,12 +119,17 @@ const Navbar = () => {
               </a>
             </div>
             <div className="w-full">
-              <Button>Log in to your account</Button>
+            <button
+              // onClick={}
+              className="mt-10 w-full flex justify-center bg-gradient-to-r from-customBiru3 to-customBiru6 text-white py-3 px-8 rounded-full shadow-lg transform transition-transform hover:scale-105 hover:from-customBiru4 hover:to-customBiru3"
+            >
+              Log In
+            </button>
             </div>
             <div className="flex justify-between text-sm font-medium text-gray-500 dark:text-gray-300">
               Not registered?&nbsp;
               <a
-                href="#"
+                href="/registration"
                 className="text-cyan-700 hover:underline dark:text-cyan-500"
               >
                 Create account
@@ -190,7 +195,7 @@ const FeaturesContent = () => {
           <i class="ri-mic-line mx-2"></i>
           Interview Test
         </a>
-        <a href="/" className="block text-sm hover:underline">
+        <a href="/chatbot" className="block text-sm hover:underline">
           <i class="ri-chat-smile-3-fill mx-2"></i>
           MonBot
         </a>

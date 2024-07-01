@@ -1,6 +1,7 @@
 import { FloatingLabel } from "flowbite-react";
 import { useNavigate } from "react-router-dom";
-import Logo from "../assets/image/logo.png"
+import Logo from "../assets/image/logo.png";
+import RegistBG from "../assets/image/regist-bg.jpg";
 
 const Registration = () => {
   const navigate = useNavigate();
@@ -12,15 +13,12 @@ const Registration = () => {
     <div className="min-h-screen flex flex-col items-center justify-center from-sky-100 to-white">
       <div className="from-sky-100 to-white p-10 rounded-lg shadow-2xl w-full max-w-sm">
         <div className="flex justify-center mb-4">
-          <img
-            src={Logo}
-            alt="InterviewGo Logo"
-            className="h-20"
-          />
+          <img src={Logo} alt="InterviewGo Logo" className="h-20" />
         </div>
         <h1 className="text-2xl font-bold text-center mb-2">InterviewGo!</h1>
         <h2 className="text-lg text-center mb-6">
-          <span className="font-medium">Join TODAY</span> and Ace Every Interview
+          <span className="font-medium">Join TODAY</span> and Ace Every
+          Interview
         </h2>
         <form className="space-y-4">
           <div>
@@ -70,7 +68,7 @@ const Registration = () => {
             </div>
           </div>
           <div>
-          <button
+            <button
               onClick={handleSignUpButton}
               className="mt-10 w-full flex justify-center bg-gradient-to-r from-customBiru3 to-customBiru6 text-white py-3 px-8 rounded-full shadow-lg transform transition-transform hover:scale-105 hover:from-customBiru4 hover:to-customBiru3"
             >
