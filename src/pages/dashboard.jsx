@@ -1,17 +1,23 @@
 import React from 'react';
-import orang from '../assets/image/orang.png';
+import chatbot from '../assets/image/chatbot.jpg';
+import speaking from '../assets/image/speaking.jpg';
+import { Link } from 'react-router-dom';
 
-const dashboard = () => {
+const Dashboard = () => {
   const cardData = [
     {
-      title: 'Speaking Test',
+      title: 'Interview Test',
       description: 'Here are the biggest enterprise technology acquisitions of 2021 so far, in reverse chronological order.',
-      buttonText: 'Read more',
+      buttonText: 'Test Now',
+      image: speaking, 
+      link: '/interview',
     },
     {
-      title: 'Chatbot',
+      title: 'Monbot',
       description: 'Here are the biggest enterprise technology acquisitions of 2021 so far, in reverse chronological order.',
-      buttonText: 'Read more',
+      buttonText: 'Chat Now',
+      image: chatbot, 
+      link: '/chatbot',
     }
   ];
 
@@ -23,32 +29,24 @@ const dashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {cardData.map((card, index) => (
             <div key={index} className="bg-white rounded-lg shadow-md hover:shadow-lg">
-              <a href="#" className="block">
-                <img src={orang} alt="" className="rounded-t-lg w-full h-48 object-cover" />
-              </a>
+              <Link to={card.link} className="block">
+                <img src={card.image} alt="" className="rounded-t-lg w-full h-48 object-cover" />
+              </Link>
               <div className="p-6">
-                <a href="#" className="block">
+                <Link to={card.link} className="block">
                   <h2 className="text-xl md:text-2xl font-bold text-gray-800 hover:text-blue-600 transition duration-300">
                     {card.title}
                   </h2>
-                </a>
+                </Link>
                 <p className="text-sm text-gray-600 mb-4">
                   {card.description}
                 </p>
-                <a
-                  href="#"
+                <Link
+                  to={card.link}
                   className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition duration-300"
                 >
                   {card.buttonText}
-                  <svg
-                    className="inline-block w-4 h-4 ml-2"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path fillRule="evenodd" d="M10 3a.75.75 0 01.75.75V9h4.25a.75.75 0 110 1.5H10v5.25a.75.75 0 01-1.5 0V10H3.75a.75.75 0 110-1.5H9V3.75A.75.75 0 0110 3zm-9 8a1 1 0 011-1h9a1 1 0 110 2H2a1 1 0 01-1-1zm18-6a1 1 0 00-1-1h-9a1 1 0 100 2h9a1 1 0 001-1z" clipRule="evenodd" />
-                  </svg>
-                </a>
+                </Link>
               </div>
             </div>
           ))}
@@ -58,4 +56,4 @@ const dashboard = () => {
   );
 };
 
-export default dashboard;
+export default Dashboard;

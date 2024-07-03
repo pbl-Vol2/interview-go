@@ -191,7 +191,7 @@ const FeaturesContent = () => {
           <i class="ri-rocket-fill mx-2"></i>
           Introduction
         </a>
-        <a href="/" className="block text-sm hover:underline">
+        <a href="/interview" className="block text-sm hover:underline">
           <i class="ri-mic-line mx-2"></i>
           Interview Test
         </a>
