@@ -10,14 +10,18 @@ const Navbar = () => {
   const handleSignupButton = () => {
     navigate("/registration");
   };
+  
+  const handleLoginButton = () => {
+    navigate("/login");
+  };
 
-  const [openModal, setOpenModal] = useState(false);
-  const [email, setEmail] = useState("");
+  // const [openModal, setOpenModal] = useState(false);
+  // const [email, setEmail] = useState("");
 
-  function onCloseModal() {
-    setOpenModal(false);
-    setEmail("");
-  }
+  // function onCloseModal() {
+  //   setOpenModal(false);
+  //   setEmail("");
+  // }
 
   return (
     <nav className="justify-center bg-white shadow-md">
@@ -60,7 +64,7 @@ const Navbar = () => {
               Sign Up
             </button>
             <p className="text-gray-300"> / </p>
-            <button onClick={() => setOpenModal(true)} className="flex align-middle justify-center font-semibold w-full py-1 px-4 border-2 border-customBiru3 rounded-full shadow-lg transform transition-transform hover:scale-105">
+            <button onClick={handleLoginButton} className="flex align-middle justify-center font-semibold w-full py-1 px-4 border-2 border-customBiru3 rounded-full shadow-lg transform transition-transform hover:scale-105">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 20"
@@ -77,7 +81,7 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* modal login */}
+      {/* modal login
       <Modal show={openModal} size="md" onClose={onCloseModal} popup>
         <Modal.Header />
         <Modal.Body>
@@ -137,7 +141,7 @@ const Navbar = () => {
             </div>
           </div>
         </Modal.Body>
-      </Modal>
+      </Modal> */}
     </nav>
   );
 };
