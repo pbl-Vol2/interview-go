@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import mic from '../assets/image/mic.png';
+import React, { useState, useEffect } from "react";
+import mic from "../assets/image/mic.jpg";
 
 function Interview() {
   const [isRecording, setIsRecording] = useState(false);
-  const [question, setQuestion] = useState('');
+  const [question, setQuestion] = useState("");
   const [hasPermission, setHasPermission] = useState(false);
   const [stream, setStream] = useState(null);
   const [mediaRecorder, setMediaRecorder] = useState(null);
@@ -20,7 +20,7 @@ function Interview() {
   useEffect(() => {
     if (isRecording) {
       const timer = setInterval(() => {
-        setTimeLeft(prevTime => prevTime - 1);
+        setTimeLeft((prevTime) => prevTime - 1);
       }, 1000);
 
       return () => {
@@ -39,17 +39,20 @@ function Interview() {
   const handleStartRecording = async () => {
     if (!hasPermission) {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+        });
         setHasPermission(true);
         setStream(stream);
       } catch (error) {
-        console.error('Error requesting microphone permission:', error);
+        console.error("Error requesting microphone permission:", error);
         return;
       }
     }
     if (hasPermission) {
       setIsRecording(true);
-      const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
+      const randomQuestion =
+        questions[Math.floor(Math.random() * questions.length)];
       setQuestion(randomQuestion);
       const mediaRecorder = new MediaRecorder(stream);
       setMediaRecorder(mediaRecorder);
@@ -65,23 +68,28 @@ function Interview() {
   return (
     <div className="bg-gradient-to-b from-sky-100 to-white h-screen">
       <div className="container mx-auto p-4 pt-12">
-        <h1 className="text-3xl font-bold mb-4">INTERVIEW TEST</h1>
-        <div className="bg-white shadow-md p-8 rounded-lg max-w-lg mx-auto">
-          <img src={mic} alt="Monye" className="w-24 rounded-lg mb-4 mx-auto" />
+        <h1 className="text-3xl font-bold mb-8">INTERVIEW TEST</h1>
+        <div className="bg-white shadow-md p-8 rounded-lg max-w-lg mx-auto text-center">
+          <img src={mic} alt="Mic" className="w-24 rounded-lg mb-4 mx-auto" />
           <p className="text-lg mb-2">Click start recording and say</p>
           <p className="text-2xl font-bold mb-8">{question}</p>
-          <p className="text-lg mb-8">{timeLeft} seconds left</p>
+          <p className="text-lg mb-8">
+            <span className="text-12 font-semibold bg-red-500 text-white p-2 rounded">
+              {timeLeft} seconds left
+            </span>
+            
+          </p>
           <div className="flex justify-center">
             {isRecording ? (
               <button
-                className="bg-green-500 hover:bg-green-700 text-white font-bold py-4 px-6 rounded-lg"
+                className="bg-green-500 hover:bg-green-700 text-white font-bold py-4 px-6 rounded-full"
                 onClick={handleStopRecording}
               >
                 Stop Recording
               </button>
             ) : (
               <button
-                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-lg"
+                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-full"
                 onClick={handleStartRecording}
               >
                 Start Recording
