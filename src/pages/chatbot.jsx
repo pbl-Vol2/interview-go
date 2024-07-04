@@ -1,23 +1,31 @@
 import React, { useState } from 'react';
 import { Card, Button } from 'flowbite-react';
+import axios from 'axios';
 
 const Chatbot = () => {
   const [messages, setMessages] = useState([
+    // Initial greeting
     { text: "Hello! How can I assist you today?", sender: "bot" }
   ]);
   const [input, setInput] = useState("");
 
   const handleSend = () => {
     if (input.trim()) {
-      setMessages([...messages, { text: input, sender: "user" }]);
+      const userMessage = input.trim();
+      setMessages([...messages, { text: userMessage, sender: "user" }]);
       setInput("");
-      // Simulate bot response
-      setTimeout(() => {
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          { text: "Hallo Kaniw, I'm here to help!", sender: "bot" }
-        ]);
-      }, 1000);
+
+      // Call Flask backend
+      axios.post('http://127.0.0.1:5000/predict', { message: userMessage })
+        .then(response => {
+          setMessages(prevMessages => [
+            ...prevMessages,
+            { text: response.data.response, sender: "bot" }
+          ]);
+        })
+        .catch(error => {
+          console.error("There was an error with the Flask API:", error);
+        });
     }
   };
 
