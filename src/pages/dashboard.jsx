@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FiAlertCircle } from 'react-icons/fi';
 import chatbot from '../assets/image/chatbot.jpg';
 import speaking from '../assets/image/speaking.jpg';
 import { Link } from 'react-router-dom';
@@ -7,28 +9,74 @@ const Dashboard = () => {
   const cardData = [
     {
       title: 'Interview Test',
-      description: 'Here are the biggest enterprise technology acquisitions of 2021 so far, in reverse chronological order.',
+      description: 'Practice your interview skills with our comprehensive test.',
       buttonText: 'Test Now',
-      image: speaking, 
+      image: speaking,
       link: '/interview',
     },
     {
       title: 'Monbot',
-      description: 'Here are the biggest enterprise technology acquisitions of 2021 so far, in reverse chronological order.',
+      description: 'Need help ? Ask Monbot anything and get answers instantly.',
       buttonText: 'Chat Now',
-      image: chatbot, 
+      image: chatbot,
       link: '/chatbot',
-    }
+    },
   ];
 
-  return (
-    <div className="min-h-screen bg-gray-100 py-8 px-4">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl md:text-4xl font-bold text-center mb-8">Hello User!</h1>
+  const [helloText, setHelloText] = useState('');
+  const [typing, setTyping] = useState(false);
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+  useEffect(() => {
+    const helloUserText = 'Hello User!';
+    let i = 0;
+    const typingInterval = setInterval(() => {
+      setHelloText(helloUserText.substring(0, i + 1));
+      i++;
+      if (i === helloUserText.length) {
+        setTimeout(() => {
+          setHelloText('');
+          i = 0;
+        }, 5000);
+      }
+    }, 100);
+    setTyping(true);
+    return () => clearInterval(typingInterval);
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-customBiru4 py-8 px-4">
+      <div className="max-w-6xl mx-auto text-center">
+        <AnimatePresence>
+          {typing && (
+            <motion.h1
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="text-3xl md:text-4xl font-bold text-white mb-8"
+            >
+              {helloText}
+            </motion.h1>
+          )}
+        </AnimatePresence>
+        {!typing && (
+          <h1 className="text-3xl md:text-4xl font-bold text-white mb-8">
+            Hello User!
+          </h1>
+        )}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="grid grid-cols-1 md:grid-cols-2 gap-6"
+        >
           {cardData.map((card, index) => (
-            <div key={index} className="bg-white rounded-lg shadow-md hover:shadow-lg">
+            <motion.div
+              key={index}
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              className="bg-white rounded-lg shadow-md hover:shadow-lg"
+            >
               <Link to={card.link} className="block">
                 <img src={card.image} alt="" className="rounded-t-lg w-full h-48 object-cover" />
               </Link>
@@ -48,9 +96,9 @@ const Dashboard = () => {
                   {card.buttonText}
                 </Link>
               </div>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </div>
   );
