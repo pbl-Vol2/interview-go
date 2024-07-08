@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import mic from "../assets/image/mic.jpg";
+import { Button } from "flowbite-react";
+import questions from "../assets/question.json"; // Impor file JSON
 
 function Interview() {
   const [isRecording, setIsRecording] = useState(false);
@@ -7,15 +9,10 @@ function Interview() {
   const [hasPermission, setHasPermission] = useState(false);
   const [stream, setStream] = useState(null);
   const [mediaRecorder, setMediaRecorder] = useState(null);
-  const [timeLeft, setTimeLeft] = useState(60);
-
-  const questions = [
-    "Hello! How Are You?",
-    "What is your name?",
-    "Where are you from?",
-    "What do you do for a living?",
-    "What are your hobbies?",
-  ];
+  const [timeLeft, setTimeLeft] = useState(120);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [isFeedback, setIsFeedback] = useState(false); // Menambahkan state untuk melacak sesi feedback
+  const [feedback, setFeedback] = useState(""); // Menambahkan state untuk menyimpan feedback
 
   useEffect(() => {
     if (isRecording) {
@@ -51,9 +48,7 @@ function Interview() {
     }
     if (hasPermission) {
       setIsRecording(true);
-      const randomQuestion =
-        questions[Math.floor(Math.random() * questions.length)];
-      setQuestion(randomQuestion);
+      setQuestion(questions[currentQuestionIndex]);
       const mediaRecorder = new MediaRecorder(stream);
       setMediaRecorder(mediaRecorder);
       mediaRecorder.start();
@@ -63,21 +58,64 @@ function Interview() {
   const handleStopRecording = () => {
     setIsRecording(false);
     mediaRecorder.stop();
+    setIsFeedback(true); // Set feedback session aktif setelah rekaman berhenti
+  };
+
+  const handleFeedbackChange = (event) => {
+    setFeedback(event.target.value); // Menyimpan nilai feedback
+  };
+
+  const handleSubmitFeedback = () => {
+    // Simpan feedback atau lakukan tindakan lain yang diperlukan
+    console.log(`Feedback for question ${currentQuestionIndex + 1}: ${feedback}`);
+    setFeedback(""); // Reset feedback
+    setIsFeedback(false); // Selesai feedback session
+    goToNextQuestion(); // Lanjut ke pertanyaan berikutnya
+  };
+
+  const goToNextQuestion = () => {
+    setCurrentQuestionIndex((prevIndex) => {
+      const nextIndex = prevIndex + 1;
+      if (nextIndex < questions.length) {
+        setQuestion(questions[nextIndex]);
+        return nextIndex;
+      } else {
+        alert("Interview selesai");
+        return prevIndex;
+      }
+    });
+  };
+
+  const formatTime = (time) => {
+    const minutes = Math.floor(time / 60);
+    const seconds = time % 60;
+    return `${minutes.toString().padStart(2, "0")}:${seconds
+      .toString()
+      .padStart(2, "0")}`;
   };
 
   return (
-    <div className="bg-gradient-to-b from-sky-100 to-white h-screen">
+    <div className="bg-gradient-to-b from-sky-100 to-white h-full">
       <div className="container mx-auto p-4 pt-12">
         <h1 className="text-3xl font-bold mb-8">INTERVIEW TEST</h1>
-        <div className="bg-white shadow-md p-8 rounded-lg max-w-lg mx-auto text-center">
-          <img src={mic} alt="Mic" className="w-24 rounded-lg mb-4 mx-auto" />
-          <p className="text-lg mb-2">Click start recording and say</p>
-          <p className="text-2xl font-bold mb-8">{question}</p>
-          <p className="text-lg mb-8">
-            <span className="text-12 font-semibold bg-red-500 text-white p-2 rounded">
-              {timeLeft} seconds left
+        <div className="flex justify-center items-center mb-4 gap-56">
+          <Button color="light" pill>
+            <i className="ri-arrow-left-line me-1"></i> Back
+          </Button>
+          <h2 className="font-semibold">
+            Question {currentQuestionIndex + 1}/{questions.length}
+          </h2>
+          <Button color="light" pill>
+            End & Review
+          </Button>
+        </div>
+        <div className="bg-white shadow-md p-8 rounded-lg max-w-3xl mx-auto text-center">
+          <img src={mic} alt="Mic" className="w-40 rounded-lg mb-4 mx-auto" />
+          <p className="text-xl font-bold mb-8">{question}</p>
+          <p className="text-xl font-bold mb-8">
+            <span className="bg-red-500 text-white rounded-lg p-3">
+              {formatTime(timeLeft)}
             </span>
-            
           </p>
           <div className="flex justify-center">
             {isRecording ? (
@@ -87,6 +125,22 @@ function Interview() {
               >
                 Stop Recording
               </button>
+            ) : isFeedback ? (
+              <div className="w-full">
+                <button
+                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-full"
+                  onClick={handleSubmitFeedback}
+                >
+                  Next Question
+                </button>
+                <textarea
+                  className="w-full p-2 border border-gray-300 rounded mt-3 mb-4"
+                  rows="4"
+                  value={feedback}
+                  onChange={handleFeedbackChange}
+                  placeholder="NANTI feedback ada di sini"
+                />
+              </div>
             ) : (
               <button
                 className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-full"
