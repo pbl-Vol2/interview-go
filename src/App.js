@@ -10,10 +10,12 @@ import Interview from "./pages/interview";
 import Login from "./pages/login";
 import Profile from "./pages/profile";
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { AuthProvider } from './context/auth-context';
 
 function App() {
   return (
     <div className="App">
+      <AuthProvider>
       <Router>
         <Navbar />
         <Routes>
@@ -29,6 +31,7 @@ function App() {
         </Routes>
         <Footer />
       </Router>
+      </AuthProvider>
     </div>
   );
 }

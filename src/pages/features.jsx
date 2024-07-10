@@ -1,23 +1,120 @@
 import { useMotionValue, motion, useSpring, useTransform } from "framer-motion";
 import React, { useRef } from "react";
 import { FiArrowRight } from "react-icons/fi";
-import Image1 from "../assets/image/image1.jpg"
-import Image2 from "../assets/image/image2.jpg"
+import Image1 from '../assets/image/image1.jpg';
+import akuntansi from '../assets/image/akuntansi.jpg';
+import designgrafis from '../assets/image/designgrafis.jpg';
+import hiburan from '../assets/image/akuntansi.jpg';
+import it from '../assets/image/it.jpg';
+import keamanan from '../assets/image/keamanan.jpg';
+import kesehatan from '../assets/image/kesehatan.jpg';
+import kuliner from '../assets/image/kuliner.jpg';
+import latarbelakanguser from '../assets/image/latarbelakanguser.jpg';
+import layananpelanggan from '../assets/image/layananpelanggan.jpg';
+import pemasaran from '../assets/image/pemasaran.jpg';
+import pendidikan from '../assets/image/pendidikan.jpg';
+import perhotelan from '../assets/image/perhotelan.jpg';
+import posisi from '../assets/image/posisi.jpg';
+import softskill from '../assets/image/softskill.jpg';
 
-const features = () => {
+const Features = () => {
   return (
     <section className="min-h-screen bg-customBiru4 p-4 md:p-8">
       <div className="mx-auto max-w-5xl">
         <Link
-          heading="Interview Test"
+          heading="General - Perusahaan"
           subheading="Learn what we do here"
           imgSrc={Image1}
           href="#"
         />
         <Link
-          heading="MonBot"
+          heading="General - Latar Belakang"
           subheading="Reach Out Our Assistance"
-          imgSrc={Image2}
+          imgSrc={latarbelakanguser}
+          href="#"
+        />
+        <Link
+          heading="General - Posisi"
+          subheading="Learn what we do here"
+          imgSrc={posisi}
+          href="#"
+        />
+        <Link
+          heading="General - Softskill Situasional"
+          subheading="Reach Out Our Assistance"
+          imgSrc={softskill}
+          href="#"
+        />
+        <Link
+          heading="Penutup"
+          subheading="Learn what we do here"
+          imgSrc={Image1}
+          href="#"
+        />
+        <Link
+          heading="Kuliner dan Restoran"
+          subheading="Reach Out Our Assistance"
+          imgSrc={kuliner}
+          href="#"
+        />
+        <Link
+          heading="Penjualan dan Pemasaran"
+          subheading="Learn what we do here"
+          imgSrc={pemasaran}
+          href="#"
+        />
+        <Link
+          heading="Layanan Pelanggan"
+          subheading="Reach Out Our Assistance"
+          imgSrc={layananpelanggan}
+          href="#"
+        />
+        <Link
+          heading="Administrasi dan Akuntansi"
+          subheading="Learn what we do here"
+          imgSrc={akuntansi}
+          href="#"
+        />
+        <Link
+          heading="design Grafis"
+          subheading="Reach Out Our Assistance"
+          imgSrc={designgrafis}
+          href="#"
+        />
+        <Link
+          heading="IT"
+          subheading="Learn what we do here"
+          imgSrc={it}
+          href="#"
+        />
+        <Link
+          heading="Keamanan"
+          subheading="Reach Out Our Assistance"
+          imgSrc={keamanan}
+          href="#"
+        />
+        <Link
+          heading="Kesehatan"
+          subheading="Learn what we do here"
+          imgSrc={kesehatan}
+          href="#"
+        />
+        <Link
+          heading="Pendidikan"
+          subheading="Reach Out Our Assistance"
+          imgSrc={pendidikan}
+          href="#"
+        />
+        <Link
+          heading="Hiburan"
+          subheading="Learn what we do here"
+          imgSrc={hiburan}
+          href="#"
+        />
+        <Link
+          heading="Perhotelan"
+          subheading="Reach Out Our Assistance"
+          imgSrc={perhotelan}
           href="#"
         />
       </div>
@@ -95,12 +192,14 @@ const Link = ({ heading, imgSrc, subheading, href }) => {
       </div>
 
       <motion.img
-        style={{
-          top,
-          left,
-          translateX: "-50%",
-          translateY: "-50%",
-        }}
+      style={{
+        top,
+        right: 0,
+        translateX: "50%",
+        translateY: "-50%",
+        marginRight: 20, 
+      }}
+ 
         variants={{
           initial: { scale: 0, rotate: "-12.5deg" },
           whileHover: { scale: 1, rotate: "12.5deg" },
@@ -131,4 +230,4 @@ const Link = ({ heading, imgSrc, subheading, href }) => {
   );
 };
 
-export default features;
+export default Features;
