@@ -71,7 +71,7 @@ const Registration = () => {
         <h2 className="text-lg text-center mb-6">
           <span className="font-medium">Join TODAY</span> and Ace Every
           Interview
-        </h2>
+        </h2> 
         <form className="space-y-4">
           <div>
             <div className="mt-8">

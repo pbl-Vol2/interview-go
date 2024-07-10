@@ -17,6 +17,13 @@ module.exports = {
         secondaryBlack: "#191919",
         secondaryGrey: "#EAEAEA",
       },
+
+      gradientColorStops: {
+        'blue-to-lightblue': ['#0000FF', '#ADD8E6'],
+        'purple-to-lightpurple': ['#800080', '#D8BFD8'],
+        'yellow-to-lightyellow': ['#FFFF00', '#FFFFE0'],
+        'pink-to-lightpink': ['#FFC0CB', '#FFB6C1'],
+      },
     },
   },
   plugins: [require('@tailwindcss/forms'), flowbite.plugin()],

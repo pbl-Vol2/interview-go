@@ -8,6 +8,7 @@ import Features  from "./pages/features"
 import Chatbot from "./pages/chatbot";
 import Interview from "./pages/interview";
 import Login from "./pages/login";
+import Profile from "./pages/profile";
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
           <Route path="/chatbot" element={<Chatbot />} />
           <Route path="/interview" element={<Interview />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/profile" element={<Profile />} />
         </Routes>
         <Footer />
       </Router>

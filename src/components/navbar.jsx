@@ -2,7 +2,7 @@ import monye from "../assets/image/monye.png";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
-import { Button, Checkbox, Label, Modal, TextInput } from "flowbite-react";
+// import { Button, Checkbox, Label, Modal, TextInput } from "flowbite-react";
 
 const Navbar = () => {
   const navigate = useNavigate();
