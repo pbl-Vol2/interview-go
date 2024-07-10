@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import mic from "../assets/image/mic.jpg";
 import { Button } from "flowbite-react";
-import questions from "../assets/question.json"; // Impor file JSON
+import axios from "axios";
 
 function Interview() {
   const [isRecording, setIsRecording] = useState(false);
@@ -13,6 +13,22 @@ function Interview() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [isFeedback, setIsFeedback] = useState(false); // Menambahkan state untuk melacak sesi feedback
   const [feedback, setFeedback] = useState(""); // Menambahkan state untuk menyimpan feedback
+
+  const [questions, setQuestions] = useState([]);
+
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      try {
+        const response = await axios.post('http://localhost:5000/questions');
+        setQuestions(response.data.questions);
+        setQuestion(response.data.questions[0].question);
+      } catch (error) {
+        console.error("Error fetching questions:", error);
+      }
+    };
+
+    fetchQuestions();
+  }, []);
 
   useEffect(() => {
     if (isRecording) {
@@ -67,7 +83,7 @@ function Interview() {
 
   const handleSubmitFeedback = () => {
     // Simpan feedback atau lakukan tindakan lain yang diperlukan
-    console.log(`Feedback for question ${currentQuestionIndex + 1}: ${feedback}`);
+    console.log('Feedback for question ${currentQuestionIndex + 1}: ${feedback}');
     setFeedback(""); // Reset feedback
     setIsFeedback(false); // Selesai feedback session
     goToNextQuestion(); // Lanjut ke pertanyaan berikutnya
