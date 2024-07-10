@@ -1,10 +1,9 @@
 import React from 'react';
 import monye from "../assets/image/monye.png";
 import { useNavigate } from "react-router-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { useState } from "react";
-import { Button, Checkbox, Label, Modal, TextInput } from "flowbite-react";
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/auth-context';
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -18,13 +17,9 @@ const Navbar = () => {
     navigate("/profile");
   };
 
-  // const [openModal, setOpenModal] = useState(false);
-  // const [email, setEmail] = useState("");
-
-  // function onCloseModal() {
-  //   setOpenModal(false);
-  //   setEmail("");
-  // }
+  const handleLoginButton = () => {
+    navigate("/login");
+  };
 
   return (
     <nav className="justify-center bg-white shadow-md">
@@ -85,7 +80,7 @@ const Navbar = () => {
                 </button>
                 <p className="text-gray-300"> / </p>
                 <button
-                  onClick={() => setOpenModal(true)}
+                  onClick={handleLoginButton}
                   className="flex align-middle justify-center font-semibold w-full py-1 px-4 border-2 border-customBiru3 rounded-full shadow-lg transform transition-transform hover:scale-105"
                 >
                   <svg
@@ -105,63 +100,6 @@ const Navbar = () => {
           </div>
         </div>
       </div>
-
-      {/* modal login
-      <Modal show={openModal} size="md" onClose={onCloseModal} popup>
-        <Modal.Header />
-        <Modal.Body>
-          <div className="space-y-6">
-            <h1 className="text-2xl font-bold text-center mb-2">
-              InterviewGo!
-            </h1>
-            <h2 className="text-lg text-center mb-6">
-              Welcome back, you’ve been missed!
-            </h2>
-            <div>
-              <div className="mb-2 block">
-                <Label htmlFor="email" value="Your email" />
-              </div>
-              <TextInput
-                id="email"
-                placeholder="name@company.com"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                required
-              />
-            </div>
-            <div>
-              <div className="mb-2 block">
-                <Label htmlFor="password" value="Your password" />
-              </div>
-              <TextInput id="password" type="password" required />
-            </div>
-            <div className="flex justify-between">
-              <div className="flex items-center gap-2">
-                <Checkbox id="remember" />
-                <Label htmlFor="remember">Remember me</Label>
-              </div>
-              <a
-                href="#"
-                className="text-sm text-cyan-700 hover:underline dark:text-cyan-500"
-              >
-                Lost Password?
-              </a>
-            </div>
-            <div className="w-full">
-              <Button>Log in to your account</Button>
-            </div>
-            <div className="flex justify-between text-sm font-medium text-gray-500 dark:text-gray-300">
-              Not registered?&nbsp;
-              <a
-                href="#"
-                className="text-cyan-700 hover:underline dark:text-cyan-500"
-              >
-                Create account
-              </a>
-            </div>
-          </div>
-        </Modal.Body>
-      </Modal> */}
     </nav>
   );
 };
@@ -203,15 +141,15 @@ const FeaturesContent = () => {
       <div className="mb-3 space-y-3">
         <h3 className="font-semibold">For Individuals</h3>
         <a href="/" className="block text-sm hover:underline">
-          <i class="ri-rocket-fill mx-2"></i>
+          <i className="ri-rocket-fill mx-2"></i>
           Introduction
         </a>
         <a href="/interview" className="block text-sm hover:underline">
-          <i class="ri-mic-line mx-2"></i>
+          <i className="ri-mic-line mx-2"></i>
           Interview Test
         </a>
         <a href="/chatbot" className="block text-sm hover:underline">
-          <i class="ri-chat-smile-3-fill mx-2"></i>
+          <i className="ri-chat-smile-3-fill mx-2"></i>
           MonBot
         </a>
       </div>
