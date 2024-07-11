@@ -37,7 +37,16 @@ const Registration = () => {
   };
 
   const handleSignUpButton = () => {
-    navigate("/dashboard");
+    const fullname = document.getElementById('fullname').value;
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const retypePassword = document.getElementById('retype-password').value;
+
+    if (fullname && email && password && retypePassword && password === retypePassword) {
+      navigate("/verif");
+    } else {
+      alert("Please fill in all the required fields and ensure the passwords match.");
+    }
   };
 
   return (
