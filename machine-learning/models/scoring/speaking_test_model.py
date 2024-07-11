@@ -559,42 +559,6 @@ import tempfile
 app = Flask(__name__)
 CORS(app)
 
-# def generate_question():
-#     # ubah dataframe jadi list lalu tampilkan
-#     df_field_values_unique = df_field_values.unique().tolist()
-#     # minta user pilih kategori berdasarkan array nomor berapa
-#     # get kategori di sini, post kategori
-#     pick_field = int(input("Masukkan kategori:" ))
-#     field = df_field_values_unique[pick_field]
-#     # print kategori yang dipilih
-#     print("Kategori yang dipilih: {}".format(field))
-#     # kumpulkan semua pertanyaan, jawaban, dan feedback
-#     questions = []
-#     answers = []
-#     feedbacks = []
-#     # buat perulangan untuk menampilkan 3 pertanyaan dari field yang dipilih
-#     # post pertanyaan berdasarkan kategori yang dipilih pake list
-#     for i in range(3):
-#         # ambil pertanyaan
-#         question = str(df[df['field'] == field].sample(1)['q'].iloc[0])
-#         questions.append(question)
-#         # tampilkan pertanyaan
-#         print("Pertanyaan {}: {}".format(i+1, question))
-#         answer = speech_to_text()
-#         answers.append(answer)
-#         # tampilkan feedback
-#         print("Feedback: {}".format(feedback(question, answer)))
-#         feedbacks.append(feedback(question, answer))
-#     # ubah jadi dataframe disajikan tabel
-#     summary = pd.DataFrame({
-#       'Question': questions,
-#       'Answer': answers,
-#       'Feedback': feedbacks
-#     })
-#     print(summary)
-
-import uuid
-
 @app.route('/questions', methods=['POST'])
 def generate_question():
     # user_input = request.get_json(force=True)
@@ -613,12 +577,11 @@ def generate_question():
     }
     return jsonify(response)
 
-# get question id, samain answer sama question id, terus post ke server
 @app.route('/answer', methods=['POST'])
 def generate_answer():
     r = sr.Recognizer()
     audio = request.files.get('audio')
-    question = request.get('question')
+    question = request.form.get('question')
     if audio:
         temp_dir = tempfile.mkdtemp()
         temp_path = os.path.join(temp_dir, 'temp_audio.wav')
@@ -627,27 +590,29 @@ def generate_answer():
         return jsonify({"error": "No audio file provided"}), 400
     try:
         with sr.AudioFile(temp_path) as source:
-            # Adjust for ambient noise and record audio
-            r.adjust_for_ambient_noise(source)
             audio_data = r.record(source)
         # Recognize speech using Google Web Speech API
-        answer = r.recognize_google(audio_data, lang="id-ID")
+        answer = r.recognize_google(audio_data, language="id-ID")
         response = {
             'question' : question,
             'answer' : answer
         }
-    except r.UnknownValueError:
+    except sr.UnknownValueError:
         response = {
-            "error": "Google Web Speech API could not understand the audio"
+            'error': "Could not understand the audio. Please try again with clearer speech or check for background noise."
+        }
+    except sr.RequestError:
+        response = {
+            'error': "Could not request results from Google Web Speech API. Check your internet connection."
         }
     finally:
         shutil.rmtree(temp_dir)
     return jsonify(response)
 
-@app.route('/feedback', methods=['GET'])
+@app.route('/feedback', methods=['POST'])
 def predict_feedback():
-    question = UserFeedback.Question
-    answer = UserFeedback.Answer
+    question = request.get('question')
+    answer = request.get('answer')
     feedback = predict_feedback(question, answer)
     response = {
         'feedback': feedback

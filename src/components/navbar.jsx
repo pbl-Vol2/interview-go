@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
 import { Button, Checkbox, Label, Modal, TextInput } from "flowbite-react";
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/auth-context.js';
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -18,13 +18,13 @@ const Navbar = () => {
     navigate("/profile");
   };
 
-  // const [openModal, setOpenModal] = useState(false);
-  // const [email, setEmail] = useState("");
+  const [openModal, setOpenModal] = useState(false);
+  const [email, setEmail] = useState("");
 
-  // function onCloseModal() {
-  //   setOpenModal(false);
-  //   setEmail("");
-  // }
+  function onCloseModal() {
+    setOpenModal(false);
+    setEmail("");
+  }
 
   return (
     <nav className="justify-center bg-white shadow-md">
