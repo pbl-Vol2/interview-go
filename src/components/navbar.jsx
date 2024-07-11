@@ -3,11 +3,10 @@ import monye from "../assets/image/monye.png";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { useAuth } from '../context/auth-context';
+import { Button, Checkbox, Label, Modal, TextInput } from "flowbite-react";
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const { isLoggedIn, logout } = useAuth();
 
   const handleSignupButton = () => {
     navigate("/registration");
