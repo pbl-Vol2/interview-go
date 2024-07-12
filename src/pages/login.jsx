@@ -70,7 +70,7 @@ const Login = ({ onLogin }) => {
   }, []);
 
   const handleForgotPassButton = () => {
-    navigate("/forgot-pa  ssword");
+    navigate("/forgot-password");
   };
 
   return (
@@ -150,12 +150,12 @@ const Login = ({ onLogin }) => {
             </a>
           </div>
           <div className="text-center pt-4">
-            Not registered yet?
+            Not registered yet? 
             <a
               href="/registration"
               className="text-sm text-cyan-700 hover:underline dark:text-cyan-500"
             >
-              Sign Up
+               Sign Up
             </a>
           </div>
           <div>

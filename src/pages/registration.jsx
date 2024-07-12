@@ -122,7 +122,7 @@ const Registration = () => {
           <div className="text-center pt-4">
             Already have an account?
             <a
-              href="/registration"
+              href="/login"
               className="text-sm text-cyan-700 hover:underline dark:text-cyan-500"
             >
               Log In Here
