@@ -1,9 +1,10 @@
 import { FloatingLabel, Checkbox, Label } from "flowbite-react";
+import { useNavigate } from "react-router-dom";
 import Logo from "../assets/image/logo.png";
 import React, { useEffect, useState } from "react";
 import "../assets/style.css";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
+import { FiAlertCircle } from "react-icons/fi";
 
 const colors = [
   "bg-red-500",
@@ -13,43 +14,10 @@ const colors = [
   "bg-purple-500",
 ];
 
-const Login = ({ onLogin }) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [message, setMessage] = useState('');
+const ForgotPassword = () => {
   const [activeColors, setActiveColors] = useState([]);
   const [cursorPosition, setCursorPosition] = useState({ x: -100, y: -100 });
-
   const navigate = useNavigate();
-
-  const handleMouseMove = (e) => {
-    setCursorPosition({ x: e.clientX, y: e.clientY });
-  };
-
-  const handleLoginButton = async (e) => {
-    e.preventDefault();
-
-    try {
-      console.log("Attempting to login with email:", email);
-
-      const response = await axios.post('http://localhost:5000/login', {
-        email_give: email,
-        password_give: password,
-      });
-
-      if (response.data.result === 'success') {
-        setMessage('Login successful!');
-        localStorage.setItem('token', response.data.token);
-
-        onLogin();
-      } else {
-        setMessage(response.data.msg || 'Unknown error occurred');
-      }
-    } catch (error) {
-      console.log("Login error:", error.response?.data?.msg || 'An error occurred');
-      setMessage(error.response?.data?.msg || 'An error occurred');
-    }
-  };
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -61,18 +29,20 @@ const Login = ({ onLogin }) => {
         newColors.push(colors[Math.floor(Math.random() * colors.length)]);
         return newColors;
       });
-    }, 6000);
+    }, 6000); // Interval pembaruan setiap 6 detik
 
     return () => clearInterval(interval);
   }, []);
 
-  const handleSignUpButton = () => {
-    navigate("/dashboard");
+  const handleMouseMove = (e) => {
+    setCursorPosition({ x: e.clientX, y: e.clientY });
   };
 
-  const handleForgotPassButton = () => {
-    navigate("/forgot-password");
+  const handleSignInButton = () => {
+    navigate("/login");
   };
+
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
     <div
@@ -87,7 +57,7 @@ const Login = ({ onLogin }) => {
             style={{
               top: `${Math.random() * 100}%`,
               left: `${Math.random() * 100}%`,
-              transform: 'translate(-50%, -50%) scale(0)',
+              transform: `translate(-50%, -50%) scale(0)`,
               animation: `pulse-${index} 8s infinite`,
               ...(cursorPosition.x !== -100 && cursorPosition.y !== -100
                 ? {
@@ -107,11 +77,8 @@ const Login = ({ onLogin }) => {
           <img src={Logo} alt="InterviewGo Logo" className="h-20" />
         </div>
         <h1 className="text-2xl font-bold text-center mb-2">InterviewGo!</h1>
-        <h2 className="text-lg text-center mb-6">
-          Hello, Welcome Back
-        </h2>
-        {message && <p className="text-center text-red-500">{message}</p>}
-        <form className="space-y-4" onSubmit={handleLoginButton}>
+        <h2 className="text-lg text-center mb-6">Reset Your Password Here</h2>
+        <form className="space-y-4">
           <div>
             <div className="mt-6">
               <FloatingLabel
@@ -122,8 +89,6 @@ const Login = ({ onLogin }) => {
                 type="email"
                 required
                 className="focus:ring-customBiru2-500 focus:border-customBiru2-500"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
               />
             </div>
             <div className="mt-6">
@@ -135,43 +100,79 @@ const Login = ({ onLogin }) => {
                 type="password"
                 required
                 className="focus:ring-customBiru2-500 focus:border-customBiru2-500"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
               />
             </div>
           </div>
-          <div className="flex justify-between">
-            <div className="flex items-center gap-2">
-              <Checkbox id="remember" />
-              <Label htmlFor="remember">Remember me</Label>
-            </div>
-            <a
-              onClick={handleForgotPassButton}
-              className="text-sm text-cyan-700 hover:underline dark:text-cyan-500"
-            >
-              Lost Password?
-            </a>
-          </div>
-          <div className="text-center mt-4">
-            <a
-              href="/registration"
-              className="text-sm text-cyan-700 hover:underline dark:text-cyan-500"
-            >
-              Not registered yet? Sign Up
-            </a>
-          </div>
-          <div>
+          <div className="flex gap-4 font-semibold">
             <button
-              type="submit"
+              onClick={handleSignInButton}
+              className="mt-10 w-full flex justify-center bg-gray-300 text-red-500 py-3 px-8 rounded-full shadow-lg transform transition-transform hover:scale-105 hover:text-red-600"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => setIsOpen(true)}
               className="mt-10 w-full flex justify-center bg-gradient-to-r from-customBiru3 to-customBiru6 text-white py-3 px-8 rounded-full shadow-lg transform transition-transform hover:scale-105 hover:from-customBiru4 hover:to-customBiru3"
             >
-              Log In
+              Reset
             </button>
           </div>
         </form>
       </div>
+      <SpringModal isOpen={isOpen} setIsOpen={setIsOpen} />
     </div>
   );
 };
 
-export default Login;
+const SpringModal = ({ isOpen, setIsOpen }) => {
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={() => setIsOpen(false)}
+          className="bg-slate-900/20 backdrop-blur p-8 fixed inset-0 z-50 grid place-items-center overflow-y-scroll cursor-pointer"
+        >
+          <motion.div
+            initial={{ scale: 0, rotate: "12.5deg" }}
+            animate={{ scale: 1, rotate: "0deg" }}
+            exit={{ scale: 0, rotate: "0deg" }}
+            onClick={(e) => e.stopPropagation()}
+            className="bg-gradient-to-br from-customBiru6 to-customBiru3 text-white p-6 rounded-lg w-full max-w-lg shadow-xl cursor-default relative overflow-hidden"
+          >
+            <FiAlertCircle className="text-white/10 rotate-12 text-[250px] absolute z-0 -top-24 -left-24" />
+            <div className="relative z-10">
+              <div className="bg-white w-16 h-16 mb-2 rounded-full text-3xl text-customBiru3 grid place-items-center mx-auto">
+                <FiAlertCircle />
+              </div>
+              <h3 className="text-3xl font-bold text-center mb-2">
+                One more thing!
+              </h3>
+              <p className="text-center mb-6">
+                Are you sure want to update your profile setting?
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="bg-transparent hover:bg-white/10 transition-colors text-white font-semibold w-full py-2 rounded"
+                >
+                  Nah, go back
+                </button>
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="bg-white hover:opacity-90 transition-opacity text-customBiru3 font-semibold w-full py-2 rounded"
+                >
+                  Understood!
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
+
+export default ForgotPassword;

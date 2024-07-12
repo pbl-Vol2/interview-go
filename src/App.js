@@ -11,6 +11,7 @@ import Login from "./pages/login";
 import Profile from "./pages/profile";
 import Verif from "./pages/verif";
 import History from "./pages/history";
+import ForgotPassword from "./pages/forgot-password";
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 // import { AuthProvider } from './context/auth-context';
 
@@ -32,6 +33,7 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/verif" element={<Verif />} />
           <Route path="/history" element={<History />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
         </Routes>
         <Footer />
       </Router>
