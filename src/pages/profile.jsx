@@ -116,7 +116,7 @@ const Profile = () => {
         <div className="mt-6 flex justify-center">
           <button
             onClick={() => setIsOpen(true)}
-            className="px-4 py-2 flex justify-center bg-gradient-to-r from-customBiru3 to-customBiru6 text-white py-3 px-8 rounded-full shadow-lg transform transition-transform hover:scale-105 hover:from-customBiru4 hover:to-customBiru3"
+            className="px-4 py-2 flex justify-center bg-gradient-to-r from-customBiru3 to-customBiru6 text-white  rounded-full shadow-lg transform transition-transform hover:scale-105 hover:from-customBiru4 hover:to-customBiru3"
           >
             Save Profile
           </button>

@@ -12,11 +12,11 @@ const Dashboard = () => {
       description: 'Practice your interview skills with our comprehensive test.',
       buttonText: 'Test Now',
       image: speaking,
-      link: '/interview',
+      link: '/history',
     },
     {
       title: 'Monbot',
-      description: 'Need help ? Ask Monbot anything and get answers instantly.',
+      description: 'Need help? Ask Monbot anything and get answers instantly.',
       buttonText: 'Chat Now',
       image: chatbot,
       link: '/chatbot',

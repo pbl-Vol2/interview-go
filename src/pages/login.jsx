@@ -1,10 +1,10 @@
 import { FloatingLabel, Checkbox, Label } from "flowbite-react";
-import { useState, useEffect } from 'react'; // Import useEffect
 import Logo from "../assets/image/logo.png";
 import React, { useEffect, useState } from "react";
 import "../assets/style.css";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
-// Define colors array
 const colors = [
   "bg-red-500",
   "bg-blue-500",
@@ -20,43 +20,37 @@ const Login = ({ onLogin }) => {
   const [activeColors, setActiveColors] = useState([]);
   const [cursorPosition, setCursorPosition] = useState({ x: -100, y: -100 });
 
-  // Function to handle mouse move
+  const navigate = useNavigate();
+
   const handleMouseMove = (e) => {
     setCursorPosition({ x: e.clientX, y: e.clientY });
   };
 
-// Function to handle login form submission
-const handleLoginButton = async (e) => {
-  e.preventDefault(); // Prevent default form submission
+  const handleLoginButton = async (e) => {
+    e.preventDefault();
 
-  try {
-    console.log("Attempting to login with email:", email); // Log the email for debugging
+    try {
+      console.log("Attempting to login with email:", email);
 
-    // Send a POST request to the backend server
-    const response = await axios.post('http://localhost:5000/login', {
-      email_give: email,
-      password_give: password,
-    });
+      const response = await axios.post('http://localhost:5000/login', {
+        email_give: email,
+        password_give: password,
+      });
 
-    // Check the response from the server
-    if (response.data.result === 'success') {
-      setMessage('Login successful!'); // Set success message
-      localStorage.setItem('token', response.data.token); // Store token in localStorage
+      if (response.data.result === 'success') {
+        setMessage('Login successful!');
+        localStorage.setItem('token', response.data.token);
 
-      // Perform action upon successful login (e.g., redirect to dashboard)
-      onLogin(); // Assuming this function navigates to the dashboard
-    } else {
-      setMessage(response.data.msg || 'Unknown error occurred'); // Display error message from backend
+        onLogin();
+      } else {
+        setMessage(response.data.msg || 'Unknown error occurred');
+      }
+    } catch (error) {
+      console.log("Login error:", error.response?.data?.msg || 'An error occurred');
+      setMessage(error.response?.data?.msg || 'An error occurred');
     }
-  } catch (error) {
-    console.log("Login error:", error.response?.data?.msg || 'An error occurred'); // Log and display error message
-    setMessage(error.response?.data?.msg || 'An error occurred'); // Display error message to user
-  }
-};
+  };
 
-
-
-  // UseEffect to set interval for color change animation
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveColors((prevColors) => {
@@ -67,14 +61,10 @@ const handleLoginButton = async (e) => {
         newColors.push(colors[Math.floor(Math.random() * colors.length)]);
         return newColors;
       });
-    }, 6000); // Interval update every 6 seconds
+    }, 6000);
 
     return () => clearInterval(interval);
   }, []);
-
-  const handleMouseMove = (e) => {
-    setCursorPosition({ x: e.clientX, y: e.clientY });
-  };
 
   const handleSignUpButton = () => {
     navigate("/dashboard");
@@ -161,15 +151,14 @@ const handleLoginButton = async (e) => {
             >
               Lost Password?
             </a>
-
           </div>
           <div className="text-center mt-4">
-          <a
-            href="/registration"
-            className="text-sm text-cyan-700 hover:underline dark:text-cyan-500"
-          >
-            Not registered yet? Sign Up
-          </a>
+            <a
+              href="/registration"
+              className="text-sm text-cyan-700 hover:underline dark:text-cyan-500"
+            >
+              Not registered yet? Sign Up
+            </a>
           </div>
           <div>
             <button
