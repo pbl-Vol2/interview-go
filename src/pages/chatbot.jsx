@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Card, Button } from 'flowbite-react';
-import axios from 'axios';
 
 const Chatbot = () => {
   const [messages, setMessages] = useState([
@@ -8,26 +7,6 @@ const Chatbot = () => {
     { text: "Hello! How can I assist you today?", sender: "bot" }
   ]);
   const [input, setInput] = useState("");
-
-  const handleSend = () => {
-    if (input.trim()) {
-      const userMessage = input.trim();
-      setMessages([...messages, { text: userMessage, sender: "user" }]);
-      setInput("");
-
-      // Call Flask backend
-      axios.post('http://127.0.0.1:5000/predict', { message: userMessage })
-        .then(response => {
-          setMessages(prevMessages => [
-            ...prevMessages,
-            { text: response.data.response, sender: "bot" }
-          ]);
-        })
-        .catch(error => {
-          console.error("There was an error with the Flask API:", error);
-        });
-    }
-  };
 
   return (
     <div className="flex flex-col items-center p-4">
@@ -50,7 +29,6 @@ const Chatbot = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
             />
-            <Button onClick={handleSend}>Send</Button>
           </div>
         </div>
       </Card>

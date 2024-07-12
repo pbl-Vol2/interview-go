@@ -12,7 +12,6 @@ import Profile from "./pages/profile";
 import Verif from "./pages/verif";
 import ForgotPassword from "./pages/forgot-password";
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-// import { AuthProvider } from './context/auth-context';
 
 function App() {
   return (
