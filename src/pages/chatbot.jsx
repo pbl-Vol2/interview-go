@@ -16,7 +16,7 @@ const Chatbot = () => {
       setInput("");
 
       // Call Flask backend
-      axios.post('http://127.0.0.1:5000/predict', { message: userMessage })
+      axios.post('http://127.0.0.1:5000/chatbot', { message: userMessage })
         .then(response => {
           setMessages(prevMessages => [
             ...prevMessages,

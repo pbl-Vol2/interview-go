@@ -242,7 +242,7 @@ for word , i in word_index.items():
 # plot_graphs(history, "accuracy")
 # plot_graphs(history, "loss")
 
-# model.save(current_dir + "././assets/model_chatbot.h5")
+# model.save(current_dir + "../../assets/model_chatbot.h5")
 
 from flask import Flask, request, jsonify
 from keras.models import load_model
@@ -251,9 +251,9 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
-model = load_model("././assets/model_chatbot.h5")
+model = load_model("../../assets/model_chatbot.h5")
 
-@app.route('/chatbot', methods=['POST'])
+@app.route('/predict', methods=['POST'])
 def predict():
         user_input = request.get_json(force=True)
         question = user_input.get('message')

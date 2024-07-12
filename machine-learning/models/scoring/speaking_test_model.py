@@ -9,7 +9,6 @@ Original file is located at
 # Good or Bad Answer Prediction
 """
 import shutil
-
 import pandas as pd
 import numpy as np
 import nltk
@@ -27,9 +26,10 @@ import speech_recognition as sr
 from sklearn.feature_extraction.text import CountVectorizer
 import pyaudio
 import os
-from keras.models import load_model
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
+# model_scoring = load_model(current_dir + '../../../assets/model_scoring.h5')
+# model_sentence = load_model(current_dir + '../../../assets/model_sentence.h5')
 
 nltk.download('punkt')
 
@@ -99,10 +99,10 @@ vectorizer = CountVectorizer()
 X = vectorizer.fit_transform(combinedData)
 print(X)
 
-vocab_size = len(vectorizer.get_feature_names_out())
+vocab_size = len(vectorizer.get_feature_names_out()) + 1
 print("Vocabulary Size:", vocab_size)
 
-training_size = round(len(combinedData) * 0.95)
+training_size = round(len(combinedData) * 0.8)
 max_length = 10
 embedding_dim = 32
 
@@ -127,53 +127,65 @@ training_padded = pad_sequences(training_sequences, maxlen=max_length, padding=p
 testing_sequences = tokenizer.texts_to_sequences(testing_sentences)
 testing_padded = pad_sequences(testing_sequences, maxlen=max_length, padding=padding_type, truncating=trunc_type)
 
+# Debugging: Check if any sequence has an index out of range
+max_index_in_sequences = max([max(seq) for seq in training_sequences if len(seq) > 0] + [max(seq) for seq in testing_sequences if len(seq) > 0])
+print(f"Maximum index in sequences: {max_index_in_sequences}")
+print(f"Vocabulary size (num_words): {vocab_size}")
+
 training_labels = np.array(training_labels)
 testing_labels = np.array(testing_labels)
 
+# Additional debugging
+print(f"Shape of training_padded: {training_padded.shape}")
+print(f"Shape of testing_padded: {testing_padded.shape}")
+print(f"Shape of training_labels: {training_labels.shape}")
+print(f"Shape of testing_labels: {testing_labels.shape}")
+
+print(f"First training sequence (before padding): {training_sequences[0]}")
+print(f"First training sequence (after padding): {training_padded[0]}")
+print(f"First training label: {training_labels[0]}")
+
 # Declare graph function
-# def plot_graphs(history, string):
-#     plt.plot(history.history[string])
-#     plt.plot(history.history['val_'+string])
-#     plt.xlabel("Epochs")
-#     plt.ylabel(string)
-#     plt.legend([string, 'val_'+string])
-#     plt.ylim(top=1.1, bottom=0)
-#     plt.show()
-#
-# # Declare the model
-# model_sentence = tf.keras.Sequential([
-#     tf.keras.layers.Embedding(vocab_size+1, embedding_dim, input_length=max_length),
-#     # di pooling jadi 1 dimensi
-#     tf.keras.layers.GlobalAveragePooling1D(),
-#     tf.keras.layers.Dense(16, activation='relu'),
-#     tf.keras.layers.Dropout(0.5),
-#     # karena cuma nentuin good atau bad, 0 atau 1
-#     tf.keras.layers.Dense(1, activation='sigmoid')
-# ])
-# model_sentence.summary()
-#
-# model_sentence.compile(loss='binary_crossentropy',optimizer=Adam(0.001), metrics=['accuracy'])
-# # verbose itu buat liat training progressnya
-# history = model_sentence.fit(training_padded, training_labels, epochs=15, validation_data=(testing_padded, testing_labels), verbose=0)
-# plot_graphs(history, "accuracy")
-# plot_graphs(history, "loss")
-#
-# # save model
-# model_sentence.save(current_dir +"../../../assets/model_sentence.h5")
-#
-# def predict(text, treshold=0.5):
-#     input_sequence = tokenizer.texts_to_sequences([text])
-#     padded_input = pad_sequences(input_sequence, maxlen=max_length, padding=padding_type, truncating=trunc_type)
-#     predictions = model_sentence.predict(padded_input)
-#     threshold = 0.5
-#     predicted_class = 1 if predictions[0][0] > threshold else 0
-#     print('Bagus' if predicted_class == 1 else 'Kurang Bagus')
-#     return predicted_class
-#
-# # predict("saya biasanya membuat daftar prioritas untuk menentukan tindakan yang paling mendesak.")
-# # predict("Saya adalah orang yang rajin")
-# # predict("Ketika saya dihadapkan pada masalah, saya biasanya membuat daftar prioritas untuk menentukan tindakan yang paling mendesak.")
-#
+def plot_graphs(history, string):
+    plt.plot(history.history[string])
+    plt.plot(history.history['val_'+string])
+    plt.xlabel("Epochs")
+    plt.ylabel(string)
+    plt.legend([string, 'val_'+string])
+    plt.ylim(top=1.1, bottom=0)
+    plt.show()
+
+# Declare the model
+model_sentence = tf.keras.Sequential([
+    tf.keras.layers.Embedding(vocab_size, embedding_dim, input_length=max_length),
+    tf.keras.layers.GlobalAveragePooling1D(),
+    tf.keras.layers.Dense(16, activation='relu'),
+    tf.keras.layers.Dropout(0.5),
+    tf.keras.layers.Dense(1, activation='sigmoid')
+])
+model_sentence.summary()
+
+model_sentence.compile(loss='binary_crossentropy',optimizer=Adam(0.001), metrics=['accuracy'])
+# verbose itu buat liat training progressnya
+history = model_sentence.fit(training_padded, training_labels, epochs=15, validation_data=(testing_padded, testing_labels), verbose=0)
+plot_graphs(history, "accuracy")
+plot_graphs(history, "loss")
+
+# save model
+model_sentence.save(current_dir +"../../../assets/model_sentence.h5")
+
+def predict(text, treshold=0.5):
+    input_sequence = tokenizer.texts_to_sequences([text])
+    padded_input = pad_sequences(input_sequence, maxlen=max_length, padding=padding_type, truncating=trunc_type)
+    predictions = model_sentence.predict(padded_input)
+    threshold = 0.5
+    predicted_class = 1 if predictions[0][0] > threshold else 0
+    print('Bagus' if predicted_class == 1 else 'Kurang Bagus')
+    return predicted_class
+
+predict("saya biasanya membuat daftar prioritas untuk menentukan tindakan yang paling mendesak.")
+predict("Ketika saya dihadapkan pada masalah, saya biasanya membuat daftar prioritas untuk menentukan tindakan yang paling mendesak.")
+
 # """# Scoring"""
 #
 # Read the dataset
@@ -186,136 +198,136 @@ df_field_values = df['field']
 # hitung HANYA jika valuenya unik saja
 questionClass = {value: index for index, value in enumerate(df_field_values.unique())}
 print('total class: ' + str(len(questionClass)))
-#
-# # Combine every answer of each question for training and validation
-# dfKey, dfValue = list(df)[0], list(df)[2::]
-# answers, labels = [], []
-# for i in range(len(dfValue)):
-#     for j in range(len(df[dfValue[i]])):
-#         answer = df[dfValue[i]][j]
-#         if pd.isna(answer): continue
-#         answers.append(answer)
-#         labels.append(questionClass[df[dfKey][j]])
-#
-# dfKey, dfValue = list(val_df)[1], list(val_df)[2:5]
-# val_answers, val_labels = [], []
-# for i in range(len(dfValue)):
-#     for j in range(len(val_df[dfValue[i]])):
-#         val_answer = val_df[dfValue[i]][j]
-#         if pd.isna(val_answer): continue
-#         val_answers.append(val_answer)
-#         val_labels.append(questionClass[val_df[dfKey][j]])
-#
-# print(f'Train data: {len(answers)}')
-# print(f'Validation data: {len(val_answers)}')
-#
-# # Counting every word to get the most used word / common word from the dataset
-# wordList = []
-# for item in answers:
-#     words = item.split()
-#     for word in words:
-#         wordList.append(re.sub(r'[^\w\d\s]', '', word.lower()))
-# result = dict(Counter(wordList))
-# commonworddata = sorted(result.items(), key=lambda x: x[1], reverse=True)
-# print(commonworddata[:3])
-#
-# # Saving common word data into json
-# word_list = [{'word': item[0], 'count': item[1]} for item in commonworddata]
-# with open('common_words.json', 'w') as json_file:
-#     json.dump(word_list, json_file, indent=4)
-#
-# # Splitting common word and the frequencies each word into two different array
-# commonword, frequencies = zip(*commonworddata)
-#
-# max_length = 25 #banyaknya common words yang dihilangkan, lebih dari 25 ga diilangin
-#
-# def preprocessing_text(sentence, max_length):
-#     filtered_words = re.sub(r'[^\w\d\s]', '', sentence.lower())
-#     # tokenizing
-#     words = word_tokenize(filtered_words)
-#     # panjang word sebelum diapus stopwordsnya
-#     prevLen = len(words)
-#     # removinfg common words atau stopwords based on dataset
-#     for i in range(len(commonword)):
-#         if (len(words) <= max_length): break
-#         # buat list words baru yang udah gaada stopwordsnya
-#         words = [word for word in words if word.lower() not in [commonword[i]]]
-#         if (len(words) == prevLen): break
-#     return ' '.join(words)
-#
-# temp = []
-# for answer in answers:
-#     temp.append(preprocessing_text(answer, max_length))
-# answers = temp
-#
-# temp = []
-# for answer in val_answers:
-#     temp.append(preprocessing_text(answer, max_length))
-# val_answers = temp
-#
-# # Counting vocabulary size to avoid overfitting or underfitting
-# vectorizer = CountVectorizer()
-# X = vectorizer.fit_transform(answers)
-# vocab_size = len(vectorizer.get_feature_names_out())
-# print("Vocabulary Size:", vocab_size)
-#
-# # Splitting training and validation data
-# training_sentences = answers
-# testing_sentences = val_answers
-# training_labels = labels
-# testing_labels = val_labels
-#
-# # Converting the data into sequences and give a padding
-# trunc_type='post'
-# padding_type='post'
-# oov_tok = "<OOV>"
-#
-# tokenizer = Tokenizer(num_words=vocab_size, oov_token=oov_tok)
-# tokenizer.fit_on_texts(training_sentences)
-# word_index = tokenizer.word_index
-#
-# training_sequences = tokenizer.texts_to_sequences(training_sentences)
-# training_padded = pad_sequences(training_sequences, maxlen=max_length, padding=padding_type, truncating=trunc_type)
-#
-# testing_sequences = tokenizer.texts_to_sequences(testing_sentences)
-# testing_padded = pad_sequences(testing_sequences, maxlen=max_length, padding=padding_type, truncating=trunc_type)
-#
-# training_labels = np.array(training_labels)
-# testing_labels = np.array(testing_labels)
-#
-# # Saving training sentences data into json
-# word_dict = {item[0]: item[1] for item in tokenizer.word_index.items()}
-# with open('tokenizer_dict_scoring.json', 'w') as json_file:
-#     json.dump(word_dict, json_file, indent=4)
-#
-# # Declare graph function
-# def plot_graphs(history, string):
-#     plt.plot(history.history[string])
-#     plt.plot(history.history['val_'+string])
-#     plt.xlabel("Epochs")
-#     plt.ylabel(string)
-#     plt.legend([string, 'val_'+string])
-#     plt.ylim(bottom=0)
-#     plt.show()
-#
-# # declare the model to predict the class
-# embedding_dim = 256
-# model_scoring = tf.keras.Sequential([
-#     tf.keras.layers.Embedding(vocab_size+1, embedding_dim, input_length=max_length),
-#     tf.keras.layers.GlobalAveragePooling1D(),
-#     tf.keras.layers.Dense(16, activation='relu'),
-#     tf.keras.layers.Dense(8, activation='relu'),
-#     tf.keras.layers.Dense(len(questionClass), activation='softmax')
-# ])
-#
-# model_scoring.summary()
-#
-# model_scoring.compile(loss='SparseCategoricalCrossentropy', optimizer=Adam(0.001), metrics=['accuracy'])
-# history = model_scoring.fit(training_padded, training_labels, epochs=15, validation_data=(testing_padded, testing_labels), verbose=2)
-# plot_graphs(history, "accuracy")
-# plot_graphs(history, "loss")
-#
-# model_scoring.save(current_dir +"../../../assets/model_scoring.h5")
+
+# Combine every answer of each question for training and validation
+dfKey, dfValue = list(df)[0], list(df)[2::]
+answers, labels = [], []
+for i in range(len(dfValue)):
+    for j in range(len(df[dfValue[i]])):
+        answer = df[dfValue[i]][j]
+        if pd.isna(answer): continue
+        answers.append(answer)
+        labels.append(questionClass[df[dfKey][j]])
+
+dfKey, dfValue = list(val_df)[1], list(val_df)[2:5]
+val_answers, val_labels = [], []
+for i in range(len(dfValue)):
+    for j in range(len(val_df[dfValue[i]])):
+        val_answer = val_df[dfValue[i]][j]
+        if pd.isna(val_answer): continue
+        val_answers.append(val_answer)
+        val_labels.append(questionClass[val_df[dfKey][j]])
+
+print(f'Train data: {len(answers)}')
+print(f'Validation data: {len(val_answers)}')
+
+# Counting every word to get the most used word / common word from the dataset
+wordList = []
+for item in answers:
+    words = item.split()
+    for word in words:
+        wordList.append(re.sub(r'[^\w\d\s]', '', word.lower()))
+result = dict(Counter(wordList))
+commonworddata = sorted(result.items(), key=lambda x: x[1], reverse=True)
+print(commonworddata[:3])
+
+# Saving common word data into json
+word_list = [{'word': item[0], 'count': item[1]} for item in commonworddata]
+with open('common_words.json', 'w') as json_file:
+    json.dump(word_list, json_file, indent=4)
+
+# Splitting common word and the frequencies each word into two different array
+commonword, frequencies = zip(*commonworddata)
+
+max_length = 25 #banyaknya common words yang dihilangkan, lebih dari 25 ga diilangin
+
+def preprocessing_text(sentence, max_length):
+    filtered_words = re.sub(r'[^\w\d\s]', '', sentence.lower())
+    # tokenizing
+    words = word_tokenize(filtered_words)
+    # panjang word sebelum diapus stopwordsnya
+    prevLen = len(words)
+    # removinfg common words atau stopwords based on dataset
+    for i in range(len(commonword)):
+        if (len(words) <= max_length): break
+        # buat list words baru yang udah gaada stopwordsnya
+        words = [word for word in words if word.lower() not in [commonword[i]]]
+        if (len(words) == prevLen): break
+    return ' '.join(words)
+
+temp = []
+for answer in answers:
+    temp.append(preprocessing_text(answer, max_length))
+answers = temp
+
+temp = []
+for answer in val_answers:
+    temp.append(preprocessing_text(answer, max_length))
+val_answers = temp
+
+# Counting vocabulary size to avoid overfitting or underfitting
+vectorizer = CountVectorizer()
+X = vectorizer.fit_transform(answers)
+vocab_size = len(vectorizer.get_feature_names_out()) + 1
+print("Vocabulary Size:", vocab_size)
+
+# Splitting training and validation data
+training_sentences = answers
+testing_sentences = val_answers
+training_labels = labels
+testing_labels = val_labels
+
+# Converting the data into sequences and give a padding
+trunc_type='post'
+padding_type='post'
+oov_tok = "<OOV>"
+
+tokenizer = Tokenizer(num_words=vocab_size, oov_token=oov_tok)
+tokenizer.fit_on_texts(training_sentences)
+word_index = tokenizer.word_index
+
+training_sequences = tokenizer.texts_to_sequences(training_sentences)
+training_padded = pad_sequences(training_sequences, maxlen=max_length, padding=padding_type, truncating=trunc_type)
+
+testing_sequences = tokenizer.texts_to_sequences(testing_sentences)
+testing_padded = pad_sequences(testing_sequences, maxlen=max_length, padding=padding_type, truncating=trunc_type)
+
+training_labels = np.array(training_labels)
+testing_labels = np.array(testing_labels)
+
+# Saving training sentences data into json
+word_dict = {item[0]: item[1] for item in tokenizer.word_index.items()}
+with open('tokenizer_dict_scoring.json', 'w') as json_file:
+    json.dump(word_dict, json_file, indent=4)
+
+# Declare graph function
+def plot_graphs(history, string):
+    plt.plot(history.history[string])
+    plt.plot(history.history['val_'+string])
+    plt.xlabel("Epochs")
+    plt.ylabel(string)
+    plt.legend([string, 'val_'+string])
+    plt.ylim(bottom=0)
+    plt.show()
+
+# declare the model to predict the class
+embedding_dim = 256
+model_scoring = tf.keras.Sequential([
+    tf.keras.layers.Embedding(vocab_size, embedding_dim, input_length=max_length),
+    tf.keras.layers.GlobalAveragePooling1D(),
+    tf.keras.layers.Dense(16, activation='relu'),
+    tf.keras.layers.Dense(8, activation='relu'),
+    tf.keras.layers.Dense(len(questionClass), activation='softmax')
+])
+
+model_scoring.summary()
+
+model_scoring.compile(loss='SparseCategoricalCrossentropy', optimizer=Adam(0.001), metrics=['accuracy'])
+history = model_scoring.fit(training_padded, training_labels, epochs=15, validation_data=(testing_padded, testing_labels), verbose=2)
+plot_graphs(history, "accuracy")
+plot_graphs(history, "loss")
+
+model_scoring.save(current_dir +"../../../assets/model_scoring.h5")
 
 # Define a Cosine Similarity Algorithm
 def cosine_similarity(str1, str2):
@@ -340,6 +352,7 @@ def cosine_similarity(str1, str2):
             count2 += 1
     arr1b = arr1a + [None] * count2
     arr2b = arr2a + [None] * count1
+
     def switch_element_by_index(arr, idx1, idx2):
         arr[idx1], arr[idx2] = arr[idx2], arr[idx1]
     for i in range(len(arr1b)):
@@ -373,9 +386,6 @@ def get_key_by_value(dictionary, target_value):
         if value == target_value:
             return key
     return None
-
-model_scoring = load_model(current_dir + '../../../assets/model_scoring.h5')
-model_sentence = load_model(current_dir + '../../../assets/model_sentence.h5')
 
 # Predict class
 def predict_class(text):
@@ -418,7 +428,7 @@ def scoring(tes_q, tes_a):
     # cari yang nilainya paling tinggi
     result_similarity = max(scoring_similarity_list)
     # hitung total scorenya
-    total_score = (result_field * 0.7) + (result_similarity * 0.3)
+    total_score = (result_field * 0.3) + (result_similarity * 0.7)
     # apakah jawaban sama pertanyaan yang diajukan nyambung
     # print(f"Your answer is {'Relate' if result_field else 'Not Relate'} with a similarity of {result_similarity}")
     # total scorenya
@@ -548,7 +558,7 @@ def get_feedback(question, answer):
 
 # q = 'Bagaimana Anda mendefinisikan konsep kuliner yang unik?'
 # a = 'Memiliki berbagai pilihan pemasok adalah strategi saya untuk mengurangi risiko ketika ada gangguan pasokan atau kenaikan harga. Ini membantu menjaga fleksibilitas produksi.'
-# feedback(q, a)
+# get_feedback(q, a)
 
 # generate random question based on field, get the predict score and scoring score based on the answer
 
@@ -560,7 +570,7 @@ app = Flask(__name__)
 CORS(app)
 
 @app.route('/questions', methods=['POST'])
-def generate_question():
+def questions():
     # user_input = request.get_json(force=True)
     # num = user_input.get('code')
     num = 3
@@ -578,10 +588,11 @@ def generate_question():
     return jsonify(response)
 
 @app.route('/answer', methods=['POST'])
-def generate_answer():
+def answer():
     r = sr.Recognizer()
     audio = request.files.get('audio')
     question = request.form.get('question')
+    category = request.form.get('category')
     if audio:
         temp_dir = tempfile.mkdtemp()
         temp_path = os.path.join(temp_dir, 'temp_audio.wav')
@@ -594,6 +605,7 @@ def generate_answer():
         # Recognize speech using Google Web Speech API
         answer = r.recognize_google(audio_data, language="id-ID")
         response = {
+            'category': category,
             'question' : question,
             'answer' : answer
         }
@@ -610,14 +622,23 @@ def generate_answer():
     return jsonify(response)
 
 @app.route('/feedback', methods=['POST'])
-def predict_feedback():
-    question = request.get('question')
-    answer = request.get('answer')
-    feedback = predict_feedback(question, answer)
+def feedback():
+    user_input = request.get_json(force=True)
+    category = user_input.get('category')
+    question = user_input.get('question')
+    answer = user_input.get('answer')
+    feedback = get_feedback(question, answer)
     response = {
+        'category': category,
+        'question': question,
+        'answer': answer,
         'feedback': feedback
     }
+    print(category, question, answer, feedback)
     return jsonify(response)
+
+# @app.route('/summary', methods =["GET"])
+
 
 # buat jalanin flasknya
 if __name__ == '__main__':
