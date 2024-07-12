@@ -14,9 +14,9 @@ const colors = [
 ];
 
 const Login = ({ onLogin }) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [message, setMessage] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [message, setMessage] = useState("");
   const [activeColors, setActiveColors] = useState([]);
   const [cursorPosition, setCursorPosition] = useState({ x: -100, y: -100 });
 
@@ -32,22 +32,25 @@ const Login = ({ onLogin }) => {
     try {
       console.log("Attempting to login with email:", email);
 
-      const response = await axios.post('http://localhost:5000/login', {
+      const response = await axios.post("http://localhost:5000/login", {
         email_give: email,
         password_give: password,
       });
 
-      if (response.data.result === 'success') {
-        setMessage('Login successful!');
-        localStorage.setItem('token', response.data.token);
+      if (response.data.result === "success") {
+        setMessage("Login successful!");
+        localStorage.setItem("token", response.data.token);
 
         onLogin();
       } else {
-        setMessage(response.data.msg || 'Unknown error occurred');
+        setMessage(response.data.msg || "Unknown error occurred");
       }
     } catch (error) {
-      console.log("Login error:", error.response?.data?.msg || 'An error occurred');
-      setMessage(error.response?.data?.msg || 'An error occurred');
+      console.log(
+        "Login error:",
+        error.response?.data?.msg || "An error occurred"
+      );
+      setMessage(error.response?.data?.msg || "An error occurred");
     }
   };
 
@@ -66,12 +69,8 @@ const Login = ({ onLogin }) => {
     return () => clearInterval(interval);
   }, []);
 
-  const handleSignUpButton = () => {
-    navigate("/dashboard");
-  };
-
   const handleForgotPassButton = () => {
-    navigate("/forgot-password");
+    navigate("/forgot-pa  ssword");
   };
 
   return (
@@ -87,7 +86,7 @@ const Login = ({ onLogin }) => {
             style={{
               top: `${Math.random() * 100}%`,
               left: `${Math.random() * 100}%`,
-              transform: 'translate(-50%, -50%) scale(0)',
+              transform: "translate(-50%, -50%) scale(0)",
               animation: `pulse-${index} 8s infinite`,
               ...(cursorPosition.x !== -100 && cursorPosition.y !== -100
                 ? {
@@ -107,9 +106,7 @@ const Login = ({ onLogin }) => {
           <img src={Logo} alt="InterviewGo Logo" className="h-20" />
         </div>
         <h1 className="text-2xl font-bold text-center mb-2">InterviewGo!</h1>
-        <h2 className="text-lg text-center mb-6">
-          Hello, Welcome Back
-        </h2>
+        <h2 className="text-lg text-center mb-6">Hello, Welcome Back</h2>
         {message && <p className="text-center text-red-500">{message}</p>}
         <form className="space-y-4" onSubmit={handleLoginButton}>
           <div>
@@ -152,12 +149,13 @@ const Login = ({ onLogin }) => {
               Lost Password?
             </a>
           </div>
-          <div className="text-center mt-4">
+          <div className="text-center pt-4">
+            Not registered yet?
             <a
               href="/registration"
               className="text-sm text-cyan-700 hover:underline dark:text-cyan-500"
             >
-              Not registered yet? Sign Up
+              Sign Up
             </a>
           </div>
           <div>

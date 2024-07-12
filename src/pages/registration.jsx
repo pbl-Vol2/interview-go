@@ -119,6 +119,15 @@ const Registration = () => {
               />
             </div>
           </div>
+          <div className="text-center pt-4">
+            Already have an account?
+            <a
+              href="/registration"
+              className="text-sm text-cyan-700 hover:underline dark:text-cyan-500"
+            >
+              Log In Here
+            </a>
+          </div>
           <div>
             <button
               onClick={handleSignUpButton}
