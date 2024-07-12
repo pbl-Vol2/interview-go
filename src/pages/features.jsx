@@ -4,7 +4,7 @@ import { FiArrowRight } from "react-icons/fi";
 import Image1 from '../assets/image/image1.jpg';
 import akuntansi from '../assets/image/akuntansi.jpg';
 import designgrafis from '../assets/image/designgrafis.jpg';
-import hiburan from '../assets/image/akuntansi.jpg';
+import hiburan from '../assets/image/hiburan.jpg';
 import it from '../assets/image/it.jpg';
 import keamanan from '../assets/image/keamanan.jpg';
 import kesehatan from '../assets/image/kesehatan.jpg';
@@ -25,7 +25,7 @@ const Features = () => {
           heading="General - Perusahaan"
           subheading="Learn what we do here"
           imgSrc={Image1}
-          href="#"
+          href="/interview"
         />
         <Link
           heading="General - Latar Belakang"
@@ -76,7 +76,7 @@ const Features = () => {
           href="#"
         />
         <Link
-          heading="design Grafis"
+          heading="Design Grafis"
           subheading="Reach Out Our Assistance"
           imgSrc={designgrafis}
           href="#"

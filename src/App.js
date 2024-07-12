@@ -9,13 +9,16 @@ import Chatbot from "./pages/chatbot";
 import Interview from "./pages/interview";
 import Login from "./pages/login";
 import Profile from "./pages/profile";
+import Verif from "./pages/verif";
+import History from "./pages/history";
+import ForgotPassword from "./pages/forgot-password";
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import { AuthProvider } from './context/auth-context';
+// import { AuthProvider } from './context/auth-context';
 
 function App() {
   return (
     <div className="App">
-      <AuthProvider>
+      {/* <AuthProvider> */}
       <Router>
         <Navbar />
         <Routes>
@@ -28,10 +31,13 @@ function App() {
           <Route path="/interview" element={<Interview />} />
           <Route path="/login" element={<Login />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/verif" element={<Verif />} />
+          <Route path="/history" element={<History />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
         </Routes>
         <Footer />
       </Router>
-      </AuthProvider>
+      {/* </AuthProvider> */}
     </div>
   );
 }
