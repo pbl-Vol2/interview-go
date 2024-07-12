@@ -10,6 +10,7 @@ import Interview from "./pages/interview";
 import Login from "./pages/login";
 import Profile from "./pages/profile";
 import Verif from "./pages/verif";
+import History from "./pages/history";
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 // import { AuthProvider } from './context/auth-context';
 
@@ -30,6 +31,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/verif" element={<Verif />} />
+          <Route path="/history" element={<History />} />
         </Routes>
         <Footer />
       </Router>
