@@ -14,9 +14,9 @@ const colors = [
 ];
 
 const Login = ({ onLogin }) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [message, setMessage] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [message, setMessage] = useState("");
   const [activeColors, setActiveColors] = useState([]);
   const [cursorPosition, setCursorPosition] = useState({ x: -100, y: -100 });
 
@@ -72,6 +72,14 @@ const handleLoginButton = async (e) => {
     return () => clearInterval(interval);
   }, []);
 
+  const handleSignUpButton = () => {
+    navigate("/dashboard");
+  };
+
+  const handleForgotPassButton = () => {
+    navigate("/forgot-password");
+  };
+
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-center from-sky-100 to-white" onMouseMove={handleMouseMove}>
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden">
@@ -82,7 +90,7 @@ const handleLoginButton = async (e) => {
             style={{
               top: `${Math.random() * 100}%`,
               left: `${Math.random() * 100}%`,
-              transform: 'translate(-50%, -50%) scale(0)',
+              transform: "translate(-50%, -50%) scale(0)",
               animation: `pulse-${index} 8s infinite`,
               ...(cursorPosition.x !== -100 && cursorPosition.y !== -100 ? {
                 top: `${cursorPosition.y}px`,
@@ -100,9 +108,7 @@ const handleLoginButton = async (e) => {
           <img src={Logo} alt="InterviewGo Logo" className="h-20" />
         </div>
         <h1 className="text-2xl font-bold text-center mb-2">InterviewGo!</h1>
-        <h2 className="text-lg text-center mb-6">
-          Hello, Welcome Back
-        </h2>
+        <h2 className="text-lg text-center mb-6">Hello, Welcome Back</h2>
         {message && <p className="text-center text-red-500">{message}</p>}
         <form className="space-y-4" onSubmit={handleLoginButton}>
           <div>
