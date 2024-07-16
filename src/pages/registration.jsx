@@ -125,7 +125,8 @@ const Registration = () => {
               href="/login"
               className="text-sm text-cyan-700 hover:underline dark:text-cyan-500"
             >
-              Log In Here
+              {" "}
+              Log in Here
             </a>
           </div>
           <div>
