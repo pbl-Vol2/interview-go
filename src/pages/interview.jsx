@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import mic from "../assets/image/mic.jpg";
-import { Button } from "flowbite-react";
+import { Accordion, Button } from "flowbite-react";
 import axios from "axios";
 
 function Interview() {
@@ -19,7 +19,7 @@ function Interview() {
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
-        const response = await axios.post('http://localhost:5000/questions');
+        const response = await axios.post("http://localhost:5000/questions");
         setQuestions(response.data.questions);
         setQuestion(response.data.questions[0].question);
       } catch (error) {
@@ -83,7 +83,9 @@ function Interview() {
 
   const handleSubmitFeedback = () => {
     // Simpan feedback atau lakukan tindakan lain yang diperlukan
-    console.log('Feedback for question ${currentQuestionIndex + 1}: ${feedback}');
+    console.log(
+      "Feedback for question ${currentQuestionIndex + 1}: ${feedback}"
+    );
     setFeedback(""); // Reset feedback
     setIsFeedback(false); // Selesai feedback session
     goToNextQuestion(); // Lanjut ke pertanyaan berikutnya
@@ -149,13 +151,50 @@ function Interview() {
                 >
                   Next Question
                 </button>
-                <textarea
-                  className="w-full p-2 border border-gray-300 rounded mt-3 mb-4"
-                  rows="4"
-                  value={feedback}
-                  onChange={handleFeedbackChange}
-                  placeholder="NANTI feedback ada di sini"
-                />
+                <Accordion data-accordion="open">
+                  <Accordion.Panel>
+                    <Accordion.Title>Your Answer</Accordion.Title>
+                    <Accordion.Content>
+                      <p className="mb-2 text-gray-500 dark:text-gray-400">
+                        Flowbite is an open-source library of interactive
+                        components built on top of Tailwind CSS including
+                        buttons, dropdowns, modals, navbars, and more.
+                      </p>
+                      <p className="text-gray-500 dark:text-gray-400">
+                        Check out this guide to learn how to&nbsp;
+                        <a
+                          href="https://flowbite.com/docs/getting-started/introduction/"
+                          className="text-cyan-600 hover:underline dark:text-cyan-500"
+                        >
+                          get started&nbsp;
+                        </a>
+                        and start developing websites even faster with
+                        components on top of Tailwind CSS.
+                      </p>
+                    </Accordion.Content>
+                  </Accordion.Panel>
+                  <Accordion.Panel>
+                    <Accordion.Title>Your Answer</Accordion.Title>
+                    <Accordion.Content>
+                      <p className="mb-2 text-gray-500 dark:text-gray-400">
+                        Flowbite is an open-source library of interactive
+                        components built on top of Tailwind CSS including
+                        buttons, dropdowns, modals, navbars, and more.
+                      </p>
+                      <p className="text-gray-500 dark:text-gray-400">
+                        Check out this guide to learn how to&nbsp;
+                        <a
+                          href="https://flowbite.com/docs/getting-started/introduction/"
+                          className="text-cyan-600 hover:underline dark:text-cyan-500"
+                        >
+                          get started&nbsp;
+                        </a>
+                        and start developing websites even faster with
+                        components on top of Tailwind CSS.
+                      </p>
+                    </Accordion.Content>
+                  </Accordion.Panel>
+                </Accordion>
               </div>
             ) : (
               <button
