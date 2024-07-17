@@ -26,7 +26,7 @@ import speech_recognition as sr
 from sklearn.feature_extraction.text import CountVectorizer
 import os
 from keras.models import load_model
-
+import shutil
 nltk.download('punkt')
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
@@ -409,7 +409,7 @@ def scoring(tes_q, tes_a):
     # cari yang nilainya paling tinggi
     result_similarity = max(scoring_similarity_list)
     # hitung total scorenya
-    total_score = result_field * 0.5 + result_similarity * 0.5
+    total_score = result_field * 0.3 + result_similarity * 0.7
     # apakah jawaban sama pertanyaan yang diajukan nyambung
     # print(f"Your answer is {'Relate' if result_field else 'Not Relate'} with a similarity of {result_similarity}")
     # total scorenya
@@ -443,6 +443,7 @@ def scoring(tes_q, tes_a):
 7. Ulangi sampai 3 kali
 8. Tampilkan summary semua pertanyaan dan feedback (display dari database)
 '''
+
 # hitung pengulangan kata yang digunakan oleh user dalam satu kali menjawab, jadi hitung total kata yang unik
 def repeat_answer(answer):
     # Inisialisasi CountVectorizer
@@ -529,12 +530,12 @@ def generate_feedback(question, answer):
     print("Repeat: ", repeat_score)
     print("Structure: ", structure_score)
     feedback_result = ", ".join(feedback_result)
-    print(feedback_result)
+    # print(feedback_result)
     return feedback_result
 #
-q = 'Bagaimana Anda mendefinisikan konsep kuliner yang unik?'
-a = 'Memiliki berbagai pilihan pemasok adalah strategi saya untuk mengurangi risiko ketika ada gangguan pasokan atau kenaikan harga. Ini membantu menjaga fleksibilitas produksi.'
-generate_feedback(q, a)
+# q = 'Bagaimana Anda mendefinisikan konsep kuliner yang unik?'
+# a = 'Memiliki berbagai pilihan pemasok adalah strategi saya untuk mengurangi risiko ketika ada gangguan pasokan atau kenaikan harga. Ini membantu menjaga fleksibilitas produksi.'
+# generate_feedback(q, a)
 
 # generate random question based on field, get the predict score and scoring score based on the answer
 from flask import Flask, request, jsonify
@@ -546,9 +547,8 @@ CORS(app)
 
 @app.route('/questions', methods=['POST'])
 def questions():
-    # user_input = request.get_json(force=True)
-    # num = user_input.get('code')
-    num = 3
+    user_input = request.get_json(force=True)
+    num = int(user_input.get('code'))
     df_field_values_unique = df_field_values.unique().tolist()
     field = df_field_values_unique[num]
     questions = []
@@ -597,12 +597,12 @@ def answer():
 @app.route('/feedback', methods=['POST'])
 def feedback():
     user_input = request.get_json(force=True)
-    category = user_input.get('category')
     question = user_input.get('question')
     answer = user_input.get('answer')
     feedback = generate_feedback(question, answer)
     response = {
-        'feedback': feedback
+        'feedback': feedback,
+        'answer': answer
     }
     return jsonify(response)
 

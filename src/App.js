@@ -13,7 +13,6 @@ import Verif from "./pages/verif";
 import History from "./pages/history";
 import ForgotPassword from "./pages/forgot-password";
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-// import { AuthProvider } from './context/auth-context';
 
 function App() {
   return (
@@ -34,6 +33,8 @@ function App() {
           <Route path="/verif" element={<Verif />} />
           <Route path="/history" element={<History />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/" element={<Features />} />
+          <Route path="/interview/:code" element={<Interview />} />
         </Routes>
         <Footer />
       </Router>

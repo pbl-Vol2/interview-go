@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import mic from "../assets/image/mic.jpg";
 import { Button } from "flowbite-react";
 import axios from "axios";
+import { useParams } from 'react-router-dom';
 
 function Interview() {
   const [isRecording, setIsRecording] = useState(false);
@@ -15,25 +16,24 @@ function Interview() {
   const [feedback, setFeedback] = useState(""); // Menambahkan state untuk menyimpan feedback
   const [recordedBlobs, setRecordedBlobs] = useState([]);
   const [questions, setQuestions] = useState([]);
+  const [field, setField] = useState([]);
+  const { code } = useParams();
 
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
-        const response = await axios.post('http://127.0.0.1:5000/questions');
+        const response = await axios.post('http://127.0.0.1:5000/questions', { code });
         console.log("Fetched questions:", response.data.questions);
         setQuestions(response.data.questions);
-        if (response.data.questions.length > 0) {
-          setQuestion(response.data.questions[0].question);
-        } else {
-          console.error("No questions found in response.");
-        }
+        const field = response.data.category ;
+        setField(field);
       } catch (error) {
         console.error("Error fetching questions:", error);
       }
     };
 
     fetchQuestions();
-  }, []);
+  }, [code]);
 
   useEffect(() => {
     if (isRecording) {
@@ -218,10 +218,22 @@ function Interview() {
     }
   };
 
+  const postFeedbackToAPI = async (question, answer) => {
+    try {
+      const response = await axios.post('http://127.0.0.1:5000/feedback', {
+        question,
+        answer,
+      });
+      console.log('Feedback posted to API:', response.data);
+    } catch (error) {
+      console.error('Error posting feedback to API:', error);
+    }
+  };
+
   return (
     <div className="bg-gradient-to-b from-sky-100 to-white h-full">
       <div className="container mx-auto p-4 pt-12">
-        <h1 className="text-3xl font-bold mb-8">INTERVIEW TEST</h1>
+        <h1 className="text-3xl font-bold mb-8">{field}</h1>
         <div className="flex justify-center items-center mb-4 gap-56">
           <Button color="light" pill>
             <i className="ri-arrow-left-line me-1"></i> Back
@@ -263,6 +275,13 @@ function Interview() {
                   value={feedback}
                   onChange={handleFeedbackChange}
                   placeholder="NANTI feedback ada di sini"
+                />
+                <textarea
+                  className="w-full p-2 border border-gray-300 rounded mt-3 mb-4"
+                  rows="4"
+                  value={feedback}
+                  onChange={handleFeedbackChange}
+                  placeholder="NANTI answer ada di sini"
                 />
               </div>
             ) : (
