@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Card, Button } from "flowbite-react";
 import axios from "axios";
 import monye from "../assets/image/monye.png";
+import profile from "../assets/image/profile-chatbot.png"
 import userImage from "../assets/image/user.png";
 
 const Chatbot = () => {
@@ -58,8 +59,8 @@ const Chatbot = () => {
       <Card className="w-1/3 max-w-full h-full flex flex-col">
         <div className="flex items-center p-4 bg-customBiru6 rounded-t-lg gap-4">
           <div class="relative">
-            <img class="w-10 h-11 rounded" src={monye} alt="" />
-            <span class="absolute bottom-0 left-8 transform translate-y-1/4 w-3.5 h-3.5 bg-green-400 border-2 border-white dark:border-gray-800 rounded-full"></span>
+            <img class="w-12 h-12 rounded-full" src={profile} alt="" />
+            <span class="absolute bottom-0 left-9 transform translate-y-1/5 w-3.5 h-3.5 bg-green-400 border-2 border-white dark:border-gray-800 rounded-full"></span>
           </div>
           <div>
             <h2 className="text-lg font-semibold text-gray-900">Monbot</h2>
