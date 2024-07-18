@@ -235,7 +235,7 @@ function Interview() {
   return (
     <div className="bg-gradient-to-b from-sky-100 to-white h-full">
       <div className="container mx-auto p-4 pt-12">
-        <h1 className="text-3xl font-bold mb-8">{field}</h1>
+        <h1 className="text-3xl font-bold mb-8 text-center">{field}</h1>
         <div className="flex justify-center items-center mb-4 gap-56">
           <Button color="light" pill>
             <i className="ri-arrow-left-line me-1"></i> Back
