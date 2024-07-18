@@ -1,5 +1,5 @@
 import { useMotionValue, motion, useSpring, useTransform } from "framer-motion";
-import React, { useRef } from "react";
+import React, { useRef, useState} from "react";
 import { FiArrowRight } from "react-icons/fi";
 import Image1 from '../assets/image/image1.jpg';
 import akuntansi from '../assets/image/akuntansi.jpg';
@@ -25,104 +25,104 @@ const Features = () => {
           heading="General - Perusahaan"
           subheading="Learn what we do here"
           imgSrc={Image1}
-          href="/interview"
+          code={0}
         />
         <Link
           heading="General - Latar Belakang"
           subheading="Reach Out Our Assistance"
           imgSrc={latarbelakanguser}
-          href="#"
+          code={1}
         />
         <Link
           heading="General - Posisi"
           subheading="Learn what we do here"
           imgSrc={posisi}
-          href="#"
+          code={2}
         />
         <Link
           heading="General - Softskill Situasional"
           subheading="Reach Out Our Assistance"
           imgSrc={softskill}
-          href="#"
+          code={3}
         />
         <Link
           heading="Penutup"
           subheading="Learn what we do here"
           imgSrc={Image1}
-          href="#"
+          code={4}
         />
         <Link
           heading="Kuliner dan Restoran"
           subheading="Reach Out Our Assistance"
           imgSrc={kuliner}
-          href="#"
+          code={5}
         />
         <Link
           heading="Penjualan dan Pemasaran"
           subheading="Learn what we do here"
           imgSrc={pemasaran}
-          href="#"
+          code={6}
         />
         <Link
           heading="Layanan Pelanggan"
           subheading="Reach Out Our Assistance"
           imgSrc={layananpelanggan}
-          href="#"
+          code={7}
         />
         <Link
           heading="Administrasi dan Akuntansi"
           subheading="Learn what we do here"
           imgSrc={akuntansi}
-          href="#"
+          code={8}
         />
         <Link
           heading="Design Grafis"
           subheading="Reach Out Our Assistance"
           imgSrc={designgrafis}
-          href="#"
+          code={9}
         />
         <Link
           heading="IT"
           subheading="Learn what we do here"
           imgSrc={it}
-          href="#"
+          code={10}
         />
         <Link
           heading="Keamanan"
           subheading="Reach Out Our Assistance"
           imgSrc={keamanan}
-          href="#"
+          code={11}
         />
         <Link
           heading="Kesehatan"
           subheading="Learn what we do here"
           imgSrc={kesehatan}
-          href="#"
+          code={12}
         />
         <Link
           heading="Pendidikan"
           subheading="Reach Out Our Assistance"
           imgSrc={pendidikan}
-          href="#"
+          code={13}
         />
         <Link
           heading="Hiburan"
           subheading="Learn what we do here"
           imgSrc={hiburan}
-          href="#"
+          code={14}
         />
         <Link
           heading="Perhotelan"
           subheading="Reach Out Our Assistance"
           imgSrc={perhotelan}
-          href="#"
+          code={15}
         />
       </div>
     </section>
   );
 };
 
-const Link = ({ heading, imgSrc, subheading, href }) => {
+const Link = ({ heading, imgSrc, subheading, code}) => {
   const ref = useRef(null);
 
   const x = useMotionValue(0);
@@ -149,6 +149,8 @@ const Link = ({ heading, imgSrc, subheading, href }) => {
     x.set(xPct);
     y.set(yPct);
   };
+
+  const href = `/interview/${code}`;
 
   return (
     <motion.a

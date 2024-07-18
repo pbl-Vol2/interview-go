@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import mic from "../assets/image/mic.jpg";
 import { Accordion, Button } from "flowbite-react";
 import axios from "axios";
+import { useParams } from 'react-router-dom';
 
 function Interview() {
   const [isRecording, setIsRecording] = useState(false);
@@ -13,22 +14,26 @@ function Interview() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [isFeedback, setIsFeedback] = useState(false); // Menambahkan state untuk melacak sesi feedback
   const [feedback, setFeedback] = useState(""); // Menambahkan state untuk menyimpan feedback
-
+  const [recordedBlobs, setRecordedBlobs] = useState([]);
   const [questions, setQuestions] = useState([]);
+  const [field, setField] = useState([]);
+  const { code } = useParams();
 
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
-        const response = await axios.post("http://localhost:5000/questions");
+        const response = await axios.post('http://127.0.0.1:5000/questions', { code });
+        console.log("Fetched questions:", response.data.questions);
         setQuestions(response.data.questions);
-        setQuestion(response.data.questions[0].question);
+        const field = response.data.category ;
+        setField(field);
       } catch (error) {
         console.error("Error fetching questions:", error);
       }
     };
 
     fetchQuestions();
-  }, []);
+  }, [code]);
 
   useEffect(() => {
     if (isRecording) {
@@ -62,19 +67,41 @@ function Interview() {
         return;
       }
     }
+
     if (hasPermission) {
       setIsRecording(true);
+      setTimeLeft(120); // Reset timer to 120 seconds
       setQuestion(questions[currentQuestionIndex]);
-      const mediaRecorder = new MediaRecorder(stream);
+
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'audio/webm;codecs=opus'
+      });
+
+      let recordedBlobs = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          recordedBlobs.push(event.data);
+        }
+      };
+
       setMediaRecorder(mediaRecorder);
+      setRecordedBlobs(recordedBlobs);
       mediaRecorder.start();
     }
   };
 
   const handleStopRecording = () => {
-    setIsRecording(false);
-    mediaRecorder.stop();
-    setIsFeedback(true); // Set feedback session aktif setelah rekaman berhenti
+    if (mediaRecorder) {
+      mediaRecorder.stop();
+      setIsRecording(false);
+      setIsFeedback(true);
+      mediaRecorder.onstop = async () => {
+        const blob = new Blob(recordedBlobs, { type: 'audio/webm' });
+        const wavBlob = await convertWebmToWav(blob);
+        await sendAudioToFlask(wavBlob);
+      };
+    }
   };
 
   const handleFeedbackChange = (event) => {
@@ -92,16 +119,18 @@ function Interview() {
   };
 
   const goToNextQuestion = () => {
-    setCurrentQuestionIndex((prevIndex) => {
-      const nextIndex = prevIndex + 1;
-      if (nextIndex < questions.length) {
-        setQuestion(questions[nextIndex]);
-        return nextIndex;
-      } else {
-        alert("Interview selesai");
-        return prevIndex;
-      }
-    });
+      setCurrentQuestionIndex((prevIndex) => {
+        const nextIndex = prevIndex + 1;
+        if (nextIndex < questions.length) {
+          setQuestion(questions[nextIndex].question);
+          setTimeLeft(120); // Reset timer to 120 seconds for the new question
+          setIsRecording(false); // Reset recording state
+          return nextIndex;
+        } else {
+          alert("Interview selesai");
+          return prevIndex;
+        }
+      });
   };
 
   const formatTime = (time) => {
@@ -112,10 +141,101 @@ function Interview() {
       .padStart(2, "0")}`;
   };
 
+  const convertWebmToWav = async (webmBlob) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsArrayBuffer(webmBlob);
+
+      reader.onloadend = () => {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        audioContext.decodeAudioData(reader.result, (buffer) => {
+          const wavBlob = bufferToWav(buffer);
+          resolve(wavBlob);
+        });
+      };
+
+      reader.onerror = reject;
+    });
+  };
+
+    const bufferToWav = (buffer) => {
+    const numOfChannels = buffer.numberOfChannels;
+    const length = buffer.length * numOfChannels * 2 + 44;
+    const bufferData = new ArrayBuffer(length);
+    const view = new DataView(bufferData);
+
+    // RIFF chunk descriptor
+    writeString(view, 0, 'RIFF');
+    view.setUint32(4, length - 8, true);
+    writeString(view, 8, 'WAVE');
+
+    // FMT sub-chunk
+    writeString(view, 12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, numOfChannels, true);
+    view.setUint32(24, buffer.sampleRate, true);
+    view.setUint32(28, buffer.sampleRate * 4, true);
+    view.setUint16(32, numOfChannels * 2, true);
+    view.setUint16(34, 16, true);
+
+    // Data sub-chunk
+    writeString(view, 36, 'data');
+    view.setUint32(40, length - 44, true);
+
+    // Write audio data
+    let offset = 44;
+    for (let i = 0; i < buffer.numberOfChannels; i++) {
+      const channel = buffer.getChannelData(i);
+      for (let j = 0; j < channel.length; j++) {
+        view.setInt16(offset, channel[j] * 0x7FFF, true);
+        offset += 2;
+      }
+    }
+
+    return new Blob([view], { type: 'audio/wav' });
+  };
+
+  const writeString = (view, offset, string) => {
+    for (let i = 0; i < string.length; i++) {
+      view.setUint8(offset + i, string.charCodeAt(i));
+    }
+  };
+
+  const sendAudioToFlask = async (blob) => {
+    const formData = new FormData();
+    formData.append('audio', blob, 'audio.wav');
+    formData.append('question', question);
+
+    try {
+      const response = await axios.post('http://127.0.0.1:5000/answer', formData, {
+        headers: {
+            'question' : question,
+            'audio': 'multipart/form-data'
+        },
+      });
+      console.log('Server response:', response.data);
+    } catch (error) {
+      console.error('Error sending audio to Flask:', error);
+    }
+  };
+
+  const postFeedbackToAPI = async (question, answer) => {
+    try {
+      const response = await axios.post('http://127.0.0.1:5000/feedback', {
+        question,
+        answer,
+      });
+      console.log('Feedback posted to API:', response.data);
+    } catch (error) {
+      console.error('Error posting feedback to API:', error);
+    }
+  };
+
   return (
     <div className="bg-gradient-to-b from-sky-100 to-white h-full">
       <div className="container mx-auto p-4 pt-12">
-        <h1 className="text-3xl font-bold mb-8">INTERVIEW TEST</h1>
+        <h1 className="text-3xl font-bold mb-8">{field}</h1>
         <div className="flex justify-center items-center mb-4 gap-56">
           <Button color="light" pill>
             <i className="ri-arrow-left-line me-1"></i> Back

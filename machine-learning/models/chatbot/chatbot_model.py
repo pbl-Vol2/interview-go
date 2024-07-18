@@ -251,7 +251,7 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
-model = load_model(current_dir+ "/../../assets/model_chatbot.h5")
+model = load_model(current_dir + "/../../assets/model_chatbot.h5")
 
 @app.route('/predict', methods=['POST'])
 def predict():

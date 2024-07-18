@@ -35,6 +35,8 @@ function App() {
           <Route path="/verif" element={<Verif />} />
           <Route path="/history" element={<History />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/" element={<Features />} />
+          <Route path="/interview/:code" element={<Interview />} />
           <Route path="/summary" element={<Summary />} />
         </Routes>
         <Footer />

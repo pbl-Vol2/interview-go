@@ -54,6 +54,18 @@ const Chatbot = () => {
     }
   };
 
+  const postFeedbackToAPI = async (question, answer) => {
+    try {
+      const response = await axios.post('http://127.0.0.1:5000/feedback', {
+        question,
+        answer,
+      });
+      console.log('Feedback posted to API:', response.data);
+    } catch (error) {
+      console.error('Error posting feedback to API:', error);
+    }
+  };
+
   return (
     <div className="flex flex-col items-center p-4 h-screen">
       <Card className="w-1/3 max-w-full h-full flex flex-col">
