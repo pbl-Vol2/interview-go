@@ -67,7 +67,7 @@ function History() {
               whileTap={{ scale: 0.9 }}
               className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded"
             >
-              <Link to="/submenu">Test Now</Link>
+              <Link to="/features">Test Now</Link>
             </motion.button>
           </div>
         </div>

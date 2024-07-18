@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import mic from "../assets/image/mic.jpg";
-import { Button } from "flowbite-react";
+import { Accordion, Button } from "flowbite-react";
 import axios from "axios";
 
 function Interview() {
@@ -19,7 +19,7 @@ function Interview() {
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
-        const response = await axios.post('http://localhost:5000/questions');
+        const response = await axios.post("http://localhost:5000/questions");
         setQuestions(response.data.questions);
         setQuestion(response.data.questions[0].question);
       } catch (error) {
@@ -83,7 +83,9 @@ function Interview() {
 
   const handleSubmitFeedback = () => {
     // Simpan feedback atau lakukan tindakan lain yang diperlukan
-    console.log('Feedback for question ${currentQuestionIndex + 1}: ${feedback}');
+    console.log(
+      "Feedback for question ${currentQuestionIndex + 1}: ${feedback}"
+    );
     setFeedback(""); // Reset feedback
     setIsFeedback(false); // Selesai feedback session
     goToNextQuestion(); // Lanjut ke pertanyaan berikutnya
@@ -125,7 +127,7 @@ function Interview() {
             End & Review
           </Button>
         </div>
-        <div className="bg-white shadow-md p-8 rounded-lg max-w-3xl mx-auto text-center">
+        <div className="bg-white shadow-md p-8 rounded-lg max-w-3xl mx-auto text-center h-full">
           <img src={mic} alt="Mic" className="w-40 rounded-lg mb-4 mx-auto" />
           <p className="text-xl font-bold mb-8">{question}</p>
           <p className="text-xl font-bold mb-8">
@@ -144,18 +146,143 @@ function Interview() {
             ) : isFeedback ? (
               <div className="w-full">
                 <button
-                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-full"
+                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-full mb-3"
                   onClick={handleSubmitFeedback}
                 >
                   Next Question
                 </button>
-                <textarea
-                  className="w-full p-2 border border-gray-300 rounded mt-3 mb-4"
-                  rows="4"
-                  value={feedback}
-                  onChange={handleFeedbackChange}
-                  placeholder="NANTI feedback ada di sini"
-                />
+                <div id="accordion-open" data-accordion="open">
+                  <h2 id="accordion-open-heading-2">
+                    <button
+                      type="button"
+                      class="flex items-center justify-between w-full p-5 font-medium rtl:text-right text-gray-500 border border-b-0 border-gray-200 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-800 dark:border-gray-700 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 gap-3"
+                      data-accordion-target="#accordion-open-body-2"
+                      aria-expanded="false"
+                      aria-controls="accordion-open-body-2"
+                    >
+                      <span class="flex items-center">
+                        <svg
+                          class="w-5 h-5 me-2 shrink-0"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            fill-rule="evenodd"
+                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z"
+                            clip-rule="evenodd"
+                          ></path>
+                        </svg>
+                        Is there a Figma file available?
+                      </span>
+                      <svg
+                        data-accordion-icon
+                        class="w-3 h-3 rotate-180 shrink-0"
+                        aria-hidden="true"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 10 6"
+                      >
+                        <path
+                          stroke="currentColor"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M9 5 5 1 1 5"
+                        />
+                      </svg>
+                    </button>
+                  </h2>
+                  <div
+                    id="accordion-open-body-2"
+                    class="hidden"
+                    aria-labelledby="accordion-open-heading-2"
+                  >
+                    <div class="p-5 border border-b-0 border-gray-200 dark:border-gray-700">
+                      <p class="mb-2 text-gray-500 dark:text-gray-400">
+                        Flowbite is first conceptualized and designed using the
+                        Figma software so everything you see in the library has
+                        a design equivalent in our Figma file.
+                      </p>
+                      <p class="text-gray-500 dark:text-gray-400">
+                        Check out the{" "}
+                        <a
+                          href="https://flowbite.com/figma/"
+                          class="text-blue-600 dark:text-blue-500 hover:underline"
+                        >
+                          Figma design system
+                        </a>{" "}
+                        based on the utility classes from Tailwind CSS and
+                        components from Flowbite.
+                      </p>
+                    </div>
+                  </div>
+                  <h2 id="accordion-open-heading-2">
+                    <button
+                      type="button"
+                      class="flex items-center justify-between w-full p-5 font-medium rtl:text-right text-gray-500 border border-b-0 border-gray-200 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-800 dark:border-gray-700 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 gap-3"
+                      data-accordion-target="#accordion-open-body-2"
+                      aria-expanded="false"
+                      aria-controls="accordion-open-body-2"
+                    >
+                      <span class="flex items-center">
+                        <svg
+                          class="w-5 h-5 me-2 shrink-0"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            fill-rule="evenodd"
+                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z"
+                            clip-rule="evenodd"
+                          ></path>
+                        </svg>
+                        Is there a Figma file available?
+                      </span>
+                      <svg
+                        data-accordion-icon
+                        class="w-3 h-3 rotate-180 shrink-0"
+                        aria-hidden="true"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 10 6"
+                      >
+                        <path
+                          stroke="currentColor"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M9 5 5 1 1 5"
+                        />
+                      </svg>
+                    </button>
+                  </h2>
+                  <div
+                    id="accordion-open-body-2"
+                    class="hidden"
+                    aria-labelledby="accordion-open-heading-2"
+                  >
+                    <div class="p-5 border border-b-0 border-gray-200 dark:border-gray-700">
+                      <p class="mb-2 text-gray-500 dark:text-gray-400">
+                        Flowbite is first conceptualized and designed using the
+                        Figma software so everything you see in the library has
+                        a design equivalent in our Figma file.
+                      </p>
+                      <p class="text-gray-500 dark:text-gray-400">
+                        Check out the{" "}
+                        <a
+                          href="https://flowbite.com/figma/"
+                          class="text-blue-600 dark:text-blue-500 hover:underline"
+                        >
+                          Figma design system
+                        </a>{" "}
+                        based on the utility classes from Tailwind CSS and
+                        components from Flowbite.
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             ) : (
               <button
