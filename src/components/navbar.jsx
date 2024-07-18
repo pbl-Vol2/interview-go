@@ -56,8 +56,8 @@ const Navbar = () => {
                 FEATURES
               </FlyoutLink>
               <li className="nav-item">
-                <a href="/tips" className="text-black hover:underline">
-                  TIPS & TRICKS
+                <a href="/pricing" className="text-black hover:underline">
+                  PRICING
                 </a>
               </li>
             </ul>
