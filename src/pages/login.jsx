@@ -54,8 +54,6 @@ const handleLoginButton = async (e) => {
   }
 };
 
-
-
   // UseEffect to set interval for color change animation
   useEffect(() => {
     const interval = setInterval(() => {
@@ -71,14 +69,6 @@ const handleLoginButton = async (e) => {
 
     return () => clearInterval(interval);
   }, []);
-
-  const handleSignUpButton = () => {
-    navigate("/dashboard");
-  };
-
-  const handleForgotPassButton = () => {
-    navigate("/forgot-password");
-  };
 
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-center from-sky-100 to-white" onMouseMove={handleMouseMove}>
@@ -145,7 +135,7 @@ const handleLoginButton = async (e) => {
               <Label htmlFor="remember">Remember me</Label>
             </div>
             <a
-              href="#"
+              href="/lost-password"
               className="text-sm text-cyan-700 hover:underline dark:text-cyan-500"
             >
               Lost Password?

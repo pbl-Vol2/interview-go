@@ -86,6 +86,7 @@ function Interview() {
       };
 
       setMediaRecorder(mediaRecorder);
+      setRecordedBlobs(recordedBlobs);
       mediaRecorder.start();
     }
   };
