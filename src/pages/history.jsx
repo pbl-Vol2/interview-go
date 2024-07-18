@@ -6,7 +6,7 @@ function History() {
   return (
     <div className="min-h-screen bg-customBiru4 py-10 px-10">
       <div className="nav-page mb-4">
-        <ol className="flex inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
+        <ol className="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
           <li className="inline-flex items-center">
             <a
               href="#"

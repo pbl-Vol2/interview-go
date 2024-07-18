@@ -37,7 +37,7 @@ const Registration = () => {
   };
 
   const handleSignUpButton = () => {
-    navigate("/dashboard");
+    navigate("/verif");
   };
 
   return (
