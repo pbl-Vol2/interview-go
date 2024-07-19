@@ -104,15 +104,11 @@ function Interview() {
       mediaRecorder.onstop = async () => {
         const blob = new Blob(recordedBlobs, { type: 'audio/webm' });
         const wavBlob = await convertWebmToWav(blob);
-        const answer = await sendAudioToFlask(wavBlob);
-        await postFeedbackToAPI(question, answer);
+        const answer = await sendAudioToFlask(wavBlob); //get answer from postFeedbackToAPI
+        await postFeedbackToAPI(question, answer); // send answer to api
       };
     }
   };
-
-  // const handleFeedbackChange = (event) => {
-  //   setFeedback(event.target.value); // Menyimpan nilai feedback
-  // };
 
   const handleNextQuestion = () => {
     console.log(
@@ -129,6 +125,8 @@ function Interview() {
           setQuestion(questions[nextIndex].question);
           setTimeLeft(120); // Reset timer to 120 seconds for the new question
           setIsRecording(false); // Reset recording state
+          setAnswer("");
+          setFeedback("");
           return nextIndex;
         } else {
           alert("Interview selesai");
@@ -232,7 +230,10 @@ function Interview() {
             'audio': 'multipart/form-data'
         },
       });
-      console.log('Server response:', response.data);
+      const answer = response.data.answer; // Assuming the server sends an object with an "answer" key
+      setAnswer(answer);
+      return answer;
+      console.log('Server response:', answer);
     } catch (error) {
       console.error('Error sending audio to Flask:', error);
     }
@@ -245,6 +246,8 @@ function Interview() {
         answer,
       });
       console.log('Feedback posted to API:', response.data);
+      const feedback = response.data.feedback;
+      setFeedback(feedback);
     } catch (error) {
       console.error('Error posting feedback to API:', error);
     }
@@ -309,20 +312,14 @@ function Interview() {
                   <Accordion.Panel>
                     <Accordion.Title>Your Answer</Accordion.Title>
                     <Accordion.Content>
-                      <p className="mb-2 text-gray-500 dark:text-gray-400">
-                        Flowbite is an open-source library of interactive
-                        components built on top of Tailwind CSS including
-                        buttons, dropdowns, modals, navbars, and more.
+                      <p className="mb-2 text-gray-500 dark:text-gray-400"> {answer}
                       </p>
                     </Accordion.Content>
                   </Accordion.Panel>
                   <Accordion.Panel>
                     <Accordion.Title>Feedback</Accordion.Title>
                     <Accordion.Content>
-                      <p className="mb-2 text-gray-500 dark:text-gray-400">
-                        Flowbite is an open-source library of interactive
-                        components built on top of Tailwind CSS including
-                        buttons, dropdowns, modals, navbars, and more.
+                      <p className="mb-2 text-gray-500 dark:text-gray-400"> {feedback}
                       </p>
                     </Accordion.Content>
                   </Accordion.Panel>
