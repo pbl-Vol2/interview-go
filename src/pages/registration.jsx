@@ -37,7 +37,7 @@ const Registration = () => {
   };
 
   const handleSignUpButton = () => {
-    navigate("/dashboard");
+    navigate("/verif");
   };
 
   return (
@@ -119,7 +119,15 @@ const Registration = () => {
               />
             </div>
           </div>
-          <div className="text-center pt-4">
+          <div>
+            <button
+              onClick={handleSignUpButton}
+              className="mt-8 w-full flex justify-center bg-gradient-to-r from-customBiru3 to-customBiru6 text-white py-3 px-8 rounded-full shadow-lg transform transition-transform hover:scale-105 hover:from-customBiru4 hover:to-customBiru3"
+            >
+              Sign Up
+            </button>
+          </div>
+          <div className="text-center pt-2">
             Already have an account?
             <a
               href="/login"
@@ -128,14 +136,6 @@ const Registration = () => {
               {" "}
               Log in Here
             </a>
-          </div>
-          <div>
-            <button
-              onClick={handleSignUpButton}
-              className="mt-10 w-full flex justify-center bg-gradient-to-r from-customBiru3 to-customBiru6 text-white py-3 px-8 rounded-full shadow-lg transform transition-transform hover:scale-105 hover:from-customBiru4 hover:to-customBiru3"
-            >
-              Sign Up
-            </button>
           </div>
         </form>
       </div>

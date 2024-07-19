@@ -1,16 +1,16 @@
 import { FloatingLabel, Checkbox, Label } from "flowbite-react";
-import { useState, useEffect } from 'react'; // Import useEffect
+import { useState, useEffect } from "react";
 import Logo from "../assets/image/logo.png";
-import axios from 'axios';
-import '../assets/style.css';
+import axios from "axios";
+import "../assets/style.css";
 
 // Define colors array
 const colors = [
-  'bg-red-500',
-  'bg-blue-500',
-  'bg-green-500',
-  'bg-yellow-500',
-  'bg-purple-500'
+  "bg-red-500",
+  "bg-blue-500",
+  "bg-green-500",
+  "bg-yellow-500",
+  "bg-purple-500",
 ];
 
 const Login = ({ onLogin }) => {
@@ -25,39 +25,42 @@ const Login = ({ onLogin }) => {
     setCursorPosition({ x: e.clientX, y: e.clientY });
   };
 
-// Function to handle login form submission
-const handleLoginButton = async (e) => {
-  e.preventDefault(); // Prevent default form submission
+  // Function to handle login form submission
+  const handleLoginButton = async (e) => {
+    e.preventDefault(); // Prevent default form submission
 
-  try {
-    console.log("Attempting to login with email:", email); // Log the email for debugging
+    try {
+      console.log("Attempting to login with email:", email); // Log the email for debugging
 
-    // Send a POST request to the backend server
-    const response = await axios.post('http://localhost:5000/login', {
-      email_give: email,
-      password_give: password,
-    });
+      // Send a POST request to the backend server
+      const response = await axios.post("http://localhost:5000/login", {
+        email_give: email,
+        password_give: password,
+      });
 
-    // Check the response from the server
-    if (response.data.result === 'success') {
-      setMessage('Login successful!'); // Set success message
-      localStorage.setItem('token', response.data.token); // Store token in localStorage
+      // Check the response from the server
+      if (response.data.result === "success") {
+        setMessage("Login successful!"); // Set success message
+        localStorage.setItem("token", response.data.token); // Store token in localStorage
 
-      // Perform action upon successful login (e.g., redirect to dashboard)
-      onLogin(); // Assuming this function navigates to the dashboard
-    } else {
-      setMessage(response.data.msg || 'Unknown error occurred'); // Display error message from backend
+        // Perform action upon successful login (e.g., redirect to dashboard)
+        onLogin(); // Assuming this function navigates to the dashboard
+      } else {
+        setMessage(response.data.msg || "Unknown error occurred"); // Display error message from backend
+      }
+    } catch (error) {
+      console.log(
+        "Login error:",
+        error.response?.data?.msg || "An error occurred"
+      ); // Log and display error message
+      setMessage(error.response?.data?.msg || "An error occurred"); // Display error message to user
     }
-  } catch (error) {
-    console.log("Login error:", error.response?.data?.msg || 'An error occurred'); // Log and display error message
-    setMessage(error.response?.data?.msg || 'An error occurred'); // Display error message to user
-  }
-};
+  };
 
   // UseEffect to set interval for color change animation
   useEffect(() => {
     const interval = setInterval(() => {
-      setActiveColors(prevColors => {
+      setActiveColors((prevColors) => {
         const newColors = [...prevColors];
         if (newColors.length >= 5) {
           newColors.shift();
@@ -71,7 +74,10 @@ const handleLoginButton = async (e) => {
   }, []);
 
   return (
-    <div className="relative min-h-screen flex flex-col items-center justify-center from-sky-100 to-white" onMouseMove={handleMouseMove}>
+    <div
+      className="relative min-h-screen flex flex-col items-center justify-center from-sky-100 to-white"
+      onMouseMove={handleMouseMove}
+    >
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden">
         {activeColors.map((color, index) => (
           <div
@@ -82,12 +88,14 @@ const handleLoginButton = async (e) => {
               left: `${Math.random() * 100}%`,
               transform: "translate(-50%, -50%) scale(0)",
               animation: `pulse-${index} 8s infinite`,
-              ...(cursorPosition.x !== -100 && cursorPosition.y !== -100 ? {
-                top: `${cursorPosition.y}px`,
-                left: `${cursorPosition.x}px`,
-                transform: 'translate(-50%, -50%) scale(1.5)',
-                transition: 'top 0.2s ease, left 0.2s ease'
-              } : {})
+              ...(cursorPosition.x !== -100 && cursorPosition.y !== -100
+                ? {
+                    top: `${cursorPosition.y}px`,
+                    left: `${cursorPosition.x}px`,
+                    transform: "translate(-50%, -50%) scale(1.5)",
+                    transition: "top 0.2s ease, left 0.2s ease",
+                  }
+                : {}),
             }}
           ></div>
         ))}
@@ -135,20 +143,11 @@ const handleLoginButton = async (e) => {
               <Label htmlFor="remember">Remember me</Label>
             </div>
             <a
-              href="/lost-password"
+              href="/forgot-password"
               className="text-sm text-cyan-700 hover:underline dark:text-cyan-500"
             >
               Lost Password?
             </a>
-
-          </div>
-          <div className="text-center mt-4">
-          <a
-            href="/registration"
-            className="text-sm text-cyan-700 hover:underline dark:text-cyan-500"
-          >
-            Not registered yet? Sign Up
-          </a>
           </div>
           <div>
             <button
@@ -158,10 +157,20 @@ const handleLoginButton = async (e) => {
               Log In
             </button>
           </div>
+          <div className="text-center mt-4">
+            Not registered yet?
+            <a
+              href="/registration"
+              className="text-sm text-cyan-700 hover:underline dark:text-cyan-500"
+            >
+              {" "}
+              Sign Up
+            </a>
+          </div>
         </form>
       </div>
     </div>
   );
-}
+};
 
 export default Login;
