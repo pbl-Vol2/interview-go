@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import mic from "../assets/image/mic.jpg";
-import { Accordion, Button } from "flowbite-react";
+import { Accordion, Button, Modal } from "flowbite-react";
+import { HiOutlineExclamationCircle } from "react-icons/hi";
 import axios from "axios";
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 
 function Interview() {
   const [isRecording, setIsRecording] = useState(false);
@@ -12,12 +13,14 @@ function Interview() {
   const [mediaRecorder, setMediaRecorder] = useState(null);
   const [timeLeft, setTimeLeft] = useState(120);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [isFeedback, setIsFeedback] = useState(false); // Menambahkan state untuk melacak sesi feedback
-  const [feedback, setFeedback] = useState(""); // Menambahkan state untuk menyimpan feedback
+  const [isFeedback, setIsFeedback] = useState(false); 
   const [recordedBlobs, setRecordedBlobs] = useState([]);
   const [questions, setQuestions] = useState([]);
   const [field, setField] = useState([]);
+  const [openModal, setOpenModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
   const { code } = useParams();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -104,16 +107,14 @@ function Interview() {
     }
   };
 
-  const handleFeedbackChange = (event) => {
-    setFeedback(event.target.value); // Menyimpan nilai feedback
-  };
+  // const handleFeedbackChange = (event) => {
+  //   setFeedback(event.target.value); // Menyimpan nilai feedback
+  // };
 
-  const handleSubmitFeedback = () => {
-    // Simpan feedback atau lakukan tindakan lain yang diperlukan
+  const handleNextQuestion = () => {
     console.log(
       "Feedback for question ${currentQuestionIndex + 1}: ${feedback}"
     );
-    setFeedback(""); // Reset feedback
     setIsFeedback(false); // Selesai feedback session
     goToNextQuestion(); // Lanjut ke pertanyaan berikutnya
   };
@@ -131,6 +132,20 @@ function Interview() {
           return prevIndex;
         }
       });
+  };
+
+  const handleOpenModal = (message) => {
+    setModalMessage(message);
+    setOpenModal(true);
+  };
+
+  const handleModalConfirm = () => {
+    setOpenModal(false);
+    if (modalMessage.includes("keluar dari sesi latihan")) {
+      navigate("/features");
+    } else if (modalMessage.includes("mengakhiri sesi interview")) {
+      navigate("/summary");
+    }
   };
 
   const formatTime = (time) => {
@@ -237,13 +252,13 @@ function Interview() {
       <div className="container mx-auto p-4 pt-12">
         <h1 className="text-3xl font-bold mb-8 text-center">{field}</h1>
         <div className="flex justify-center items-center mb-4 gap-56">
-          <Button color="light" pill>
+          <Button onClick={() => handleOpenModal("Apakah Anda yakin ingin keluar dari sesi latihan?")} color="light" pill>
             <i className="ri-arrow-left-line me-1"></i> Back
           </Button>
           <h2 className="font-semibold">
             Question {currentQuestionIndex + 1}/{questions.length}
           </h2>
-          <Button color="light" pill>
+          <Button onClick={() => handleOpenModal("Apakah Anda yakin ingin mengakhiri sesi interview dan review summary dari feedback Anda? Anda tidak dapat melanjutkan sesi interview ini.")} color="failure" pill>
             End & Review
           </Button>
         </div>
@@ -267,7 +282,7 @@ function Interview() {
               <div className="w-full">
                 <button
                   className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-full mb-3"
-                  onClick={handleSubmitFeedback}
+                  onClick={handleNextQuestion}
                 >
                   Next Question
                 </button>
@@ -415,6 +430,25 @@ function Interview() {
           </div>
         </div>
       </div>
+      <Modal show={openModal} size="md" onClose={() => setOpenModal(false)} popup>
+        <Modal.Header />
+        <Modal.Body>
+          <div className="text-center">
+            <HiOutlineExclamationCircle className="mx-auto mb-4 h-14 w-14 text-gray-400 dark:text-gray-200" />
+            <h3 className="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
+              {modalMessage}
+            </h3>
+            <div className="flex justify-center gap-4">
+              <Button color="failure" onClick={handleModalConfirm} pill>
+                Yes, I'm sure
+              </Button>
+              <Button color="gray" onClick={() => setOpenModal(false)} pill>
+                No, cancel
+              </Button>
+            </div>
+          </div>
+        </Modal.Body>
+      </Modal>
     </div>
   );
 }
