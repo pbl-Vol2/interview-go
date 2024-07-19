@@ -238,11 +238,12 @@ for word , i in word_index.items():
 #     validation_data=(validation_padded, validation_labels),
 #     callbacks=[Callback()]
 # )
-
+#
 # plot_graphs(history, "accuracy")
 # plot_graphs(history, "loss")
-
-# model.save(current_dir + "../../assets/model_chatbot.h5")
+#
+# # model.save(current_dir + "/../../assets/model_chatbot.h5")
+#
 
 from flask import Flask, request, jsonify
 from keras.models import load_model

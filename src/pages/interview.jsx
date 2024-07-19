@@ -12,10 +12,11 @@ function Interview() {
   const [mediaRecorder, setMediaRecorder] = useState(null);
   const [timeLeft, setTimeLeft] = useState(120);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [isFeedback, setIsFeedback] = useState(false); // Menambahkan state untuk melacak sesi feedback
+  const [isFeedback, setIsFeedback] = useState(false); // (menampilkan feedback)
   const [feedback, setFeedback] = useState(""); // Menambahkan state untuk menyimpan feedback
   const [recordedBlobs, setRecordedBlobs] = useState([]);
   const [questions, setQuestions] = useState([]);
+  const [answer, setAnswer] = useState([]);
   const [field, setField] = useState([]);
   const { code } = useParams();
 
@@ -99,7 +100,8 @@ function Interview() {
       mediaRecorder.onstop = async () => {
         const blob = new Blob(recordedBlobs, { type: 'audio/webm' });
         const wavBlob = await convertWebmToWav(blob);
-        await sendAudioToFlask(wavBlob);
+        const answer = await sendAudioToFlask(wavBlob);
+        await postFeedbackToAPI(question, answer);
       };
     }
   };
@@ -192,7 +194,6 @@ function Interview() {
         offset += 2;
       }
     }
-
     return new Blob([view], { type: 'audio/wav' });
   };
 
@@ -214,7 +215,9 @@ function Interview() {
             'audio': 'multipart/form-data'
         },
       });
-      console.log('Server response:', response.data);
+      const answer = response.data.answer; // Assuming the server sends an object with an "answer" key
+      console.log('Server response:', answer);
+      return answer;
     } catch (error) {
       console.error('Error sending audio to Flask:', error);
     }
@@ -227,6 +230,8 @@ function Interview() {
         answer,
       });
       console.log('Feedback posted to API:', response.data);
+      const feedback = response.data.feedback;
+      return feedback;
     } catch (error) {
       console.error('Error posting feedback to API:', error);
     }
