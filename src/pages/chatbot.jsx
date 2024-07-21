@@ -17,6 +17,7 @@ const Chatbot = () => {
       }),
     },
   ]);
+  
   const [input, setInput] = useState("");
 
   const handleSend = () => {
