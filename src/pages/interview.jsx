@@ -4,23 +4,31 @@ import { Accordion, Button, Modal } from "flowbite-react";
 import { HiOutlineExclamationCircle } from "react-icons/hi";
 import axios from "axios";
 import { useParams, useNavigate } from 'react-router-dom';
+import { v4 as uuidv4 } from 'uuid';
 
 function Interview() {
   const [isRecording, setIsRecording] = useState(false);
-  const [question, setQuestion] = useState("");
   const [hasPermission, setHasPermission] = useState(false);
   const [stream, setStream] = useState(null);
   const [mediaRecorder, setMediaRecorder] = useState(null);
   const [timeLeft, setTimeLeft] = useState(120);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [isFeedback, setIsFeedback] = useState(false); 
+  const [isFeedback, setIsFeedback] = useState(false); // (menampilkan feedback)
   const [recordedBlobs, setRecordedBlobs] = useState([]);
-  const [questions, setQuestions] = useState([]);
-  const [field, setField] = useState([]);
   const [openModal, setOpenModal] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
   const { code } = useParams();
   const navigate = useNavigate();
+//   save category
+  const [category, setCategory] = useState("");
+//   save array questions, answers, feedback
+  const [questions, setQuestions] = useState([]);
+  const [answers, setAnswers] = useState([]);
+  const [feedbacks, setFeedbacks] = useState([]);
+// save question
+  const [question, setQuestion] = useState("");
+  const [feedback, setFeedback] = useState("");
+  const [answer, setAnswer] = useState("");
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -28,8 +36,8 @@ function Interview() {
         const response = await axios.post('http://127.0.0.1:5000/questions', { code });
         console.log("Fetched questions:", response.data.questions);
         setQuestions(response.data.questions);
-        const field = response.data.category ;
-        setField(field);
+        const category = response.data.category ;
+        setCategory(category);
       } catch (error) {
         console.error("Error fetching questions:", error);
       }
@@ -102,14 +110,24 @@ function Interview() {
       mediaRecorder.onstop = async () => {
         const blob = new Blob(recordedBlobs, { type: 'audio/webm' });
         const wavBlob = await convertWebmToWav(blob);
-        await sendAudioToFlask(wavBlob);
+        const answer = await sendAudioToFlask(wavBlob); //get answer from postFeedbackToAPI
+        await postFeedbackToAPI(question, answer); // send answer to api
+
+        // Store the answer and feedback
+        setAnswers(prevAnswers => {
+            const newAnswers = [...prevAnswers];
+            newAnswers[currentQuestionIndex] = answer;
+            return newAnswers;
+        });
+
+        setFeedbacks(prevFeedbacks => {
+            const newFeedbacks = [...prevFeedbacks];
+            newFeedbacks[currentQuestionIndex] = feedback;
+            return newFeedbacks;
+        });
       };
     }
   };
-
-  // const handleFeedbackChange = (event) => {
-  //   setFeedback(event.target.value); // Menyimpan nilai feedback
-  // };
 
   const handleNextQuestion = () => {
     console.log(
@@ -126,6 +144,8 @@ function Interview() {
           setQuestion(questions[nextIndex].question);
           setTimeLeft(120); // Reset timer to 120 seconds for the new question
           setIsRecording(false); // Reset recording state
+          setAnswer("");
+          setFeedback("");
           return nextIndex;
         } else {
           alert("Interview selesai");
@@ -139,13 +159,35 @@ function Interview() {
     setOpenModal(true);
   };
 
-  const handleModalConfirm = () => {
-    setOpenModal(false);
-    if (modalMessage.includes("keluar dari sesi latihan")) {
-      navigate("/features");
-    } else if (modalMessage.includes("mengakhiri sesi interview")) {
-      navigate("/summary");
-    }
+  const handleModalConfirm = async () => {
+      setOpenModal(false);
+      if (modalMessage.includes("keluar dari sesi latihan")) {
+        navigate("/features");
+      } else if (modalMessage.includes("mengakhiri sesi interview")) {
+          // generate random uniqueId
+        const uniqueId = uuidv4();
+        // Collect the interview summary data
+        const summaryData = questions.map((question) => ({
+          category,
+          question: question,
+          answer: answer,
+          feedback: feedback,
+          timestamp: new Date().toISOString()
+        }));
+
+        try {
+          // Send the summary data to the API
+          await axios.post('http://127.0.0.1:5000/summary', {
+            id : uniqueId,
+            summary: summaryData
+          });
+          // Navigate to the summary page with uniqueId
+          navigate(`/summary/${uniqueId}`);
+          console.log(summaryData);
+        } catch (error) {
+          console.error('Error posting summary to API:', error);
+        }
+      }
   };
 
   const formatTime = (time) => {
@@ -229,7 +271,10 @@ function Interview() {
             'audio': 'multipart/form-data'
         },
       });
-      console.log('Server response:', response.data);
+      const answer = response.data.answer; // Assuming the server sends an object with an "answer" key
+      setAnswer(answer);
+      return answer;
+      console.log('Server response:', answer);
     } catch (error) {
       console.error('Error sending audio to Flask:', error);
     }
@@ -242,15 +287,18 @@ function Interview() {
         answer,
       });
       console.log('Feedback posted to API:', response.data);
+      const feedback = response.data.feedback;
+      setFeedback(feedback);
     } catch (error) {
       console.error('Error posting feedback to API:', error);
     }
   };
 
+
   return (
     <div className="bg-gradient-to-b from-sky-100 to-white h-full">
       <div className="container mx-auto p-4 pt-12">
-        <h1 className="text-3xl font-bold mb-8 text-center">{field}</h1>
+        <h1 className="text-3xl font-bold mb-8 text-center">{category}</h1>
         <div className="flex justify-center items-center mb-4 gap-56">
           <Button
             onClick={() =>
@@ -306,20 +354,14 @@ function Interview() {
                   <Accordion.Panel>
                     <Accordion.Title>Your Answer</Accordion.Title>
                     <Accordion.Content>
-                      <p className="mb-2 text-gray-500 dark:text-gray-400">
-                        Flowbite is an open-source library of interactive
-                        components built on top of Tailwind CSS including
-                        buttons, dropdowns, modals, navbars, and more.
+                      <p className="mb-2 text-gray-500 dark:text-gray-400"> {answer}
                       </p>
                     </Accordion.Content>
                   </Accordion.Panel>
                   <Accordion.Panel>
                     <Accordion.Title>Feedback</Accordion.Title>
                     <Accordion.Content>
-                      <p className="mb-2 text-gray-500 dark:text-gray-400">
-                        Flowbite is an open-source library of interactive
-                        components built on top of Tailwind CSS including
-                        buttons, dropdowns, modals, navbars, and more.
+                      <p className="mb-2 text-gray-500 dark:text-gray-400"> {feedback}
                       </p>
                     </Accordion.Content>
                   </Accordion.Panel>

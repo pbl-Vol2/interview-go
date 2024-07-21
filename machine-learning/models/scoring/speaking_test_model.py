@@ -468,9 +468,11 @@ summary_res = [
 ]
 
 scoring_res = [
+    'tingkat relatif jawaban dengan pertanyaan yang diberikan tidak tepat',
     'tingkat relatif jawaban dengan pertanyaan yang diberikan kurang tepat',
     'tingkat relatif jawaban dengan pertanyaan yang diberikan cukup tepat',
     'tingkat relatif jawaban dengan pertanyaan yang diberikan sudah tepat',
+    'tingkat relatif jawaban dengan pertanyaan yang diberikan sudah sangat tepat',
 ]
 
 structure_res = [
@@ -480,8 +482,10 @@ structure_res = [
 
 repeat_res = [
     'sebaiknya kamu lebih fokus lagi dalam melakukan simulasi agar bisa memahami pertanyaan yang diberikan',
+    'tingkat fokus kamu dalam memahami pertanyaan saat melakukan simulasi cukup baik',
     'tingkat fokus kamu dalam memahami pertanyaan saat melakukan simulasi lumayan baik',
     'tingkat fokus kamu dalam memahami pertanyaan saat melakukan simulasi sudah baik',
+    'tingkat fokus kamu dalam memahami pertanyaan saat melakukan simulasi sudah sangat baik',
 ]
 
 '''
@@ -498,38 +502,59 @@ Struktur kalimat feedback:
 4. X Repeat, inputan berupa integer (1-10)
 '''
 
-score = 0
-structure = 0
-repeat = 0
-total_score = 0
 def generate_feedback(question, answer):
-    # Calculate structure score
-    structure = predict(answer)
-    structure_score = 10 if structure == 1 else 5
+    score = 0
+    structure = 0
+    repeat = 0
+    total_score = 0
 
-    # Calculate scoring score
-    score = scoring(question, answer)
-    score_s = min(round(score * 3), 2)
+    structure = predict(answer)
+    score_s = scoring(question, answer)
+    score_s = round(score_s * 100 / 20)
+
+    # Calculate structure score
+    structure_s = predict(answer)
 
     # Calculate repeat score
-    repeat = repeat_answer(answer)
-    repeat_score = min(round(repeat * 3), 2)
+    repeat_score_s = repeat_answer(answer)
+    if repeat_score_s <= 1:
+        repeat = 0
+    elif repeat_score_s <= 3:
+        repeat = 1
+    elif repeat_score_s <= 5:
+        repeat = 2
+    elif repeat_score_s <= 7:
+        repeat = 3
+    elif repeat_score_s <= 9:
+        repeat = 4
 
-    # Calculate total score for summary
-    total_score = (score_s + structure_score + repeat_score) // 4
+    # menghitung total untuk sum_tmary
+    total_score_s = score + structure + repeat
+    if total_score_s <= 2:
+        total_score = 0
+    if total_score_s <= 4:
+        total_score = 1
+    if total_score_s <= 6:
+        total_score = 2
+    if total_score_s <= 8:
+        total_score = 3
+    if total_score_s >= 10:
+        total_score = 4
 
     # Compile feedback result
     feedback_result = [
-        summary_res[min(total_score, len(summary_res) - 1)],
-        scoring_res[min(score_s, len(scoring_res) - 1)],
+        summary_res[total_score],
+        scoring_res[score_s-1],
         structure_res[structure],
-        repeat_res[min(repeat_score, len(repeat_res))]
+        repeat_res[repeat]
     ]
-    print("Total score: ", total_score)
-    print("Scoring: ", score_s)
-    print("Repeat: ", repeat_score)
-    print("Structure: ", structure_score)
+
+    print("Rating: ", total_score, "Total score: ", total_score_s)
+    print("Score from function: ", score_s)
+    print("repeat from function:", repeat_score_s)
+    print("Structure: ", structure)
     feedback_result = ", ".join(feedback_result)
+    print(feedback_result)
     # print(feedback_result)
     return feedback_result
 #
@@ -541,9 +566,21 @@ def generate_feedback(question, answer):
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import tempfile
+import datetime
 
 app = Flask(__name__)
 CORS(app)
+
+user_test_data = [] #buat simpen test data user
+summaries = {}
+
+class TestEntry:
+    def __init__(self, category, question, answer, feedback, timestamp=None):
+        self.category = category
+        self.question = question
+        self.answer = answer
+        self.feedback = feedback
+        self.timestamp = timestamp if timestamp else datetime.datetime.now().isoformat()
 
 @app.route('/questions', methods=['POST'])
 def questions():
@@ -556,6 +593,7 @@ def questions():
         question = str(df[df['field'] == field].sample(1)['q'].iloc[0])
         if question not in questions:
             questions.append(question)
+            user_test_data.append(TestEntry(category=field, question=question, answer= "", feedback = "", timestamp=None))
     response = {
         'category': field,
         'questions': questions
@@ -578,9 +616,12 @@ def answer():
             audio_data = r.record(source)
         # Recognize speech using Google Web Speech API
         answer = r.recognize_google(audio_data, language="id-ID")
+        for entry in user_test_data:
+            if entry.question == question:
+                entry.answer = answer
+                break
         response = {
-            'question' : question,
-            'answer' : answer
+            'answer': answer
         }
     except sr.UnknownValueError:
         response = {
@@ -600,15 +641,33 @@ def feedback():
     question = user_input.get('question')
     answer = user_input.get('answer')
     feedback = generate_feedback(question, answer)
+    for entry in user_test_data:
+        if entry.question == question and entry.answer == answer:
+            entry.feedback = feedback
+            break
     response = {
         'feedback': feedback,
         'answer': answer
     }
     return jsonify(response)
 
-@app.route("/summary", methods=['POST'])
-def summary():
-    return 0
+@app.route('/summary', methods=['POST'])
+def save_summary():
+    data = request.json
+    summary_id = data.get('id')  # Expecting a unique ID in the data
+    summaries[summary_id] = data.get('summary')
+    print(summaries)
+    print(summaries[summary_id])
+    return jsonify({"message": "Summary saved successfully"}), 200
+
+@app.route('/get_summary/<summary_id>', methods=['GET'])
+def get_summary(summary_id):
+    summary = summaries.get(summary_id)
+    if summary:
+        return jsonify(summary), 200
+    else:
+        return jsonify({"message": "Summary not found"}), 404
+
 
 # buat jalanin flasknya
 if __name__ == '__main__':
