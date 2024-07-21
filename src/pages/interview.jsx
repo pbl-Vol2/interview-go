@@ -23,6 +23,7 @@ function Interview() {
   const [modalMessage, setModalMessage] = useState("");
   const { code } = useParams();
   const navigate = useNavigate();
+  const [category, setCategory] = useState("");
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -30,7 +31,8 @@ function Interview() {
         const response = await axios.post('http://127.0.0.1:5000/questions', { code });
         console.log("Fetched questions:", response.data.questions);
         setQuestions(response.data.questions);
-        const field = response.data.category ;
+        const category = response.data.category ;
+        setCategory(category);
         setField(field);
       } catch (error) {
         console.error("Error fetching questions:", error);
@@ -248,6 +250,20 @@ function Interview() {
       console.log('Feedback posted to API:', response.data);
       const feedback = response.data.feedback;
       setFeedback(feedback);
+    } catch (error) {
+      console.error('Error posting feedback to API:', error);
+    }
+  };
+
+  const postSummaryToAPI = async (question, answer) => {
+    try {
+      const response = await axios.post('http://127.0.0.1:5000/summary', {
+        category,
+        question,
+        answer,
+        feedback
+      });
+      console.log('Feedback posted to API:', response.data);
     } catch (error) {
       console.error('Error posting feedback to API:', error);
     }

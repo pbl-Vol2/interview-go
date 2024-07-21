@@ -570,6 +570,14 @@ import tempfile
 app = Flask(__name__)
 CORS(app)
 
+class Feedback:
+  def __init__(self, category, question, answer, feedback):
+    self.category = category
+    self.question = question
+    self.answer = answer
+    self.feedback = feedback
+
+
 @app.route('/questions', methods=['POST'])
 def questions():
     user_input = request.get_json(force=True)
@@ -633,6 +641,7 @@ def feedback():
 
 @app.route("/summary", methods=['POST'])
 def summary():
+
     return 0
 
 # buat jalanin flasknya
