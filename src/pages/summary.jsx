@@ -34,17 +34,19 @@ const Summary = () => {
             </Button>
           </div>
         </div>
-               <Accordion>
-                    {summaryData.map((item, index) => (
+           <Accordion>
+               {summaryData.map((item, index) => (
                         <Accordion.Panel key={index}>
                             <Accordion.Title>Q{index + 1}. {item.question}</Accordion.Title>
                             <Accordion.Content>
                                 <p className="mb-2 text-gray-500 dark:text-gray-400">Answer: {item.answer}</p>
                                 <p className="mb-2 text-gray-500 dark:text-gray-400">Feedback: {item.feedback}</p>
+                                <p className="mb-2 text-gray-500 dark:text-gray-400">Rating: {item.rating}</p>
+                                <p className="mb-2 text-gray-500 dark:text-gray-400">Timestamp: {item.timestamp}</p>
                             </Accordion.Content>
                         </Accordion.Panel>
                     ))}
-                </Accordion>
+          </Accordion>
       </div>
     </div>
   );

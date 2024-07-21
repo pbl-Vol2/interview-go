@@ -8,22 +8,27 @@ import { v4 as uuidv4 } from 'uuid';
 
 function Interview() {
   const [isRecording, setIsRecording] = useState(false);
-  const [question, setQuestion] = useState("");
   const [hasPermission, setHasPermission] = useState(false);
   const [stream, setStream] = useState(null);
   const [mediaRecorder, setMediaRecorder] = useState(null);
   const [timeLeft, setTimeLeft] = useState(120);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [isFeedback, setIsFeedback] = useState(false); // (menampilkan feedback)
-  const [feedback, setFeedback] = useState([]); // Menambahkan state untuk menyimpan feedback
   const [recordedBlobs, setRecordedBlobs] = useState([]);
-  const [questions, setQuestions] = useState([]);
-  const [answer, setAnswer] = useState([]);
   const [openModal, setOpenModal] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
   const { code } = useParams();
   const navigate = useNavigate();
-  const [category, setCategory] = useState([]);
+//   save category
+  const [category, setCategory] = useState("");
+//   save array questions, answers, feedback
+  const [questions, setQuestions] = useState([]);
+  const [answers, setAnswers] = useState([]);
+  const [feedbacks, setFeedbacks] = useState([]);
+// save question
+  const [question, setQuestion] = useState("");
+  const [feedback, setFeedback] = useState("");
+  const [answer, setAnswer] = useState("");
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -107,6 +112,19 @@ function Interview() {
         const wavBlob = await convertWebmToWav(blob);
         const answer = await sendAudioToFlask(wavBlob); //get answer from postFeedbackToAPI
         await postFeedbackToAPI(question, answer); // send answer to api
+
+        // Store the answer and feedback
+        setAnswers(prevAnswers => {
+            const newAnswers = [...prevAnswers];
+            newAnswers[currentQuestionIndex] = answer;
+            return newAnswers;
+        });
+
+        setFeedbacks(prevFeedbacks => {
+            const newFeedbacks = [...prevFeedbacks];
+            newFeedbacks[currentQuestionIndex] = feedback;
+            return newFeedbacks;
+        });
       };
     }
   };
@@ -149,11 +167,11 @@ function Interview() {
           // generate random uniqueId
         const uniqueId = uuidv4();
         // Collect the interview summary data
-        const summaryData = questions.map((question, index) => ({
+        const summaryData = questions.map((question) => ({
           category,
           question: question,
-          answer: answer[index] || "",
-          feedback: feedback[index] || "",
+          answer: answer,
+          feedback: feedback,
           timestamp: new Date().toISOString()
         }));
 
@@ -165,6 +183,7 @@ function Interview() {
           });
           // Navigate to the summary page with uniqueId
           navigate(`/summary/${uniqueId}`);
+          console.log(summaryData);
         } catch (error) {
           console.error('Error posting summary to API:', error);
         }

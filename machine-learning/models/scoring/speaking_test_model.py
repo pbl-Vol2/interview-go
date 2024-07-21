@@ -656,6 +656,7 @@ def save_summary():
     data = request.json
     summary_id = data.get('id')  # Expecting a unique ID in the data
     summaries[summary_id] = data.get('summary')
+    print(summaries)
     print(summaries[summary_id])
     return jsonify({"message": "Summary saved successfully"}), 200
 
