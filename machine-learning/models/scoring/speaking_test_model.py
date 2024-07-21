@@ -566,17 +566,21 @@ def generate_feedback(question, answer):
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import tempfile
+import datetime
 
 app = Flask(__name__)
 CORS(app)
 
-class Feedback:
-  def __init__(self, category, question, answer, feedback):
-    self.category = category
-    self.question = question
-    self.answer = answer
-    self.feedback = feedback
+user_test_data = [] #buat simpen test data user
+summaries = {}
 
+class TestEntry:
+    def __init__(self, category, question, answer, feedback, timestamp=None):
+        self.category = category
+        self.question = question
+        self.answer = answer
+        self.feedback = feedback
+        self.timestamp = timestamp if timestamp else datetime.datetime.now().isoformat()
 
 @app.route('/questions', methods=['POST'])
 def questions():
@@ -589,6 +593,7 @@ def questions():
         question = str(df[df['field'] == field].sample(1)['q'].iloc[0])
         if question not in questions:
             questions.append(question)
+            user_test_data.append(TestEntry(category=field, question=question, answer= "", feedback = "", timestamp=None))
     response = {
         'category': field,
         'questions': questions
@@ -611,9 +616,12 @@ def answer():
             audio_data = r.record(source)
         # Recognize speech using Google Web Speech API
         answer = r.recognize_google(audio_data, language="id-ID")
-        print(answer)
+        for entry in user_test_data:
+            if entry.question == question:
+                entry.answer = answer
+                break
         response = {
-            'answer' : answer
+            'answer': answer
         }
     except sr.UnknownValueError:
         response = {
@@ -633,16 +641,32 @@ def feedback():
     question = user_input.get('question')
     answer = user_input.get('answer')
     feedback = generate_feedback(question, answer)
+    for entry in user_test_data:
+        if entry.question == question and entry.answer == answer:
+            entry.feedback = feedback
+            break
     response = {
         'feedback': feedback,
         'answer': answer
     }
     return jsonify(response)
 
-@app.route("/summary", methods=['POST'])
-def summary():
+@app.route('/summary', methods=['POST'])
+def save_summary():
+    data = request.json
+    summary_id = data.get('id')  # Expecting a unique ID in the data
+    summaries[summary_id] = data.get('summary')
+    print(summaries[summary_id])
+    return jsonify({"message": "Summary saved successfully"}), 200
 
-    return 0
+@app.route('/get_summary/<summary_id>', methods=['GET'])
+def get_summary(summary_id):
+    summary = summaries.get(summary_id)
+    if summary:
+        return jsonify(summary), 200
+    else:
+        return jsonify({"message": "Summary not found"}), 404
+
 
 # buat jalanin flasknya
 if __name__ == '__main__':

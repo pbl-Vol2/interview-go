@@ -4,6 +4,7 @@ import { Accordion, Button, Modal } from "flowbite-react";
 import { HiOutlineExclamationCircle } from "react-icons/hi";
 import axios from "axios";
 import { useParams, useNavigate } from 'react-router-dom';
+import { v4 as uuidv4 } from 'uuid';
 
 function Interview() {
   const [isRecording, setIsRecording] = useState(false);
@@ -14,16 +15,15 @@ function Interview() {
   const [timeLeft, setTimeLeft] = useState(120);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [isFeedback, setIsFeedback] = useState(false); // (menampilkan feedback)
-  const [feedback, setFeedback] = useState(""); // Menambahkan state untuk menyimpan feedback
+  const [feedback, setFeedback] = useState([]); // Menambahkan state untuk menyimpan feedback
   const [recordedBlobs, setRecordedBlobs] = useState([]);
   const [questions, setQuestions] = useState([]);
   const [answer, setAnswer] = useState([]);
-  const [field, setField] = useState([]);
   const [openModal, setOpenModal] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
   const { code } = useParams();
   const navigate = useNavigate();
-  const [category, setCategory] = useState("");
+  const [category, setCategory] = useState([]);
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -33,7 +33,6 @@ function Interview() {
         setQuestions(response.data.questions);
         const category = response.data.category ;
         setCategory(category);
-        setField(field);
       } catch (error) {
         console.error("Error fetching questions:", error);
       }
@@ -142,13 +141,34 @@ function Interview() {
     setOpenModal(true);
   };
 
-  const handleModalConfirm = () => {
-    setOpenModal(false);
-    if (modalMessage.includes("keluar dari sesi latihan")) {
-      navigate("/features");
-    } else if (modalMessage.includes("mengakhiri sesi interview")) {
-      navigate("/summary");
-    }
+  const handleModalConfirm = async () => {
+      setOpenModal(false);
+      if (modalMessage.includes("keluar dari sesi latihan")) {
+        navigate("/features");
+      } else if (modalMessage.includes("mengakhiri sesi interview")) {
+          // generate random uniqueId
+        const uniqueId = uuidv4();
+        // Collect the interview summary data
+        const summaryData = questions.map((question, index) => ({
+          category,
+          question: question,
+          answer: answer[index] || "",
+          feedback: feedback[index] || "",
+          timestamp: new Date().toISOString()
+        }));
+
+        try {
+          // Send the summary data to the API
+          await axios.post('http://127.0.0.1:5000/summary', {
+            id : uniqueId,
+            summary: summaryData
+          });
+          // Navigate to the summary page with uniqueId
+          navigate(`/summary/${uniqueId}`);
+        } catch (error) {
+          console.error('Error posting summary to API:', error);
+        }
+      }
   };
 
   const formatTime = (time) => {
@@ -255,24 +275,11 @@ function Interview() {
     }
   };
 
-  const postSummaryToAPI = async (question, answer) => {
-    try {
-      const response = await axios.post('http://127.0.0.1:5000/summary', {
-        category,
-        question,
-        answer,
-        feedback
-      });
-      console.log('Feedback posted to API:', response.data);
-    } catch (error) {
-      console.error('Error posting feedback to API:', error);
-    }
-  };
 
   return (
     <div className="bg-gradient-to-b from-sky-100 to-white h-full">
       <div className="container mx-auto p-4 pt-12">
-        <h1 className="text-3xl font-bold mb-8 text-center">{field}</h1>
+        <h1 className="text-3xl font-bold mb-8 text-center">{category}</h1>
         <div className="flex justify-center items-center mb-4 gap-56">
           <Button
             onClick={() =>
