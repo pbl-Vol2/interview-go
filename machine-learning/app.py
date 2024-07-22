@@ -57,26 +57,6 @@ def preprocessing_text(sentence):
 
     return ' '.join(cleaned_words)
 
-def processing_json_dataset(dataset):
-    tags = []
-    inputs = []
-    responses={}
-    for intent in dataset:
-        responses[intent['tag']]=intent['responses']
-        for lines in intent['patterns']:
-            inputs.append(preprocessing_text(lines))
-            tags.append(intent['tag'])
-    return [tags, inputs, responses]
-
-def processing_json_val_dataset(dataset):
-    tags = []
-    inputs = []
-    for intent in dataset:
-        for lines in intent['patterns']:
-            inputs.append(preprocessing_text(lines))
-            tags.append(intent['tag'])
-    return [tags, inputs]
-
 # Load tokenizer dictionary
 with open(current_dir + '/models/chatbot/tokenizer_dict_chatbot.json', 'r') as file:
     word_index = json.load(file)

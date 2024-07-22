@@ -21,14 +21,18 @@ function Interview() {
   const navigate = useNavigate();
 //   save category
   const [category, setCategory] = useState("");
-//   save array questions, answers, feedback
+//   save array questions, answers, feedback, rating, sample_answer as an array
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState([]);
   const [feedbacks, setFeedbacks] = useState([]);
-// save question
+  const [ratings,setRatings] = useState([]);
+  const [sampleAnswers,setSampleAnswers] = useState([]);
+// save all as an index
   const [question, setQuestion] = useState("");
   const [feedback, setFeedback] = useState("");
   const [answer, setAnswer] = useState("");
+  const [rating, setRating] = useState("");
+
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -36,7 +40,8 @@ function Interview() {
         const response = await axios.post('http://127.0.0.1:5000/questions', { code });
         console.log("Fetched questions:", response.data.questions);
         setQuestions(response.data.questions);
-        const category = response.data.category ;
+        setSampleAnswers(response.data.sample_ans);
+        const category = response.data.category;
         setCategory(category);
       } catch (error) {
         console.error("Error fetching questions:", error);
