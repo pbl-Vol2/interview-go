@@ -3,8 +3,9 @@ import mic from "../assets/image/mic.jpg";
 import { Accordion, Button, Modal } from "flowbite-react";
 import { HiOutlineExclamationCircle } from "react-icons/hi";
 import axios from "axios";
-import { useParams, useNavigate } from 'react-router-dom';
-import { v4 as uuidv4 } from 'uuid';
+import { useParams, useNavigate } from "react-router-dom";
+import { v4 as uuidv4 } from "uuid";
+import StarRating from "../components/starRating";
 
 function Interview() {
   const [isRecording, setIsRecording] = useState(false);
@@ -13,30 +14,34 @@ function Interview() {
   const [mediaRecorder, setMediaRecorder] = useState(null);
   const [timeLeft, setTimeLeft] = useState(120);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [isFeedback, setIsFeedback] = useState(false); // (menampilkan feedback)
+  const [isFeedback, setIsFeedback] = useState(false);
   const [recordedBlobs, setRecordedBlobs] = useState([]);
   const [openModal, setOpenModal] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
   const { code } = useParams();
   const navigate = useNavigate();
-//   save category
   const [category, setCategory] = useState("");
-//   save array questions, answers, feedback
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState([]);
   const [feedbacks, setFeedbacks] = useState([]);
-// save question
   const [question, setQuestion] = useState("");
   const [feedback, setFeedback] = useState("");
   const [answer, setAnswer] = useState("");
+  const [rating, setRating] = useState(0);
+
+  const ratings = [
+    1, 2, 3, 4, 5
+  ];
 
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
-        const response = await axios.post('http://127.0.0.1:5000/questions', { code });
+        const response = await axios.post("http://127.0.0.1:5000/questions", {
+          code,
+        });
         console.log("Fetched questions:", response.data.questions);
         setQuestions(response.data.questions);
-        const category = response.data.category ;
+        const category = response.data.category;
         setCategory(category);
       } catch (error) {
         console.error("Error fetching questions:", error);
@@ -61,7 +66,7 @@ function Interview() {
   useEffect(() => {
     if (timeLeft === 0) {
       handleStopRecording();
-      setTimeLeft(60);
+      setTimeLeft(0);
     }
   }, [timeLeft]);
 
@@ -81,11 +86,11 @@ function Interview() {
 
     if (hasPermission) {
       setIsRecording(true);
-      setTimeLeft(120); // Reset timer to 120 seconds
+      setTimeLeft(120);
       setQuestion(questions[currentQuestionIndex]);
 
       const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm;codecs=opus'
+        mimeType: "audio/webm;codecs=opus",
       });
 
       let recordedBlobs = [];
@@ -108,50 +113,59 @@ function Interview() {
       setIsRecording(false);
       setIsFeedback(true);
       mediaRecorder.onstop = async () => {
-        const blob = new Blob(recordedBlobs, { type: 'audio/webm' });
+        const blob = new Blob(recordedBlobs, { type: "audio/webm" });
         const wavBlob = await convertWebmToWav(blob);
-        const answer = await sendAudioToFlask(wavBlob); //get answer from postFeedbackToAPI
-        await postFeedbackToAPI(question, answer); // send answer to api
+        const answer = await sendAudioToFlask(wavBlob);
+        await postFeedbackToAPI(question, answer);
 
-        // Store the answer and feedback
-        setAnswers(prevAnswers => {
-            const newAnswers = [...prevAnswers];
-            newAnswers[currentQuestionIndex] = answer;
-            return newAnswers;
+        setAnswers((prevAnswers) => {
+          const newAnswers = [...prevAnswers];
+          newAnswers[currentQuestionIndex] = answer;
+          return newAnswers;
         });
 
-        setFeedbacks(prevFeedbacks => {
-            const newFeedbacks = [...prevFeedbacks];
-            newFeedbacks[currentQuestionIndex] = feedback;
-            return newFeedbacks;
+        setFeedbacks((prevFeedbacks) => {
+          const newFeedbacks = [...prevFeedbacks];
+          newFeedbacks[currentQuestionIndex] = feedback;
+          return newFeedbacks;
         });
+
+        // Set the rating received from feedback API
+        // setRating(feedback.rating);
       };
     }
   };
 
   const handleNextQuestion = () => {
-    console.log(
-      "Feedback for question ${currentQuestionIndex + 1}: ${feedback}"
-    );
-    setIsFeedback(false); // Selesai feedback session
-    goToNextQuestion(); // Lanjut ke pertanyaan berikutnya
+    if (currentQuestionIndex + 1 < questions.length) {
+      setIsFeedback(false);
+      goToNextQuestion();
+    } else {
+      handleFinishInterview();
+    }
   };
 
   const goToNextQuestion = () => {
-      setCurrentQuestionIndex((prevIndex) => {
-        const nextIndex = prevIndex + 1;
-        if (nextIndex < questions.length) {
-          setQuestion(questions[nextIndex].question);
-          setTimeLeft(120); // Reset timer to 120 seconds for the new question
-          setIsRecording(false); // Reset recording state
-          setAnswer("");
-          setFeedback("");
-          return nextIndex;
-        } else {
-          alert("Interview selesai");
-          return prevIndex;
-        }
-      });
+    setCurrentQuestionIndex((prevIndex) => {
+      const nextIndex = prevIndex + 1;
+      if (nextIndex < questions.length) {
+        setQuestion(questions[nextIndex].question);
+        setTimeLeft(120);
+        setIsRecording(false);
+        setAnswer("");
+        setFeedback("");
+        return nextIndex;
+      } else {
+        alert("Interview selesai");
+        return prevIndex;
+      }
+    });
+  };
+
+  const handleFinishInterview = () => {
+    handleOpenModal(
+      "Apakah Anda yakin ingin mengakhiri sesi interview dan review summary dari feedback Anda? Anda tidak dapat melanjutkan sesi interview ini."
+    );
   };
 
   const handleOpenModal = (message) => {
@@ -160,34 +174,30 @@ function Interview() {
   };
 
   const handleModalConfirm = async () => {
-      setOpenModal(false);
-      if (modalMessage.includes("keluar dari sesi latihan")) {
-        navigate("/features");
-      } else if (modalMessage.includes("mengakhiri sesi interview")) {
-          // generate random uniqueId
-        const uniqueId = uuidv4();
-        // Collect the interview summary data
-        const summaryData = questions.map((question) => ({
-          category,
-          question: question,
-          answer: answer,
-          feedback: feedback,
-          timestamp: new Date().toISOString()
-        }));
+    setOpenModal(false);
+    if (modalMessage.includes("keluar dari sesi latihan")) {
+      navigate("/features");
+    } else if (modalMessage.includes("mengakhiri sesi interview")) {
+      const uniqueId = uuidv4();
+      const summaryData = questions.map((question, index) => ({
+        category,
+        question: question,
+        answer: answers[index],
+        feedback: feedbacks[index],
+        timestamp: new Date().toISOString(),
+      }));
 
-        try {
-          // Send the summary data to the API
-          await axios.post('http://127.0.0.1:5000/summary', {
-            id : uniqueId,
-            summary: summaryData
-          });
-          // Navigate to the summary page with uniqueId
-          navigate(`/summary/${uniqueId}`);
-          console.log(summaryData);
-        } catch (error) {
-          console.error('Error posting summary to API:', error);
-        }
+      try {
+        await axios.post("http://127.0.0.1:5000/summary", {
+          id: uniqueId,
+          summary: summaryData,
+        });
+        navigate(`/summary/${uniqueId}`);
+        console.log(summaryData);
+      } catch (error) {
+        console.error("Error posting summary to API:", error);
       }
+    }
   };
 
   const formatTime = (time) => {
@@ -204,7 +214,8 @@ function Interview() {
       reader.readAsArrayBuffer(webmBlob);
 
       reader.onloadend = () => {
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const audioContext = new (window.AudioContext ||
+          window.webkitAudioContext)();
         audioContext.decodeAudioData(reader.result, (buffer) => {
           const wavBlob = bufferToWav(buffer);
           resolve(wavBlob);
@@ -215,19 +226,17 @@ function Interview() {
     });
   };
 
-    const bufferToWav = (buffer) => {
+  const bufferToWav = (buffer) => {
     const numOfChannels = buffer.numberOfChannels;
     const length = buffer.length * numOfChannels * 2 + 44;
     const bufferData = new ArrayBuffer(length);
     const view = new DataView(bufferData);
 
-    // RIFF chunk descriptor
-    writeString(view, 0, 'RIFF');
+    writeString(view, 0, "RIFF");
     view.setUint32(4, length - 8, true);
-    writeString(view, 8, 'WAVE');
+    writeString(view, 8, "WAVE");
 
-    // FMT sub-chunk
-    writeString(view, 12, 'fmt ');
+    writeString(view, 12, "fmt ");
     view.setUint32(16, 16, true);
     view.setUint16(20, 1, true);
     view.setUint16(22, numOfChannels, true);
@@ -236,21 +245,19 @@ function Interview() {
     view.setUint16(32, numOfChannels * 2, true);
     view.setUint16(34, 16, true);
 
-    // Data sub-chunk
-    writeString(view, 36, 'data');
+    writeString(view, 36, "data");
     view.setUint32(40, length - 44, true);
 
-    // Write audio data
     let offset = 44;
     for (let i = 0; i < buffer.numberOfChannels; i++) {
       const channel = buffer.getChannelData(i);
       for (let j = 0; j < channel.length; j++) {
-        view.setInt16(offset, channel[j] * 0x7FFF, true);
+        view.setInt16(offset, channel[j] * 0x7fff, true);
         offset += 2;
       }
     }
 
-    return new Blob([view], { type: 'audio/wav' });
+    return new Blob([view], { type: "audio/wav" });
   };
 
   const writeString = (view, offset, string) => {
@@ -261,39 +268,44 @@ function Interview() {
 
   const sendAudioToFlask = async (blob) => {
     const formData = new FormData();
-    formData.append('audio', blob, 'audio.wav');
-    formData.append('question', question);
+    formData.append("audio", blob, "audio.wav");
+    formData.append("question", question);
 
     try {
-      const response = await axios.post('http://127.0.0.1:5000/answer', formData, {
-        headers: {
-            'question' : question,
-            'audio': 'multipart/form-data'
-        },
-      });
-      const answer = response.data.answer; // Assuming the server sends an object with an "answer" key
+      const response = await axios.post(
+        "http://127.0.0.1:5000/answer",
+        formData,
+        {
+          headers: {
+            question: question,
+            audio: "multipart/form-data",
+          },
+        }
+      );
+      const answer = response.data.answer;
       setAnswer(answer);
       return answer;
-      console.log('Server response:', answer);
+      console.log("Server response:", answer);
     } catch (error) {
-      console.error('Error sending audio to Flask:', error);
+      console.error("Error sending audio to Flask:", error);
     }
   };
 
   const postFeedbackToAPI = async (question, answer) => {
     try {
-      const response = await axios.post('http://127.0.0.1:5000/feedback', {
+      const response = await axios.post("http://127.0.0.1:5000/feedback", {
         question,
         answer,
       });
-      console.log('Feedback posted to API:', response.data);
+      console.log("Feedback posted to API:", response.data);
       const feedback = response.data.feedback;
       setFeedback(feedback);
+      // Update the rating based on the feedback
+      setRating(feedback.rating);
     } catch (error) {
-      console.error('Error posting feedback to API:', error);
+      console.error("Error posting feedback to API:", error);
     }
   };
-
 
   return (
     <div className="bg-gradient-to-b from-sky-100 to-white h-full">
@@ -348,20 +360,35 @@ function Interview() {
                   className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-full mb-3"
                   onClick={handleNextQuestion}
                 >
-                  Next Question
+                  {currentQuestionIndex + 1 === questions.length
+                    ? "Finish Interview"
+                    : "Next Question"}
                 </button>
                 <Accordion>
                   <Accordion.Panel>
                     <Accordion.Title>Your Answer</Accordion.Title>
                     <Accordion.Content>
-                      <p className="mb-2 text-gray-500 dark:text-gray-400"> {answer}
+                      <p className="mb-2 text-gray-500 dark:text-gray-400">
+                        {answer}
                       </p>
                     </Accordion.Content>
                   </Accordion.Panel>
                   <Accordion.Panel>
                     <Accordion.Title>Feedback</Accordion.Title>
                     <Accordion.Content>
-                      <p className="mb-2 text-gray-500 dark:text-gray-400"> {feedback}
+                      <div className="mb-2">
+                        <StarRating rating={rating} />
+                      </div>
+                      <p className="mb-2 text-gray-500 dark:text-gray-400">
+                        {feedback}
+                      </p>
+                    </Accordion.Content>
+                  </Accordion.Panel>
+                  <Accordion.Panel>
+                    <Accordion.Title>Sample Answer</Accordion.Title>
+                    <Accordion.Content>
+                      <p className="mb-2 text-gray-500 dark:text-gray-400">
+                        {/* {feedback} */}
                       </p>
                     </Accordion.Content>
                   </Accordion.Panel>
