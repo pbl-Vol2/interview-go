@@ -14,6 +14,7 @@ import History from "./pages/history";
 import ForgotPassword from "./pages/forgotPassword";
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Summary from "./pages/summary";
+import EditProfile from "./pages/editProfile";
 
 function App() {
   return (
@@ -38,6 +39,7 @@ function App() {
           <Route path="/interview/:code" element={<Interview />} />
           <Route path="/" element={<Interview />} />
           <Route path="/summary/:id" element={<Summary />} />
+          <Route path="/editProfile" element={<EditProfile />} />
         </Routes>
         <Footer />
       </Router>
