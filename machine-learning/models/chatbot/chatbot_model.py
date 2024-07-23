@@ -243,37 +243,3 @@ plot_graphs(history, "accuracy")
 plot_graphs(history, "loss")
 
 model.save(current_dir + "/../../assets/model_chatbot.h5")
-
-# from flask import Flask, request, jsonify
-# from keras.models import load_model
-# from flask_cors import CORS
-#
-# app = Flask(__name__)
-# CORS(app)
-#
-# model = load_model(current_dir + "/../../assets/model_chatbot.h5")
-#
-# @app.route('/predict', methods=['POST'])
-# def predict():
-#         user_input = request.get_json(force=True)
-#         question = user_input.get('message')
-#         input = preprocessing_text(question)
-#         input = tokenizer.texts_to_sequences([input])
-#         input = np.array(input).reshape(-1)
-#         input = pad_sequences([input], training_padded.shape[1])
-#         output = model.predict(input)
-#         output = output.argmax()
-#         response_tag = le.inverse_transform([output])[0]
-#         # Check if the response_tag is in responses
-#         if response_tag in responses:
-#             response = {
-#                 'response' : random.choice(responses[response_tag])
-#             }
-#         else:
-#             response = {
-#                 'response' : 'Maaf, saya tidak mengerti. Bisa kamu ulangi lagi dengan kata lain?'
-#             }
-#         return jsonify(response)
-#
-# if __name__ == '__main__':
-#     app.run(debug=True)

@@ -33,7 +33,6 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 model_sentence = load_model(current_dir + "/../../assets/model_sentence.h5")
 model_scoring = load_model(current_dir + "/../../assets/model_scoring.h5")
 
-
 # Read the dataset
 df = pd.read_excel(current_dir +'/dataset.xlsx', sheet_name='main')
 df2 = pd.read_excel(current_dir +'/dataset.xlsx', sheet_name='archive')
@@ -131,38 +130,38 @@ word_dict = {item[0]: item[1] for item in tokenizer.word_index.items()}
 with open(current_dir +'/tokenizer_dict_struktur.json', 'w') as json_file:
     json.dump(word_dict, json_file, indent=4)
 
-# # Declare graph function
-# def plot_graphs(history, string):
-#     plt.plot(history.history[string])
-#     plt.plot(history.history['val_'+string])
-#     plt.xlabel("Epochs")
-#     plt.ylabel(string)
-#     plt.legend([string, 'val_'+string])
-#     plt.ylim(top=1.1, bottom=0)
-#     plt.show()
-#
-# """Models"""
-#
-# # Declare the model
-# model_sentence = tf.keras.Sequential([
-#     tf.keras.layers.Embedding(vocab_size+1000, embedding_dim, input_length=max_length_1),
-#     # di pooling jadi 1 dimensi
-#     tf.keras.layers.GlobalAveragePooling1D(),
-#     tf.keras.layers.Dense(16, activation='relu'),
-#     tf.keras.layers.Dropout(0.5),
-#     # karena cuma nentuin good atau bad, 0 atau 1
-#     tf.keras.layers.Dense(1, activation='sigmoid')
-# ])
-# model_sentence.summary()
-#
-# model_sentence.compile(loss='binary_crossentropy',optimizer=Adam(0.001),metrics=['accuracy'])
-# # verbose itu buat liat training progressnya
-# history = model_sentence.fit(training_padded, training_labels, epochs=15, validation_data=(testing_padded, testing_labels), verbose=0)
-# plot_graphs(history, "accuracy")
-# plot_graphs(history, "loss")
-#
-# # save model
-# model_sentence.save(current_dir + "/../../assets/model_sentence.h5")
+# Declare graph function
+def plot_graphs(history, string):
+    plt.plot(history.history[string])
+    plt.plot(history.history['val_'+string])
+    plt.xlabel("Epochs")
+    plt.ylabel(string)
+    plt.legend([string, 'val_'+string])
+    plt.ylim(top=1.1, bottom=0)
+    plt.show()
+
+"""Models"""
+
+# Declare the model
+model_sentence = tf.keras.Sequential([
+    tf.keras.layers.Embedding(vocab_size+1000, embedding_dim, input_length=max_length_1),
+    # di pooling jadi 1 dimensi
+    tf.keras.layers.GlobalAveragePooling1D(),
+    tf.keras.layers.Dense(16, activation='relu'),
+    tf.keras.layers.Dropout(0.5),
+    # karena cuma nentuin good atau bad, 0 atau 1
+    tf.keras.layers.Dense(1, activation='sigmoid')
+])
+model_sentence.summary()
+
+model_sentence.compile(loss='binary_crossentropy',optimizer=Adam(0.001),metrics=['accuracy'])
+# verbose itu buat liat training progressnya
+history = model_sentence.fit(training_padded, training_labels, epochs=15, validation_data=(testing_padded, testing_labels), verbose=0)
+plot_graphs(history, "accuracy")
+plot_graphs(history, "loss")
+
+# save model
+model_sentence.save(current_dir + "/../../assets/model_sentence.h5")
 
 def predict(text, treshold=0.5):
     input_sequence = tokenizer.texts_to_sequences([text])
@@ -173,11 +172,11 @@ def predict(text, treshold=0.5):
     # print('Bagus' if predicted_class == 1 else 'Kurang Bagus')
     return predicted_class
 
-# predict("saya biasanya membuat daftar prioritas untuk menentukan tindakan yang paling mendesak.")
-#
-# predict("Saya adalah orang yang rajin")
-#
-# predict("Ketika saya dihadapkan pada masalah, saya biasanya membuat daftar prioritas untuk menentukan tindakan yang paling mendesak.")
+predict("saya biasanya membuat daftar prioritas untuk menentukan tindakan yang paling mendesak.")
+
+predict("Saya adalah orang yang rajin")
+
+predict("Ketika saya dihadapkan pada masalah, saya biasanya membuat daftar prioritas untuk menentukan tindakan yang paling mendesak.")
 
 """# Scoring"""
 
@@ -269,11 +268,6 @@ testing_sentences = val_answers
 training_labels = labels
 testing_labels = val_labels
 
-# Converting the data into sequences and give a padding
-trunc_type='post'
-padding_type='post'
-oov_tok = "<OOV>"
-
 tokenizer = Tokenizer(num_words=vocab_size, oov_token=oov_tok)
 tokenizer.fit_on_texts(training_sentences)
 word_index = tokenizer.word_index
@@ -289,27 +283,28 @@ testing_labels = np.array(testing_labels)
 
 # Saving training sentences data into json
 word_dict = {item[0]: item[1] for item in tokenizer.word_index.items()}
-with open('tokenizer_dict_scoring.json', 'w') as json_file:
+with open(current_dir + '/tokenizer_dict_scoring.json', 'w') as json_file:
     json.dump(word_dict, json_file, indent=4)
 
-# # declare the model to predict the class
-# embedding_dim = 256
-# model_scoring = tf.keras.Sequential([
-#     tf.keras.layers.Embedding(vocab_size + 10, embedding_dim, input_length=max_length),
-#     tf.keras.layers.GlobalAveragePooling1D(),
-#     tf.keras.layers.Dense(16, activation='relu'),
-#     tf.keras.layers.Dense(8, activation='relu'),
-#     tf.keras.layers.Dense(len(questionClass), activation='softmax')
-# ])
-#
-# model_scoring.summary()
-#
-# model_scoring.compile(loss='SparseCategoricalCrossentropy', optimizer=Adam(0.001), metrics=['accuracy'])
-# history = model_scoring.fit(training_padded, training_labels, epochs=15, validation_data=(testing_padded, testing_labels), verbose=2)
-# plot_graphs(history, "accuracy")
-# plot_graphs(history, "loss")
+# declare the model to predict the class
+embedding_dim = 256
+model_scoring = tf.keras.Sequential([
+    tf.keras.layers.Embedding(vocab_size + 10, embedding_dim, input_length=max_length),
+    tf.keras.layers.GlobalAveragePooling1D(),
+    tf.keras.layers.Dense(16, activation='relu'),
+    tf.keras.layers.Dense(8, activation='relu'),
+    tf.keras.layers.Dense(len(questionClass), activation='softmax')
+])
 
-# model_scoring.save(current_dir + "/../../assets/model_scoring.h5")
+model_scoring.summary()
+
+model_scoring.compile(loss='SparseCategoricalCrossentropy', optimizer=Adam(0.001), metrics=['accuracy'])
+
+history = model_scoring.fit(training_padded, training_labels, epochs=15, validation_data=(testing_padded, testing_labels), verbose=2)
+plot_graphs(history, "accuracy")
+plot_graphs(history, "loss")
+
+model_scoring.save(current_dir + "/../../assets/model_scoring.h5")
 
 # Define a Cosine Similarity Algorithm
 def cosine_similarity(str1, str2):
@@ -409,27 +404,27 @@ def scoring(tes_q, tes_a):
     # cari yang nilainya paling tinggi
     result_similarity = max(scoring_similarity_list)
     # hitung total scorenya
-    total_score = result_field * 0.3 + result_similarity * 0.7
+    total_score = result_field * 0.5 + result_similarity * 0.5
     # apakah jawaban sama pertanyaan yang diajukan nyambung
     # print(f"Your answer is {'Relate' if result_field else 'Not Relate'} with a similarity of {result_similarity}")
     # total scorenya
     # print('Total score:', total_score)
     return total_score
 
-# # Demo: Pertanyaan dengan field Kuliner dan Restoran dengan jawaban yang bagus
-# q = 'Bagaimana Anda mendefinisikan konsep kuliner yang unik?'
-# a = 'Bagi saya, kuliner yang unik melibatkan eksperimen dalam menciptakan rasa baru yang belum pernah dikenal sebelumnya. Proses ini melibatkan penggabungan bahan, teknik memasak inovatif, dan cara penyajian yang menarik.'
-# scoring(q, a)
-#
-# # field: Pertanyaan dengan field Kuliner dan Restoran dengan jawaban yang kurang tepat namun tetap satu bidang
-# q = 'Bagaimana Anda mendefinisikan konsep kuliner yang unik?'
-# a = 'Memiliki berbagai pilihan pemasok adalah strategi saya untuk mengurangi risiko ketika ada gangguan pasokan atau kenaikan harga. Ini membantu menjaga fleksibilitas produksi.'
-# scoring(q, a)
-#
-# # field: Pertanyaan dengan field Kuliner dan Restoran dengan jawaban yang tidak tepat dan beda bidang
-# q = 'Bagaimana Anda mendefinisikan konsep kuliner yang unik?'
-# a = 'Untuk mencegah masalah yang sama terulang, saya akan mengadakan pertemuan "tindakan perbaikan" yang melibatkan tim terkait. saya akan mengevaluasi tindakan yang telah diambil untuk mengatasi masalah tersebut dan memastikan implementasi perbaikan yang sesuai. Untuk mencegah masalah baru, saya akan mendorong tim untuk berpikir kritis dan aktif mencari tanda-tanda potensi masalah.'
-# scoring(q, a)
+# Demo: Pertanyaan dengan field Kuliner dan Restoran dengan jawaban yang bagus
+q = 'Bagaimana Anda mendefinisikan konsep kuliner yang unik?'
+a = 'Bagi saya, kuliner yang unik melibatkan eksperimen dalam menciptakan rasa baru yang belum pernah dikenal sebelumnya. Proses ini melibatkan penggabungan bahan, teknik memasak inovatif, dan cara penyajian yang menarik.'
+scoring(q, a)
+
+# field: Pertanyaan dengan field Kuliner dan Restoran dengan jawaban yang kurang tepat namun tetap satu bidang
+q = 'Bagaimana Anda mendefinisikan konsep kuliner yang unik?'
+a = 'Memiliki berbagai pilihan pemasok adalah strategi saya untuk mengurangi risiko ketika ada gangguan pasokan atau kenaikan harga. Ini membantu menjaga fleksibilitas produksi.'
+scoring(q, a)
+
+# field: Pertanyaan dengan field Kuliner dan Restoran dengan jawaban yang tidak tepat dan beda bidang
+q = 'Bagaimana Anda mendefinisikan konsep kuliner yang unik?'
+a = 'Untuk mencegah masalah yang sama terulang, saya akan mengadakan pertemuan "tindakan perbaikan" yang melibatkan tim terkait. saya akan mengevaluasi tindakan yang telah diambil untuk mengatasi masalah tersebut dan memastikan implementasi perbaikan yang sesuai. Untuk mencegah masalah baru, saya akan mendorong tim untuk berpikir kritis dan aktif mencari tanda-tanda potensi masalah.'
+scoring(q, a)
 
 """# Feedback"""
 
@@ -502,173 +497,39 @@ Struktur kalimat feedback:
 4. X Repeat, inputan berupa integer (1-10)
 '''
 
+structure = 0
+score = 0
+repeat = 0
+total_score = 0
 def generate_feedback(question, answer):
-    score = 0
-    structure = 0
-    repeat = 0
-    total_score = 0
-
     structure = predict(answer)
-    score_s = scoring(question, answer)
-    score_s = round(score_s * 100 / 20)
+    structure_s = 5 if structure == 1 else 0
+    print("Structure: ", structure)
+    print("Structure: ", structure_s)
 
-    # Calculate structure score
-    structure_s = predict(answer)
+    score = scoring(question, answer)
+    score = round(score * 100/20)
+    print("Score from function: ", score)
 
     # Calculate repeat score
-    repeat_score_s = repeat_answer(answer)
-    if repeat_score_s <= 1:
-        repeat = 0
-    elif repeat_score_s <= 3:
-        repeat = 1
-    elif repeat_score_s <= 5:
-        repeat = 2
-    elif repeat_score_s <= 7:
-        repeat = 3
-    elif repeat_score_s <= 9:
-        repeat = 4
+    repeat = round(repeat_answer(answer) / 2)
+    print("repeat from function:", repeat)
 
-    # menghitung total untuk sum_tmary
-    total_score_s = score + structure + repeat
-    if total_score_s <= 2:
-        total_score = 0
-    if total_score_s <= 4:
-        total_score = 1
-    if total_score_s <= 6:
-        total_score = 2
-    if total_score_s <= 8:
-        total_score = 3
-    if total_score_s >= 10:
-        total_score = 4
+    # menghitung total untuk summary
+    rating = round((score + structure_s + repeat) / 3)
+    print("Rating ", rating)
 
     # Compile feedback result
     feedback_result = [
-        summary_res[total_score],
-        scoring_res[score_s-1],
+        summary_res[rating - 1],
+        scoring_res[score - 1],
         structure_res[structure],
-        repeat_res[repeat]
+        repeat_res[repeat - 1]
     ]
 
-    print("Rating: ", total_score, "Total score: ", total_score_s)
-    print("Score from function: ", score_s)
-    print("repeat from function:", repeat_score_s)
-    print("Structure: ", structure)
     feedback_result = ", ".join(feedback_result)
-    print(feedback_result)
-    # print(feedback_result)
-    return feedback_result
-#
-# q = 'Bagaimana Anda mendefinisikan konsep kuliner yang unik?'
-# a = 'Memiliki berbagai pilihan pemasok adalah strategi saya untuk mengurangi risiko ketika ada gangguan pasokan atau kenaikan harga. Ini membantu menjaga fleksibilitas produksi.'
-# generate_feedback(q, a)
+    return rating, feedback_result
 
-# generate random question based on field, get the predict score and scoring score based on the answer
-from flask import Flask, request, jsonify
-from flask_cors import CORS
-import tempfile
-import datetime
-
-app = Flask(__name__)
-CORS(app)
-
-user_test_data = [] #buat simpen test data user
-summaries = {}
-
-class TestEntry:
-    def __init__(self, category, question, answer, feedback, timestamp=None):
-        self.category = category
-        self.question = question
-        self.answer = answer
-        self.feedback = feedback
-        self.timestamp = timestamp if timestamp else datetime.datetime.now().isoformat()
-
-@app.route('/questions', methods=['POST'])
-def questions():
-    user_input = request.get_json(force=True)
-    num = int(user_input.get('code'))
-    df_field_values_unique = df_field_values.unique().tolist()
-    field = df_field_values_unique[num]
-    questions = []
-    while len(questions) < 3:
-        question = str(df[df['field'] == field].sample(1)['q'].iloc[0])
-        if question not in questions:
-            questions.append(question)
-            user_test_data.append(TestEntry(category=field, question=question, answer= "", feedback = "", timestamp=None))
-    response = {
-        'category': field,
-        'questions': questions
-    }
-    return jsonify(response)
-
-@app.route('/answer', methods=['POST'])
-def answer():
-    r = sr.Recognizer()
-    audio = request.files.get('audio')
-    question = request.form.get('question')
-    if audio:
-        temp_dir = tempfile.mkdtemp()
-        temp_path = os.path.join(temp_dir, 'temp_audio.wav')
-        audio.save(temp_path)
-    else:
-        return jsonify({"error": "No audio file provided"}), 400
-    try:
-        with sr.AudioFile(temp_path) as source:
-            audio_data = r.record(source)
-        # Recognize speech using Google Web Speech API
-        answer = r.recognize_google(audio_data, language="id-ID")
-        for entry in user_test_data:
-            if entry.question == question:
-                entry.answer = answer
-                break
-        response = {
-            'answer': answer
-        }
-    except sr.UnknownValueError:
-        response = {
-            'error': "Could not understand the audio. Please try again with clearer speech or check for background noise."
-        }
-    except sr.RequestError:
-        response = {
-            'error': "Could not request results from Google Web Speech API. Check your internet connection."
-        }
-    finally:
-        shutil.rmtree(temp_dir)
-    return jsonify(response)
-
-@app.route('/feedback', methods=['POST'])
-def feedback():
-    user_input = request.get_json(force=True)
-    question = user_input.get('question')
-    answer = user_input.get('answer')
-    feedback = generate_feedback(question, answer)
-    for entry in user_test_data:
-        if entry.question == question and entry.answer == answer:
-            entry.feedback = feedback
-            break
-    response = {
-        'feedback': feedback,
-        'answer': answer
-    }
-    return jsonify(response)
-
-@app.route('/summary', methods=['POST'])
-def save_summary():
-    data = request.json
-    summary_id = data.get('id')  # Expecting a unique ID in the data
-    summaries[summary_id] = data.get('summary')
-    print(summaries)
-    print(summaries[summary_id])
-    return jsonify({"message": "Summary saved successfully"}), 200
-
-@app.route('/get_summary/<summary_id>', methods=['GET'])
-def get_summary(summary_id):
-    summary = summaries.get(summary_id)
-    if summary:
-        return jsonify(summary), 200
-    else:
-        return jsonify({"message": "Summary not found"}), 404
-
-
-# buat jalanin flasknya
-if __name__ == '__main__':
-    app.run(debug=True)
+q = 'Bagaimana Anda mendefinisikan konsep kuliner yang unik?'
+a = 'Memiliki berbagai pilihan pemasok adalah strategi saya untuk mengurangi risiko ketika ada gangguan pasokan atau kenaikan harga. Ini membantu menjaga fleksibilitas produksi.'
+generate_feedback(q, a)
