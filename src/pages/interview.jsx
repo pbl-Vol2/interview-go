@@ -21,13 +21,13 @@ function Interview() {
   const { code } = useParams();
   const navigate = useNavigate();
   const [category, setCategory] = useState("");
-//   save array questions, answers, feedback, rating, sample_answer as an array
+  //   save array questions, answers, feedback, rating, sample_answer as an array
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState([]);
   const [feedbacks, setFeedbacks] = useState([]);
   const [ratings, setRatings] = useState([]);
-  const [sampleAnswers,setSampleAnswers] = useState([]);
-// save all as an index
+  const [sampleAnswers, setSampleAnswers] = useState([]);
+  // save all as an index
   const [question, setQuestion] = useState("");
   const [feedback, setFeedback] = useState("");
   const [answer, setAnswer] = useState("");
@@ -37,7 +37,9 @@ function Interview() {
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
-        const response = await axios.post('http://127.0.0.1:5000/questions', { code });
+        const response = await axios.post("http://127.0.0.1:5000/questions", {
+          code,
+        });
         console.log("Fetched questions:", response.data.questions);
         // set array question dan sample answer
         setQuestions(response.data.questions);
@@ -121,40 +123,41 @@ function Interview() {
         const answer = await sendAudioToFlask(wavBlob);
         const feedbackResponse = await postFeedbackToAPI(question, answer);
 
-          if (feedbackResponse) {
-            setAnswers((prevAnswers) => {
-              const newAnswers = [...prevAnswers];
-              newAnswers[currentQuestionIndex] = answer;
-              return newAnswers;
-            });
+        if (feedbackResponse) {
+          setAnswers((prevAnswers) => {
+            const newAnswers = [...prevAnswers];
+            newAnswers[currentQuestionIndex] = answer;
+            return newAnswers;
+          });
 
-            setFeedbacks((prevFeedbacks) => {
-              const newFeedbacks = [...prevFeedbacks];
-              newFeedbacks[currentQuestionIndex] = feedbackResponse.feedback;
-              return newFeedbacks;
-            });
+          setFeedbacks((prevFeedbacks) => {
+            const newFeedbacks = [...prevFeedbacks];
+            newFeedbacks[currentQuestionIndex] = feedbackResponse.feedback;
+            return newFeedbacks;
+          });
 
-            setRatings((prevRatings) => {
-              const newRatings = [...prevRatings];
-              newRatings[currentQuestionIndex] = feedbackResponse.rating;
-              return newRatings;
-            });
+          setRatings((prevRatings) => {
+            const newRatings = [...prevRatings];
+            newRatings[currentQuestionIndex] = feedbackResponse.rating;
+            return newRatings;
+          });
 
-            setFeedback(feedbackResponse.feedback);
-            setRating(feedbackResponse.rating);
-          } else {
-            console.error("Failed to get feedback and rating.");
-          }
+          setFeedback(feedbackResponse.feedback);
+          setRating(feedbackResponse.rating);
+        } else {
+          console.error("Failed to get feedback and rating.");
+        }
       };
     }
   };
 
   const handleNextQuestion = () => {
-    console.log(
-      "Feedback for question ${currentQuestionIndex + 1}: ${feedback}"
-    );
-    setIsFeedback(false); // Selesai feedback session
-    goToNextQuestion(); // Lanjut ke pertanyaan berikutnya
+    if (currentQuestionIndex + 1 < questions.length) {
+      setIsFeedback(false); // Selesai feedback session
+      goToNextQuestion(); // Lanjut ke pertanyaan berikutnya
+    } else {
+      handleFinishInterview();
+    }
   };
 
   const goToNextQuestion = () => {
@@ -188,22 +191,22 @@ function Interview() {
   };
 
   const handleModalConfirm = async () => {
-      setOpenModal(false);
-      if (modalMessage.includes("keluar dari sesi latihan")) {
-        navigate("/features");
-      } else if (modalMessage.includes("mengakhiri sesi interview")) {
-          // generate random uniqueId
-        const uniqueId = uuidv4();
-        // Collect the interview summary data
-        const summaryData = questions.map((question, index) => ({
-          category,
-          question: question,
-          answer: answers[index],
-          feedback: feedbacks[index],
-          timestamp: new Date().toISOString(),
-          rating: ratings[index],
-          sample_ans: sampleAnswers[index],
-        }));
+    setOpenModal(false);
+    if (modalMessage.includes("keluar dari sesi latihan")) {
+      navigate("/features");
+    } else if (modalMessage.includes("mengakhiri sesi interview")) {
+      // generate random uniqueId
+      const uniqueId = uuidv4();
+      // Collect the interview summary data
+      const summaryData = questions.map((question, index) => ({
+        category,
+        question: question,
+        answer: answers[index],
+        feedback: feedbacks[index],
+        timestamp: new Date().toISOString(),
+        rating: ratings[index],
+        sample_ans: sampleAnswers[index],
+      }));
 
       try {
         await axios.post("http://127.0.0.1:5000/summary", {
@@ -319,12 +322,11 @@ function Interview() {
       console.log("Feedback posted to API:", response.data);
       const feedback = response.data.feedback;
       const rating = response.data.rating;
-      return {feedback, rating};
+      return { feedback, rating };
     } catch (error) {
       console.error("Error posting feedback to API:", error);
     }
   };
-
 
   return (
     <div className="bg-gradient-to-b from-sky-100 to-white h-full">
