@@ -25,25 +25,24 @@ function Interview() {
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState([]);
   const [feedbacks, setFeedbacks] = useState([]);
-  const [ratings,setRatings] = useState([]);
+  const [ratings, setRatings] = useState([]);
   const [sampleAnswers,setSampleAnswers] = useState([]);
 // save all as an index
   const [question, setQuestion] = useState("");
   const [feedback, setFeedback] = useState("");
   const [answer, setAnswer] = useState("");
   const [rating, setRating] = useState(0);
-
-  const ratings = [
-    1, 2, 3, 4, 5
-  ];
+  const [sampleAnswer, setSampleAnswer] = useState("");
 
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
         const response = await axios.post('http://127.0.0.1:5000/questions', { code });
         console.log("Fetched questions:", response.data.questions);
+        // set array question dan sample answer
         setQuestions(response.data.questions);
         setSampleAnswers(response.data.sample_ans);
+        // set category
         const category = response.data.category;
         setCategory(category);
       } catch (error) {
@@ -91,6 +90,7 @@ function Interview() {
       setIsRecording(true);
       setTimeLeft(120);
       setQuestion(questions[currentQuestionIndex]);
+      setSampleAnswer(sampleAnswers[currentQuestionIndex]);
 
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: "audio/webm;codecs=opus",
@@ -119,22 +119,32 @@ function Interview() {
         const blob = new Blob(recordedBlobs, { type: "audio/webm" });
         const wavBlob = await convertWebmToWav(blob);
         const answer = await sendAudioToFlask(wavBlob);
-        await postFeedbackToAPI(question, answer);
+        const feedbackResponse = await postFeedbackToAPI(question, answer);
 
-        setAnswers((prevAnswers) => {
-          const newAnswers = [...prevAnswers];
-          newAnswers[currentQuestionIndex] = answer;
-          return newAnswers;
-        });
+          if (feedbackResponse) {
+            setAnswers((prevAnswers) => {
+              const newAnswers = [...prevAnswers];
+              newAnswers[currentQuestionIndex] = answer;
+              return newAnswers;
+            });
 
-        setFeedbacks((prevFeedbacks) => {
-          const newFeedbacks = [...prevFeedbacks];
-          newFeedbacks[currentQuestionIndex] = feedback;
-          return newFeedbacks;
-        });
+            setFeedbacks((prevFeedbacks) => {
+              const newFeedbacks = [...prevFeedbacks];
+              newFeedbacks[currentQuestionIndex] = feedbackResponse.feedback;
+              return newFeedbacks;
+            });
 
-        // Set the rating received from feedback API
-        // setRating(feedback.rating);
+            setRatings((prevRatings) => {
+              const newRatings = [...prevRatings];
+              newRatings[currentQuestionIndex] = feedbackResponse.rating;
+              return newRatings;
+            });
+
+            setFeedback(feedbackResponse.feedback);
+            setRating(feedbackResponse.rating);
+          } else {
+            console.error("Failed to get feedback and rating.");
+          }
       };
     }
   };
@@ -152,10 +162,12 @@ function Interview() {
       const nextIndex = prevIndex + 1;
       if (nextIndex < questions.length) {
         setQuestion(questions[nextIndex].question);
+        setSampleAnswer(sampleAnswers[nextIndex].sampleAnswer);
         setTimeLeft(120);
         setIsRecording(false);
         setAnswer("");
         setFeedback("");
+        setRating(0);
         return nextIndex;
       } else {
         alert("Interview selesai");
@@ -183,12 +195,14 @@ function Interview() {
           // generate random uniqueId
         const uniqueId = uuidv4();
         // Collect the interview summary data
-        const summaryData = questions.map((question) => ({
+        const summaryData = questions.map((question, index) => ({
           category,
           question: question,
-          answer: answer,
-          feedback: feedback,
-          timestamp: new Date().toISOString()
+          answer: answers[index],
+          feedback: feedbacks[index],
+          timestamp: new Date().toISOString(),
+          rating: ratings[index],
+          sample_ans: sampleAnswers[index],
         }));
 
       try {
@@ -304,9 +318,8 @@ function Interview() {
       });
       console.log("Feedback posted to API:", response.data);
       const feedback = response.data.feedback;
-      setFeedback(feedback);
-      // Update the rating based on the feedback
-      setRating(feedback.rating);
+      const rating = response.data.rating;
+      return {feedback, rating};
     } catch (error) {
       console.error("Error posting feedback to API:", error);
     }
@@ -394,7 +407,7 @@ function Interview() {
                     <Accordion.Title>Sample Answer</Accordion.Title>
                     <Accordion.Content>
                       <p className="mb-2 text-gray-500 dark:text-gray-400">
-                        {/* {feedback} */}
+                        {sampleAnswer}
                       </p>
                     </Accordion.Content>
                   </Accordion.Panel>

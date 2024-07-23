@@ -43,6 +43,7 @@ const Summary = () => {
                                 <p className="mb-2 text-gray-500 dark:text-gray-400">Feedback: {item.feedback}</p>
                                 <p className="mb-2 text-gray-500 dark:text-gray-400">Rating: {item.rating}</p>
                                 <p className="mb-2 text-gray-500 dark:text-gray-400">Timestamp: {item.timestamp}</p>
+                                <p className="mb-2 text-gray-500 dark:text-gray-400">Sample Answer: {item.sample_ans}</p>
                             </Accordion.Content>
                         </Accordion.Panel>
                     ))}
