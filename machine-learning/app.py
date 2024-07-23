@@ -21,6 +21,9 @@ import tempfile
 from collections import Counter
 import pandas as pd
 
+# Suppress TensorFlow warnings
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+ 
 app = Flask(__name__)
 CORS(app)
 
