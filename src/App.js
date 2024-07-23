@@ -11,7 +11,7 @@ import Login from "./pages/login";
 import Profile from "./pages/profile";
 import Verif from "./pages/verif";
 import History from "./pages/history";
-import ForgotPassword from "./pages/forgot-password";
+import ForgotPassword from "./pages/forgotPassword";
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Summary from "./pages/summary";
 

@@ -29,9 +29,9 @@ function Interview() {
   const [answer, setAnswer] = useState("");
   const [rating, setRating] = useState(0);
 
-  const ratings = [
-    1, 2, 3, 4, 5
-  ];
+  // const ratings = [
+  //   1, 2, 3, 4, 5
+  // ];
 
   useEffect(() => {
     const fetchQuestions = async () => {
