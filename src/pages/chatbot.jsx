@@ -17,6 +17,7 @@ const Chatbot = () => {
       }),
     },
   ]);
+  
   const [input, setInput] = useState("");
 
   const handleSend = () => {
@@ -51,6 +52,18 @@ const Chatbot = () => {
         .catch((error) => {
           console.error("There was an error with the Flask API:", error);
         });
+    }
+  };
+
+  const postFeedbackToAPI = async (question, answer) => {
+    try {
+      const response = await axios.post('http://127.0.0.1:5000/feedback', {
+        question,
+        answer,
+      });
+      console.log('Feedback posted to API:', response.data);
+    } catch (error) {
+      console.error('Error posting feedback to API:', error);
     }
   };
 

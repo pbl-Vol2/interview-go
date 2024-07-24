@@ -187,93 +187,59 @@ for word , i in word_index.items():
         if embedding_vector is not None:
             embedding_matrix[i] = embedding_vector
 
-# # Declare graph function and callback class
-# def plot_graphs(history, string):
-#     plt.plot(history.history[string])
-#     plt.plot(history.history['val_'+string])
-#     plt.xlabel("Epochs")
-#     plt.ylabel(string)
-#     plt.legend([string, 'val_'+string])
-#     plt.ylim(bottom=0)
-#     plt.show()
-#
-# class Callback(tf.keras.callbacks.Callback):
-#     def on_epoch_end(self, epoch, logs={}):
-#         if logs.get('val_accuracy') > 0.8 and logs.get('accuracy') > 0.92:
-#             self.model.stop_training = True
-#
-# # Declare the model
-# model = tf.keras.Sequential([
-#     tf.keras.layers.Input(shape=(training_padded.shape[1],)),
-#     tf.keras.layers.Embedding(input_dim=max_words, output_dim=100, weights=[embedding_matrix], trainable=False, mask_zero=True),
-#     tf.keras.layers.Dropout(0.3),
-#     tf.keras.layers.GRU(128, dropout=0.2, return_sequences=True),
-#     tf.keras.layers.LayerNormalization(),
-#     tf.keras.layers.Dropout(0.1),
-#     tf.keras.layers.GRU(128, dropout=0.1, return_sequences=False),
-#     tf.keras.layers.LayerNormalization(),
-#     tf.keras.layers.Dropout(0.2),
-#     tf.keras.layers.Dense(128, activation="relu"),
-#     tf.keras.layers.LayerNormalization(),
-#     tf.keras.layers.Dense(64, activation="relu"),
-#     tf.keras.layers.Dropout(0.1),
-#     tf.keras.layers.LayerNormalization(),
-#     tf.keras.layers.Dense(output_length, activation="softmax")
-# ])
-#
-# # see the sum of the model
-# model.summary()
-#
-# # Compile and training the model
-# model.compile(
-#     loss="sparse_categorical_crossentropy",
-#     optimizer=tf.keras.optimizers.Adam(0.0007),
-#     metrics=['accuracy']
-# )
-# history = model.fit(
-#     training_padded,
-#     training_labels,
-#     epochs=500,
-#     batch_size=64,
-#     validation_data=(validation_padded, validation_labels),
-#     callbacks=[Callback()]
-# )
+# Declare graph function and callback class
+def plot_graphs(history, string):
+    plt.plot(history.history[string])
+    plt.plot(history.history['val_'+string])
+    plt.xlabel("Epochs")
+    plt.ylabel(string)
+    plt.legend([string, 'val_'+string])
+    plt.ylim(bottom=0)
+    plt.show()
 
-# plot_graphs(history, "accuracy")
-# plot_graphs(history, "loss")
+class Callback(tf.keras.callbacks.Callback):
+    def on_epoch_end(self, epoch, logs={}):
+        if logs.get('val_accuracy') > 0.8 and logs.get('accuracy') > 0.92:
+            self.model.stop_training = True
 
-# model.save(current_dir + "../../assets/model_chatbot.h5")
+# Declare the model
+model = tf.keras.Sequential([
+    tf.keras.layers.Input(shape=(training_padded.shape[1],)),
+    tf.keras.layers.Embedding(input_dim=max_words, output_dim=100, weights=[embedding_matrix], trainable=False, mask_zero=True),
+    tf.keras.layers.Dropout(0.3),
+    tf.keras.layers.GRU(128, dropout=0.2, return_sequences=True),
+    tf.keras.layers.LayerNormalization(),
+    tf.keras.layers.Dropout(0.1),
+    tf.keras.layers.GRU(128, dropout=0.1, return_sequences=False),
+    tf.keras.layers.LayerNormalization(),
+    tf.keras.layers.Dropout(0.2),
+    tf.keras.layers.Dense(128, activation="relu"),
+    tf.keras.layers.LayerNormalization(),
+    tf.keras.layers.Dense(64, activation="relu"),
+    tf.keras.layers.Dropout(0.1),
+    tf.keras.layers.LayerNormalization(),
+    tf.keras.layers.Dense(output_length, activation="softmax")
+])
 
-from flask import Flask, request, jsonify
-from keras.models import load_model
-from flask_cors import CORS
+# see the sum of the model
+model.summary()
 
-app = Flask(__name__)
-CORS(app)
+# Compile and training the model
+model.compile(
+    loss="sparse_categorical_crossentropy",
+    optimizer=tf.keras.optimizers.Adam(0.0007),
+    metrics=['accuracy']
+)
+history = model.fit(
+    training_padded,
+    training_labels,
+    epochs=500,
+    batch_size=64,
+    validation_data=(validation_padded, validation_labels),
+    callbacks=[Callback()]
+)
 
-model = load_model(current_dir+ "/../../assets/model_chatbot.h5")
+plot_graphs(history, "accuracy")
+plot_graphs(history, "loss")
 
-@app.route('/predict', methods=['POST'])
-def predict():
-        user_input = request.get_json(force=True)
-        question = user_input.get('message')
-        input = preprocessing_text(question)
-        input = tokenizer.texts_to_sequences([input])
-        input = np.array(input).reshape(-1)
-        input = pad_sequences([input], training_padded.shape[1])
-        output = model.predict(input)
-        output = output.argmax()
-        response_tag = le.inverse_transform([output])[0]
-        # Check if the response_tag is in responses
-        if response_tag in responses:
-            response = {
-                'response' : random.choice(responses[response_tag])
-            }
-        else:
-            response = {
-                'response' : 'Maaf, saya tidak mengerti. Bisa kamu ulangi lagi dengan kata lain?'
-            }
-        return jsonify(response)
-
-if __name__ == '__main__':
-    app.run(debug=True)
+model.save(current_dir + "/../../assets/model_chatbot.h5")

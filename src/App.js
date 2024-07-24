@@ -11,10 +11,10 @@ import Login from "./pages/login";
 import Profile from "./pages/profile";
 import Verif from "./pages/verif";
 import History from "./pages/history";
-import ForgotPassword from "./pages/forgot-password";
+import ForgotPassword from "./pages/forgotPassword";
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Summary from "./pages/summary";
-// import { AuthProvider } from './context/auth-context';
+import EditProfile from "./pages/editProfile";
 
 function App() {
   return (
@@ -35,11 +35,14 @@ function App() {
           <Route path="/verif" element={<Verif />} />
           <Route path="/history" element={<History />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/summary" element={<Summary />} />
+          <Route path="/" element={<Features />} />
+          <Route path="/interview/:code" element={<Interview />} />
+          <Route path="/" element={<Interview />} />
+          <Route path="/summary/:id" element={<Summary />} />
+          <Route path="/editProfile" element={<EditProfile />} />
         </Routes>
         <Footer />
       </Router>
-      {/* </AuthProvider> */}
     </div>
   );
 }

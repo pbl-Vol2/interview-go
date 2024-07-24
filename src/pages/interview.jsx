@@ -1,34 +1,59 @@
 import React, { useState, useEffect } from "react";
 import mic from "../assets/image/mic.jpg";
-import { Accordion, Button } from "flowbite-react";
+import { Accordion, Button, Modal } from "flowbite-react";
+import { HiOutlineExclamationCircle } from "react-icons/hi";
 import axios from "axios";
+import { useParams, useNavigate } from "react-router-dom";
+import { v4 as uuidv4 } from "uuid";
+import StarRating from "../components/starRating";
 
 function Interview() {
   const [isRecording, setIsRecording] = useState(false);
-  const [question, setQuestion] = useState("");
   const [hasPermission, setHasPermission] = useState(false);
   const [stream, setStream] = useState(null);
   const [mediaRecorder, setMediaRecorder] = useState(null);
   const [timeLeft, setTimeLeft] = useState(120);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [isFeedback, setIsFeedback] = useState(false); // Menambahkan state untuk melacak sesi feedback
-  const [feedback, setFeedback] = useState(""); // Menambahkan state untuk menyimpan feedback
-
+  const [isFeedback, setIsFeedback] = useState(false); // (menampilkan feedback)
+  const [recordedBlobs, setRecordedBlobs] = useState([]);
+  const [openModal, setOpenModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
+  const { code } = useParams();
+  const navigate = useNavigate();
+  const [category, setCategory] = useState("");
+  //   save array questions, answers, feedback, rating, sample_answer as an array
   const [questions, setQuestions] = useState([]);
+  const [answers, setAnswers] = useState([]);
+  const [feedbacks, setFeedbacks] = useState([]);
+  const [ratings, setRatings] = useState([]);
+  const [sampleAnswers, setSampleAnswers] = useState([]);
+  // save all as an index
+  const [question, setQuestion] = useState("");
+  const [feedback, setFeedback] = useState("");
+  const [answer, setAnswer] = useState("");
+  const [rating, setRating] = useState(0);
+  const [sampleAnswer, setSampleAnswer] = useState("");
 
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
-        const response = await axios.post("http://localhost:5000/questions");
+        const response = await axios.post("http://127.0.0.1:5000/questions", {
+          code,
+        });
+        console.log("Fetched questions:", response.data.questions);
+        // set array question dan sample answer
         setQuestions(response.data.questions);
-        setQuestion(response.data.questions[0].question);
+        setSampleAnswers(response.data.sample_ans);
+        // set category
+        const category = response.data.category;
+        setCategory(category);
       } catch (error) {
         console.error("Error fetching questions:", error);
       }
     };
 
     fetchQuestions();
-  }, []);
+  }, [code]);
 
   useEffect(() => {
     if (isRecording) {
@@ -62,46 +87,138 @@ function Interview() {
         return;
       }
     }
+
     if (hasPermission) {
       setIsRecording(true);
+      setTimeLeft(120);
       setQuestion(questions[currentQuestionIndex]);
-      const mediaRecorder = new MediaRecorder(stream);
+      setSampleAnswer(sampleAnswers[currentQuestionIndex]);
+
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: "audio/webm;codecs=opus",
+      });
+
+      let recordedBlobs = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          recordedBlobs.push(event.data);
+        }
+      };
+
       setMediaRecorder(mediaRecorder);
+      setRecordedBlobs(recordedBlobs);
       mediaRecorder.start();
     }
   };
 
   const handleStopRecording = () => {
-    setIsRecording(false);
-    mediaRecorder.stop();
-    setIsFeedback(true); // Set feedback session aktif setelah rekaman berhenti
+    if (mediaRecorder) {
+      mediaRecorder.stop();
+      setIsRecording(false);
+      setIsFeedback(true);
+      mediaRecorder.onstop = async () => {
+        const blob = new Blob(recordedBlobs, { type: "audio/webm" });
+        const wavBlob = await convertWebmToWav(blob);
+        const answer = await sendAudioToFlask(wavBlob);
+        const feedbackResponse = await postFeedbackToAPI(question, answer);
+
+        if (feedbackResponse) {
+          setAnswers((prevAnswers) => {
+            const newAnswers = [...prevAnswers];
+            newAnswers[currentQuestionIndex] = answer;
+            return newAnswers;
+          });
+
+          setFeedbacks((prevFeedbacks) => {
+            const newFeedbacks = [...prevFeedbacks];
+            newFeedbacks[currentQuestionIndex] = feedbackResponse.feedback;
+            return newFeedbacks;
+          });
+
+          setRatings((prevRatings) => {
+            const newRatings = [...prevRatings];
+            newRatings[currentQuestionIndex] = feedbackResponse.rating;
+            return newRatings;
+          });
+
+          setFeedback(feedbackResponse.feedback);
+          setRating(feedbackResponse.rating);
+        } else {
+          console.error("Failed to get feedback and rating.");
+        }
+      };
+    }
   };
 
-  const handleFeedbackChange = (event) => {
-    setFeedback(event.target.value); // Menyimpan nilai feedback
-  };
-
-  const handleSubmitFeedback = () => {
-    // Simpan feedback atau lakukan tindakan lain yang diperlukan
-    console.log(
-      "Feedback for question ${currentQuestionIndex + 1}: ${feedback}"
-    );
-    setFeedback(""); // Reset feedback
-    setIsFeedback(false); // Selesai feedback session
-    goToNextQuestion(); // Lanjut ke pertanyaan berikutnya
+  const handleNextQuestion = () => {
+    if (currentQuestionIndex + 1 < questions.length) {
+      setIsFeedback(false); // Selesai feedback session
+      goToNextQuestion(); // Lanjut ke pertanyaan berikutnya
+    } else {
+      handleFinishInterview();
+    }
   };
 
   const goToNextQuestion = () => {
     setCurrentQuestionIndex((prevIndex) => {
       const nextIndex = prevIndex + 1;
       if (nextIndex < questions.length) {
-        setQuestion(questions[nextIndex]);
+        setQuestion(questions[nextIndex].question);
+        setSampleAnswer(sampleAnswers[nextIndex].sampleAnswer);
+        setTimeLeft(120);
+        setIsRecording(false);
+        setAnswer("");
+        setFeedback("");
+        setRating(0);
         return nextIndex;
       } else {
         alert("Interview selesai");
         return prevIndex;
       }
     });
+  };
+
+  const handleFinishInterview = () => {
+    handleOpenModal(
+      "Apakah Anda yakin ingin mengakhiri sesi interview dan review summary dari feedback Anda? Anda tidak dapat melanjutkan sesi interview ini."
+    );
+  };
+
+  const handleOpenModal = (message) => {
+    setModalMessage(message);
+    setOpenModal(true);
+  };
+
+  const handleModalConfirm = async () => {
+    setOpenModal(false);
+    if (modalMessage.includes("keluar dari sesi latihan")) {
+      navigate("/features");
+    } else if (modalMessage.includes("mengakhiri sesi interview")) {
+      // generate random uniqueId
+      const uniqueId = uuidv4();
+      // Collect the interview summary data
+      const summaryData = questions.map((question, index) => ({
+        category,
+        question: question,
+        answer: answers[index],
+        feedback: feedbacks[index],
+        timestamp: new Date().toISOString(),
+        rating: ratings[index],
+        sample_ans: sampleAnswers[index],
+      }));
+
+      try {
+        await axios.post("http://127.0.0.1:5000/summary", {
+          id: uniqueId,
+          summary: summaryData,
+        });
+        navigate(`/summary/${uniqueId}`);
+        console.log(summaryData);
+      } catch (error) {
+        console.error("Error posting summary to API:", error);
+      }
+    }
   };
 
   const formatTime = (time) => {
@@ -112,18 +229,133 @@ function Interview() {
       .padStart(2, "0")}`;
   };
 
+  const convertWebmToWav = async (webmBlob) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsArrayBuffer(webmBlob);
+
+      reader.onloadend = () => {
+        const audioContext = new (window.AudioContext ||
+          window.webkitAudioContext)();
+        audioContext.decodeAudioData(reader.result, (buffer) => {
+          const wavBlob = bufferToWav(buffer);
+          resolve(wavBlob);
+        });
+      };
+
+      reader.onerror = reject;
+    });
+  };
+
+  const bufferToWav = (buffer) => {
+    const numOfChannels = buffer.numberOfChannels;
+    const length = buffer.length * numOfChannels * 2 + 44;
+    const bufferData = new ArrayBuffer(length);
+    const view = new DataView(bufferData);
+
+    writeString(view, 0, "RIFF");
+    view.setUint32(4, length - 8, true);
+    writeString(view, 8, "WAVE");
+
+    writeString(view, 12, "fmt ");
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, numOfChannels, true);
+    view.setUint32(24, buffer.sampleRate, true);
+    view.setUint32(28, buffer.sampleRate * 4, true);
+    view.setUint16(32, numOfChannels * 2, true);
+    view.setUint16(34, 16, true);
+
+    writeString(view, 36, "data");
+    view.setUint32(40, length - 44, true);
+
+    // Write audio data
+    let offset = 44;
+    for (let i = 0; i < buffer.numberOfChannels; i++) {
+      const channel = buffer.getChannelData(i);
+      for (let j = 0; j < channel.length; j++) {
+        view.setInt16(offset, channel[j] * 0x7fff, true);
+        offset += 2;
+      }
+    }
+
+    return new Blob([view], { type: "audio/wav" });
+  };
+
+  const writeString = (view, offset, string) => {
+    for (let i = 0; i < string.length; i++) {
+      view.setUint8(offset + i, string.charCodeAt(i));
+    }
+  };
+
+  const sendAudioToFlask = async (blob) => {
+    const formData = new FormData();
+    formData.append("audio", blob, "audio.wav");
+    formData.append("question", question);
+
+    try {
+      const response = await axios.post(
+        "http://127.0.0.1:5000/answer",
+        formData,
+        {
+          headers: {
+            question: question,
+            audio: "multipart/form-data",
+          },
+        }
+      );
+      const answer = response.data.answer;
+      setAnswer(answer);
+      return answer;
+      console.log("Server response:", answer);
+    } catch (error) {
+      console.error("Error sending audio to Flask:", error);
+    }
+  };
+
+  const postFeedbackToAPI = async (question, answer) => {
+    try {
+      const response = await axios.post("http://127.0.0.1:5000/feedback", {
+        question,
+        answer,
+      });
+      console.log("Feedback posted to API:", response.data);
+      const feedback = response.data.feedback;
+      const rating = response.data.rating;
+      return { feedback, rating };
+    } catch (error) {
+      console.error("Error posting feedback to API:", error);
+    }
+  };
+
   return (
     <div className="bg-gradient-to-b from-sky-100 to-white h-full">
       <div className="container mx-auto p-4 pt-12">
-        <h1 className="text-3xl font-bold mb-8">INTERVIEW TEST</h1>
+        <h1 className="text-3xl font-bold mb-8 text-center">{category}</h1>
         <div className="flex justify-center items-center mb-4 gap-56">
-          <Button color="light" pill>
+          <Button
+            onClick={() =>
+              handleOpenModal(
+                "Apakah Anda yakin ingin keluar dari sesi latihan?"
+              )
+            }
+            color="light"
+            pill
+          >
             <i className="ri-arrow-left-line me-1"></i> Back
           </Button>
           <h2 className="font-semibold">
             Question {currentQuestionIndex + 1}/{questions.length}
           </h2>
-          <Button color="light" pill>
+          <Button
+            onClick={() =>
+              handleOpenModal(
+                "Apakah Anda yakin ingin mengakhiri sesi interview dan review summary dari feedback Anda? Anda tidak dapat melanjutkan sesi interview ini."
+              )
+            }
+            color="failure"
+            pill
+          >
             End & Review
           </Button>
         </div>
@@ -147,142 +379,41 @@ function Interview() {
               <div className="w-full">
                 <button
                   className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-full mb-3"
-                  onClick={handleSubmitFeedback}
+                  onClick={handleNextQuestion}
                 >
-                  Next Question
+                  {currentQuestionIndex + 1 === questions.length
+                    ? "Finish Interview"
+                    : "Next Question"}
                 </button>
-                <div id="accordion-open" data-accordion="open">
-                  <h2 id="accordion-open-heading-2">
-                    <button
-                      type="button"
-                      class="flex items-center justify-between w-full p-5 font-medium rtl:text-right text-gray-500 border border-b-0 border-gray-200 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-800 dark:border-gray-700 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 gap-3"
-                      data-accordion-target="#accordion-open-body-2"
-                      aria-expanded="false"
-                      aria-controls="accordion-open-body-2"
-                    >
-                      <span class="flex items-center">
-                        <svg
-                          class="w-5 h-5 me-2 shrink-0"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            fill-rule="evenodd"
-                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z"
-                            clip-rule="evenodd"
-                          ></path>
-                        </svg>
-                        Is there a Figma file available?
-                      </span>
-                      <svg
-                        data-accordion-icon
-                        class="w-3 h-3 rotate-180 shrink-0"
-                        aria-hidden="true"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 10 6"
-                      >
-                        <path
-                          stroke="currentColor"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M9 5 5 1 1 5"
-                        />
-                      </svg>
-                    </button>
-                  </h2>
-                  <div
-                    id="accordion-open-body-2"
-                    class="hidden"
-                    aria-labelledby="accordion-open-heading-2"
-                  >
-                    <div class="p-5 border border-b-0 border-gray-200 dark:border-gray-700">
-                      <p class="mb-2 text-gray-500 dark:text-gray-400">
-                        Flowbite is first conceptualized and designed using the
-                        Figma software so everything you see in the library has
-                        a design equivalent in our Figma file.
+                <Accordion>
+                  <Accordion.Panel>
+                    <Accordion.Title>Your Answer</Accordion.Title>
+                    <Accordion.Content>
+                      <p className="mb-2 text-gray-500 dark:text-gray-400">
+                        {answer}
                       </p>
-                      <p class="text-gray-500 dark:text-gray-400">
-                        Check out the{" "}
-                        <a
-                          href="https://flowbite.com/figma/"
-                          class="text-blue-600 dark:text-blue-500 hover:underline"
-                        >
-                          Figma design system
-                        </a>{" "}
-                        based on the utility classes from Tailwind CSS and
-                        components from Flowbite.
+                    </Accordion.Content>
+                  </Accordion.Panel>
+                  <Accordion.Panel>
+                    <Accordion.Title>Feedback</Accordion.Title>
+                    <Accordion.Content>
+                      <div className="mb-2">
+                        <StarRating rating={rating} />
+                      </div>
+                      <p className="mb-2 text-gray-500 dark:text-gray-400">
+                        {feedback}
                       </p>
-                    </div>
-                  </div>
-                  <h2 id="accordion-open-heading-2">
-                    <button
-                      type="button"
-                      class="flex items-center justify-between w-full p-5 font-medium rtl:text-right text-gray-500 border border-b-0 border-gray-200 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-800 dark:border-gray-700 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 gap-3"
-                      data-accordion-target="#accordion-open-body-2"
-                      aria-expanded="false"
-                      aria-controls="accordion-open-body-2"
-                    >
-                      <span class="flex items-center">
-                        <svg
-                          class="w-5 h-5 me-2 shrink-0"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            fill-rule="evenodd"
-                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z"
-                            clip-rule="evenodd"
-                          ></path>
-                        </svg>
-                        Is there a Figma file available?
-                      </span>
-                      <svg
-                        data-accordion-icon
-                        class="w-3 h-3 rotate-180 shrink-0"
-                        aria-hidden="true"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 10 6"
-                      >
-                        <path
-                          stroke="currentColor"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M9 5 5 1 1 5"
-                        />
-                      </svg>
-                    </button>
-                  </h2>
-                  <div
-                    id="accordion-open-body-2"
-                    class="hidden"
-                    aria-labelledby="accordion-open-heading-2"
-                  >
-                    <div class="p-5 border border-b-0 border-gray-200 dark:border-gray-700">
-                      <p class="mb-2 text-gray-500 dark:text-gray-400">
-                        Flowbite is first conceptualized and designed using the
-                        Figma software so everything you see in the library has
-                        a design equivalent in our Figma file.
+                    </Accordion.Content>
+                  </Accordion.Panel>
+                  <Accordion.Panel>
+                    <Accordion.Title>Sample Answer</Accordion.Title>
+                    <Accordion.Content>
+                      <p className="mb-2 text-gray-500 dark:text-gray-400">
+                        {sampleAnswer}
                       </p>
-                      <p class="text-gray-500 dark:text-gray-400">
-                        Check out the{" "}
-                        <a
-                          href="https://flowbite.com/figma/"
-                          class="text-blue-600 dark:text-blue-500 hover:underline"
-                        >
-                          Figma design system
-                        </a>{" "}
-                        based on the utility classes from Tailwind CSS and
-                        components from Flowbite.
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                    </Accordion.Content>
+                  </Accordion.Panel>
+                </Accordion>
               </div>
             ) : (
               <button
@@ -295,6 +426,30 @@ function Interview() {
           </div>
         </div>
       </div>
+      <Modal
+        show={openModal}
+        size="md"
+        onClose={() => setOpenModal(false)}
+        popup
+      >
+        <Modal.Header />
+        <Modal.Body>
+          <div className="text-center">
+            <HiOutlineExclamationCircle className="mx-auto mb-4 h-14 w-14 text-gray-400 dark:text-gray-200" />
+            <h3 className="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
+              {modalMessage}
+            </h3>
+            <div className="flex justify-center gap-4">
+              <Button color="failure" onClick={handleModalConfirm} pill>
+                Yes, I'm sure
+              </Button>
+              <Button color="gray" onClick={() => setOpenModal(false)} pill>
+                No, cancel
+              </Button>
+            </div>
+          </div>
+        </Modal.Body>
+      </Modal>
     </div>
   );
 }
