@@ -1,0 +1,6 @@
+{
+    "python.analysis.extraPaths": [
+        "./machine-learning/models/chatbot",
+        "./machine-learning/models"
+    ]
+}
