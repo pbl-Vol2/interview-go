@@ -8,6 +8,8 @@ const Summary = () => {
   const { id } = useParams();
   const [summaryData, setSummaryData] = useState([]);
   const navigate = useNavigate();
+  const [rating, setRating] = useState(0);
+  const [totalScore, setTotalScore] = useState(0);
 
   useEffect(() => {
     const fetchSummaryData = async () => {
@@ -23,6 +25,14 @@ const Summary = () => {
 
     fetchSummaryData();
   }, [id]);
+
+  useEffect(() => {
+    if (summaryData.length > 0) {
+      const totalRating = summaryData.reduce((acc, item) => acc + item.rating, 0);
+      const averageRating = totalRating / summaryData.length;
+      setTotalScore(averageRating / 3);
+    }
+  }, [summaryData]);
 
   const handleEndReview = () => {
     navigate("/dashboard");
@@ -41,23 +51,39 @@ const Summary = () => {
             </Button>
           </div>
         </div>
-           <Accordion>
-               {summaryData.map((item, index) => (
-                        <Accordion.Panel key={index}>
-                            <Accordion.Title>Q{index + 1}. {item.question}</Accordion.Title>
-                            <Accordion.Content>
-                                <p className="mb-2 text-gray-500 dark:text-gray-400">Answer: {item.answer}</p>
-                                <p className="mb-2 text-gray-500 dark:text-gray-400">Feedback: {item.feedback}</p>
-                                <p className="mb-2 text-gray-500 dark:text-gray-400">Rating: {item.rating}</p>
-                                <p className="mb-2 text-gray-500 dark:text-gray-400">Timestamp: {item.timestamp}</p>
-                                <p className="mb-2 text-gray-500 dark:text-gray-400">Sample Answer: {item.sample_ans}</p>
-                            </Accordion.Content>
-                        </Accordion.Panel>
-                    ))}
-          </Accordion>
+        <div className="my-6 text-center">
+          <h3 className="text-2xl font-bold">Total Score</h3>
+          <StarRating rating={totalScore} />
+        </div>
+        <Accordion>
+          {summaryData.map((item, index) => (
+            <Accordion.Panel key={index}>
+              <Accordion.Title>
+                Q{index + 1}. {item.question}
+              </Accordion.Title>
+              <Accordion.Content>
+                <p className="mb-2 text-gray-500 dark:text-gray-400">
+                  Answer: {item.answer}
+                </p>
+                <p className="mb-2 text-gray-500 dark:text-gray-400">
+                  Feedback: {item.feedback}
+                </p>
+                <p className="mb-2 text-gray-500 dark:text-gray-400">
+                  Rating: {item.rating}
+                </p>
+                <p className="mb-2 text-gray-500 dark:text-gray-400">
+                  Timestamp: {item.timestamp}
+                </p>
+                <p className="mb-2 text-gray-500 dark:text-gray-400">
+                  Sample Answer: {item.sample_ans}
+                </p>
+              </Accordion.Content>
+            </Accordion.Panel>
+          ))}
+        </Accordion>
       </div>
     </div>
   );
 };
-  
+
 export default Summary;
