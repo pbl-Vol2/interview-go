@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import monye from "../assets/image/monye.png";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
@@ -41,21 +41,23 @@ const Navbar = () => {
             />
           </div>
           <div className="hidden md:flex md:space-x-8 md:items-center">
-            <ul className="flex navbar gap-8">
-              <li className="nav-item">
+            <ul className="flex navbar gap-8 justify-center items-center">
+              <li className="nav-item font-semibold">
                 <a href="/" className="text-black hover:underline">
                   HOME
                 </a>
               </li>
-              <li className="nav-item">
+              <li className="nav-item font-semibold">
                 <a href="/about" className="text-black hover:underline">
                   ABOUT
                 </a>
               </li>
-              <FlyoutLink href="/features" FlyoutContent={FeaturesContent}>
-                FEATURES
-              </FlyoutLink>
               <li className="nav-item">
+                <FlyoutLink href="/features" FlyoutContent={FeaturesContent}>
+                  FEATURES
+                </FlyoutLink>
+              </li>
+              <li className="nav-item font-semibold">
                 <a href="/pricing" className="text-black hover:underline">
                   PRICING
                 </a>
@@ -121,24 +123,27 @@ const FlyoutLink = ({ children, href, FlyoutContent }) => {
     <div
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
-      className="relative nav-item"
+      className="relative w-fit h-fit"
     >
-      <a href={href} className="text-black hover:underline">
+      <a href={href} className="relative hover:underline font-semibold">
         {children}
       </a>
-      {showFlyout && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.85 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.85 }}
-          transition={{ duration: 0.15 }}
-          className="absolute left-0 w-64 pt-2"
-        >
-          <div className="bg-white shadow-lg border p-4">
+      <AnimatePresence>
+        {showFlyout && (
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 15 }}
+            style={{ translateX: "-50%" }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="absolute left-1/2 top-12 bg-white text-black"
+          >
+            <div className="absolute -top-6 left-0 right-0 h-6 bg-transparent" />
+            {/* <div className="absolute left-1/2 top-0 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rotate-45 bg-white" /> */}
             <FlyoutContent />
-          </div>
-        </motion.div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
@@ -147,11 +152,7 @@ const FeaturesContent = () => {
   return (
     <div className="w-64 bg-white p-6 shadow-xl">
       <div className="mb-3 space-y-3">
-        <h3 className="font-semibold">For Individuals</h3>
-        <a href="/" className="block text-sm hover:underline">
-          <i className="ri-rocket-fill mx-2"></i>
-          Introduction
-        </a>
+        <h3 className="font-semibold">Our Services</h3>
         <a href="/interview" className="block text-sm hover:underline">
           <i className="ri-mic-line mx-2"></i>
           Interview Test
@@ -161,15 +162,6 @@ const FeaturesContent = () => {
           MonBot
         </a>
       </div>
-      <div className="mb-6 space-y-3">
-        <h3 className="font-semibold">For Companies</h3>
-        <a href="/" className="block text-sm hover:underline">
-          Startups
-        </a>
-      </div>
-      <button className="w-full rounded-lg border-2 border-neutral-950 px-4 py-2 font-semibold transition-colors hover:bg-neutral-950 hover:text-white">
-        Contact Us
-      </button>
     </div>
   );
 };
