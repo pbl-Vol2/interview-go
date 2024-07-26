@@ -5,6 +5,7 @@ import Logo from "../assets/image/logo.png";
 import axios from "axios";
 import "../assets/style.css";
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 // Define colors array
 const colors = [
@@ -20,6 +21,8 @@ const Login = ({ onLogin }) => {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [activeColors, setActiveColors] = useState([]);
+  const [rememberMe, setRememberMe] = useState(false);
+  const navigate = useNavigate();
   const [cursorPosition, setCursorPosition] = useState({ x: -100, y: -100 });
 
   useEffect(() => {
