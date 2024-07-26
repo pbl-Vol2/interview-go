@@ -1,13 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import monye from "../assets/image/monye.png";
 import { useNavigate } from "react-router-dom";
-import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
-import { Button, Checkbox, Label, Modal, TextInput } from "flowbite-react";
+import { motion } from "framer-motion";
+import { useAuth } from "../context/auth-context";
+import axios from 'axios';
 
 const Navbar = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { isAuthenticated, login, logout } = useAuth();
   const navigate = useNavigate();
+
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   const handleSignupButton = () => {
     navigate("/registration");
@@ -18,30 +20,53 @@ const Navbar = () => {
   };
 
   const handleLoginButton = () => {
-    navigate("/login");
-    // Simulating login for demonstration
-    setIsAuthenticated(true);
+    login();
+    navigate("/dashboard");
   };
 
   const handleLogoutButton = () => {
-    // Perform logout logic here
-    setIsAuthenticated(false);
-    navigate("/");
+    setShowConfirmDialog(true);
+  };
+
+  const handleConfirmLogout = async () => {
+    try {
+        await axios.post('http://localhost:5000/logout', {}, { withCredentials: true });
+        // Clear tokens from storage
+        localStorage.removeItem('token');
+        localStorage.removeItem('email');
+        localStorage.removeItem('rememberMe');
+        sessionStorage.removeItem('email');
+        sessionStorage.removeItem('rememberMe');
+        // Call logout function and redirect
+        logout();
+        navigate("/");
+    } catch (error) {
+        console.error('Logout error:', error);
+    } finally {
+        setShowConfirmDialog(false);
+    }
+};
+
+ 
+
+
+  const handleCancelLogout = () => {
+    setShowConfirmDialog(false);
   };
 
   return (
-    <nav className="justify-center bg-white shadow-md">
+    <nav className="bg-white shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
+        <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
             <img
               src={monye}
               alt="Logo"
-              className="inline-block pl-5 mr-2 h-12 w"
+              className="h-12 w-auto"
             />
           </div>
-          <div className="hidden md:flex md:space-x-8 md:items-center">
-            <ul className="flex navbar gap-8">
+          <div className="hidden md:flex md:space-x-8">
+            <ul className="flex space-x-8">
               <li className="nav-item">
                 <a href="/" className="text-black hover:underline">
                   HOME
@@ -62,18 +87,18 @@ const Navbar = () => {
               </li>
             </ul>
           </div>
-          <div className="group space-x-2 hidden md:flex md:items-center w-52">
+          <div className="hidden md:flex space-x-2">
             {isAuthenticated ? (
               <>
                 <button
                   onClick={handleProfileButton}
-                  className="font-semibold w-72 h-12 hover:underline hover:bg-secondaryGrey duration-500"
+                  className="font-semibold px-4 py-2 border rounded-lg hover:bg-secondaryGrey transition-colors"
                 >
                   Profile
                 </button>
                 <button
                   onClick={handleLogoutButton}
-                  className="flex align-middle justify-center font-semibold w-full py-1 px-4 border-2 border-customBiru3 rounded-full shadow-lg transform transition-transform hover:scale-105"
+                  className="font-semibold px-4 py-2 border-2 border-red-500 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-colors"
                 >
                   Logout
                 </button>
@@ -82,14 +107,14 @@ const Navbar = () => {
               <>
                 <button
                   onClick={handleSignupButton}
-                  className="font-semibold w-72 h-12 hover:underline hover:bg-secondaryGrey duration-500"
+                  className="font-semibold px-4 py-2 border rounded-lg hover:bg-secondaryGrey transition-colors"
                 >
                   Sign Up
                 </button>
                 <p className="text-gray-300"> / </p>
                 <button
                   onClick={handleLoginButton}
-                  className="flex align-middle justify-center font-semibold w-full py-1 px-4 border-2 border-customBiru3 rounded-full shadow-lg transform transition-transform hover:scale-105"
+                  className="flex items-center font-semibold px-4 py-2 border-2 border-customBiru3 text-customBiru3 rounded-lg hover:bg-customBiru3 hover:text-white transition-colors"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -97,7 +122,7 @@ const Navbar = () => {
                     width="16"
                     height="16"
                     fill="currentColor"
-                    className="mr-2 mt-1"
+                    className="mr-2"
                   >
                     <path d="M4 22C4 17.5817 7.58172 14 12 14C16.4183 14 20 17.5817 20 22H4ZM12 13C8.685 13 6 10.315 6 7C6 3.685 8.685 1 12 1C15.315 1 18 3.685 18 7C18 10.315 15.315 13 12 13Z"></path>
                   </svg>
@@ -108,6 +133,30 @@ const Navbar = () => {
           </div>
         </div>
       </div>
+
+      {/* Confirmation Dialog */}
+      {showConfirmDialog && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
+            <h3 className="text-lg font-semibold">Confirm Logout</h3>
+            <p className="mt-2">Are you sure you want to log out?</p>
+            <div className="mt-4 flex justify-end gap-4">
+              <button
+                onClick={handleConfirmLogout}
+                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+              >
+                Yes, Logout
+              </button>
+              <button
+                onClick={handleCancelLogout}
+                className="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </nav>
   );
 };
@@ -115,28 +164,24 @@ const Navbar = () => {
 const FlyoutLink = ({ children, href, FlyoutContent }) => {
   const [open, setOpen] = useState(false);
 
-  const showFlyout = FlyoutContent && open;
-
   return (
     <div
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
-      className="relative nav-item"
+      className="relative"
     >
       <a href={href} className="text-black hover:underline">
         {children}
       </a>
-      {showFlyout && (
+      {open && (
         <motion.div
           initial={{ opacity: 0, scale: 0.85 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.85 }}
           transition={{ duration: 0.15 }}
-          className="absolute left-0 w-64 pt-2"
+          className="absolute left-0 mt-2 w-64 bg-white shadow-lg border p-4"
         >
-          <div className="bg-white shadow-lg border p-4">
-            <FlyoutContent />
-          </div>
+          <FlyoutContent />
         </motion.div>
       )}
     </div>

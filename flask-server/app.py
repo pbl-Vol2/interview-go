@@ -1,14 +1,14 @@
 import sys
 import os
-from flask import Flask, jsonify, request, current_app, send_from_directory, session
+from flask import Flask, jsonify, request,Blueprint, current_app, session, send_from_directory, abort
 from flask_cors import CORS, cross_origin
 from flask_session import Session
 from pymongo import MongoClient
 from config import Config
-import jwt
+from jwt import ExpiredSignatureError, DecodeError
 from bson import ObjectId
 from flask_bcrypt import Bcrypt
-from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, unset_jwt_cookies
 from functools import wraps
 import hashlib
 from datetime import datetime, timedelta
@@ -16,6 +16,7 @@ from werkzeug.security import check_password_hash
 from werkzeug.utils import secure_filename
 import shutil
 import tempfile
+
 # from tensorflow.keras.layers import LayerNormalization
 # from tensorflow.python.keras.models import load_model
 
@@ -35,6 +36,13 @@ app.config.from_object(Config)
 Session(app)
 bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
+
+auth = Blueprint('auth', __name__)
+
+# Ensure the upload folder exists
+UPLOAD_FOLDER = 'uploads'
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
 
 class Feedback:
   def __init__(self, category, question, answer, feedback):
@@ -146,7 +154,7 @@ def protected(current_user):
     else:
         return jsonify({'result': 'fail', 'msg': 'User not found'}), 404
 
-# Route to get user information including email
+# Route to get user information including email and profile picture
 @app.route('/get_user_info', methods=['GET'])
 @jwt_required()
 @cross_origin(supports_credentials=True)
@@ -155,46 +163,97 @@ def get_user_info():
     user = db.users.find_one({'email': current_user}, {'_id': False, 'password': False})
     
     if user:
-        return jsonify({'user': {'fullname': user['fullname'], 'email': user['email']}})
+        return jsonify({
+            'user': {
+                'fullname': user.get('fullname', ''),
+                'email': user.get('email', ''),
+                'profile_pic_real': user.get('profile_pic_real', '')  # Include profile_pic_real
+            }
+        })
     else:
         return jsonify({'error': 'User not found'}), 404
     
-# Route to Update Profile
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    uploads_dir = os.path.join(app.root_path, 'uploads')
+    file_path = os.path.join(uploads_dir, filename)
+    if not os.path.isfile(file_path):
+        print(f"File not found: {file_path}")  # Debug line
+        return jsonify({'message': 'File not found'}), 404
+    return send_from_directory(uploads_dir, filename)
+
+# Update Profile   
 @app.route("/update_profile", methods=["POST"])
 @jwt_required()
 def update_profile():
     try:
         email = get_jwt_identity()
-
         new_profile = {}
 
-        # Update profile name if provided
-        name = request.form.get('fullname')
-        if name:
-            new_profile['profile_name'] = name
+        # Update profile fullname if provided
+        fullname = request.form.get('fullname')
+        if fullname:
+            new_profile['fullname'] = fullname
 
         # Update profile picture if provided
         if 'file_give' in request.files:
             file = request.files['file_give']
-            if file:
+            if file and file.filename:
                 filename = secure_filename(file.filename)
                 extension = filename.split('.')[-1]
+                
+                # Ensure the file is an image
+                if extension.lower() not in ['jpg', 'jpeg', 'png', 'gif']:
+                    return jsonify({'result': 'fail', 'msg': 'Unsupported file type'}), 400
+                
                 file_path = os.path.join(app.config['UPLOAD_FOLDER'], f'{email}.{extension}')
                 file.save(file_path)
                 new_profile['profile_pic'] = filename
-                new_profile['profile_pic_real'] = file_path
+                new_profile['profile_pic_real'] = f'{email}.{extension}'
+
+        # Debug logging
+        print(f"Updating profile for email: {email}")
+        print(f"New profile data: {new_profile}")
 
         # Perform database update
         result = db.users.update_one({'email': email}, {'$set': new_profile})
+
+        # Debug logging
+        print(f"Update result: {result.raw_result}")
 
         # Check if update was successful
         if result.modified_count > 0:
             return jsonify({'result': 'success', 'msg': 'Profile updated successfully'})
         else:
-            return jsonify({'result': 'fail', 'msg': 'Profile not updated'})
+            return jsonify({'result': 'fail', 'msg': 'No changes were made to the profile'})
 
     except Exception as e:
+        # Debug logging
+        print(f"Error: {str(e)}")
         return jsonify({'result': 'fail', 'msg': str(e)}), 500
+ 
+#Route to Logout   
+@auth.route('/logout', methods=['POST'])
+@jwt_required()
+def logout():
+    # Invalidate the token by unsetting JWT cookies
+    response = jsonify({'msg': 'Logout successful'})
+    unset_jwt_cookies(response)
+    return response
+
+@app.route('/logout', methods=['OPTIONS', 'POST'])
+def handle_options():
+    if request.method == 'OPTIONS':
+        response = jsonify({'msg': 'Preflight request'})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Methods', 'POST, OPTIONS')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        return response
+    else:
+        # Handle the POST request as usual
+        return logout()
+
+
 
 # #Route to Chatbot
 # @app.route('/predict', methods=['POST'])
@@ -536,19 +595,28 @@ def get_summary(user_id):
 #         return jsonify({'result': 'fail', 'msg': 'Authentication failed'}), 401
 
 # Route to delete user profile
-@app.route("/delete_profile", methods=["POST"])
-def delete_profile():
+@app.route("/delete_user", methods=["POST"])
+def delete_user():
     token_receive = request.cookies.get(Config.TOKEN_KEY)
+    
+    if not token_receive:
+        return jsonify({'result': 'fail', 'msg': 'Token is missing'}), 401
+    
     try:
         payload = jwt.decode(token_receive, Config.SECRET_KEY, algorithms=["HS256"])
         email = payload.get('id')
+        
+        if not email:
+            return jsonify({'result': 'fail', 'msg': 'Email not found in token'}), 401
         
         db.users.delete_one({'email': email})
         
         return jsonify({'result': 'success', 'msg': 'Profile deleted successfully'})
     
-    except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
-        return jsonify({'result': 'fail', 'msg': 'Authentication failed'}), 401
+    except ExpiredSignatureError:
+        return jsonify({'result': 'fail', 'msg': 'Token has expired'}), 401
+    except DecodeError:
+        return jsonify({'result': 'fail', 'msg': 'Token is invalid'}), 401
 
 if __name__ == '__main__':
     app.run(debug=True)

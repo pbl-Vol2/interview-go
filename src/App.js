@@ -11,14 +11,16 @@ import Login from "./pages/login";
 import Profile from "./pages/profile";
 import Verif from "./pages/verif";
 import History from "./pages/history";
-import ForgotPassword from "./pages/forgot-password";
+import ForgotPassword from "./pages/forgotPassword";
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Summary from "./pages/summary";
+import EditProfile from "./pages/editProfile";
+import { AuthProvider } from "../src/context/auth-context";
 
 function App() {
   return (
     <div className="App">
-      {/* <AuthProvider> */}
+      <AuthProvider>
       <Router>
         <Navbar />
         <Routes>
@@ -38,9 +40,11 @@ function App() {
           <Route path="/interview/:code" element={<Interview />} />
           <Route path="/" element={<Interview />} />
           <Route path="/summary/:id" element={<Summary />} />
+          <Route path="/editProfile" element={<EditProfile />} />
         </Routes>
         <Footer />
       </Router>
+      </AuthProvider>
     </div>
   );
 }

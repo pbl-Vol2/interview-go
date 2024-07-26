@@ -1,9 +1,18 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { FloatingLabel, Checkbox, Label } from "flowbite-react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 import Logo from "../assets/image/logo.png";
-import '../assets/style.css';
+import axios from "axios";
+import "../assets/style.css";
+import { useAuth } from '../context/auth-context';
+
+const colors = [
+  "bg-red-500",
+  "bg-blue-500",
+  "bg-green-500",
+  "bg-yellow-500",
+  "bg-purple-500",
+];
 
 const Login = () => {
   const navigate = useNavigate();
@@ -11,6 +20,14 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [message, setMessage] = useState('');
+  const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 }); // Define cursorPosition state
+  const [activeColors, setActiveColors] = useState([]); // Define activeColors state
+
+  const { login } = useAuth();
+
+  const handleMouseMove = (e) => {
+    setCursorPosition({ x: e.clientX, y: e.clientY });
+  };
 
   const handleLoginButton = async (e) => {
     e.preventDefault();
@@ -51,6 +68,21 @@ const Login = () => {
       setMessage(error.response?.data?.msg || 'An error occurred');
     }
   };
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveColors((prevColors) => {
+        const newColors = [...prevColors];
+        if (newColors.length >= 5) {
+          newColors.shift();
+        }
+        newColors.push(colors[Math.floor(Math.random() * colors.length)]);
+        return newColors;
+      });
+    }, 6000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-center from-sky-100 to-white">
