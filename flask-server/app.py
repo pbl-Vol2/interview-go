@@ -1,6 +1,6 @@
 import sys
 import os
-from flask import Flask, jsonify, request,Blueprint, current_app, session, send_from_directory, abort
+from flask import Flask, jsonify, request, Blueprint, current_app, session, send_from_directory, abort
 from flask_cors import CORS, cross_origin
 from flask_session import Session
 from pymongo import MongoClient
@@ -22,6 +22,9 @@ import tempfile
 
 # # Load the trained models
 # current_dir = os.path.dirname(os.path.realpath(__file__))
+=======
+# current_dir = os.path.dirname(os.path.realpath(_file_))
+>>>>>>> 6f741ab667f663df820da3f00f54869fa5603248
 # model1 = load_model(os.path.join(current_dir, "../machine-learning/assets/model_chatbot.h5"))
 # model2 = load_model(os.path.join(current_dir, "../machine-learning/assets/model_scoring.h5"))
 
@@ -31,6 +34,7 @@ import tempfile
 
 
 app = Flask(__name__)
+<<<<<<< HEAD
 CORS(app, supports_credentials=True) 
 app.config.from_object(Config)
 Session(app)
@@ -50,6 +54,16 @@ class Feedback:
     self.question = question
     self.answer = answer
     self.feedback = feedback
+=======
+
+class Feedback:
+    def _init_(self, category, question, answer, feedback):
+        self.category = category
+        self.question = question
+        self.answer = answer
+        self.feedback = feedback
+
+>>>>>>> 6f741ab667f663df820da3f00f54869fa5603248
 
 # MongoDB client setup
 client = MongoClient(Config.MONGO_URI)
@@ -62,6 +76,10 @@ app.config['SECRET_KEY'] = 'VIEWGO'
 def hash_password(password):
     return hashlib.sha256(password.encode('utf-8')).hexdigest()
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 6f741ab667f663df820da3f00f54869fa5603248
 # Token required decorator
 def token_required(f):
     @wraps(f)
@@ -85,6 +103,10 @@ def token_required(f):
 
     return decorated_function
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 6f741ab667f663df820da3f00f54869fa5603248
 # Route for user registration
 @app.route('/register', methods=['POST'])
 def register():
@@ -122,6 +144,10 @@ def register():
     except Exception as e:
         return jsonify({'result': 'fail', 'msg': str(e)}), 500
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 6f741ab667f663df820da3f00f54869fa5603248
 # Route for user Login
 @app.route('/login', methods=['POST'])
 def login():
@@ -129,6 +155,7 @@ def login():
         data = request.get_json()
         email = data.get('email')
         password = data.get('password')
+<<<<<<< HEAD
         
         user = db.users.find_one({'email': email})
 
@@ -142,6 +169,10 @@ def login():
     except Exception as e:
         return jsonify({'result': 'fail', 'msg': str(e)}), 500
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 6f741ab667f663df820da3f00f54869fa5603248
 # Protected route example
 @app.route('/protected', methods=['GET'])
 @token_required
@@ -154,6 +185,10 @@ def protected(current_user):
     else:
         return jsonify({'result': 'fail', 'msg': 'User not found'}), 404
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 6f741ab667f663df820da3f00f54869fa5603248
 # Route to get user information including email and profile picture
 @app.route('/get_user_info', methods=['GET'])
 @jwt_required()
@@ -161,7 +196,11 @@ def protected(current_user):
 def get_user_info():
     current_user = get_jwt_identity()
     user = db.users.find_one({'email': current_user}, {'_id': False, 'password': False})
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> 6f741ab667f663df820da3f00f54869fa5603248
     if user:
         return jsonify({
             'user': {
@@ -172,6 +211,7 @@ def get_user_info():
         })
     else:
         return jsonify({'error': 'User not found'}), 404
+<<<<<<< HEAD
     
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
@@ -182,6 +222,7 @@ def uploaded_file(filename):
         return jsonify({'message': 'File not found'}), 404
     return send_from_directory(uploads_dir, filename)
 
+<<<<<<< HEAD
 # Update Profile   
 @app.route("/update_profile", methods=["POST"])
 @jwt_required()
@@ -201,11 +242,19 @@ def update_profile():
             if file and file.filename:
                 filename = secure_filename(file.filename)
                 extension = filename.split('.')[-1]
+<<<<<<< HEAD
                 
                 # Ensure the file is an image
                 if extension.lower() not in ['jpg', 'jpeg', 'png', 'gif']:
                     return jsonify({'result': 'fail', 'msg': 'Unsupported file type'}), 400
                 
+=======
+
+                # Ensure the file is an image
+                if extension.lower() not in ['jpg', 'jpeg', 'png', 'gif']:
+                    return jsonify({'result': 'fail', 'msg': 'Unsupported file type'}), 400
+
+>>>>>>> 6f741ab667f663df820da3f00f54869fa5603248
                 file_path = os.path.join(app.config['UPLOAD_FOLDER'], f'{email}.{extension}')
                 file.save(file_path)
                 new_profile['profile_pic'] = filename
@@ -231,7 +280,13 @@ def update_profile():
         # Debug logging
         print(f"Error: {str(e)}")
         return jsonify({'result': 'fail', 'msg': str(e)}), 500
+<<<<<<< HEAD
  
+=======
+
+
+# Route to Logout
+>>>>>>> 6f741ab667f663df820da3f00f54869fa5603248
 #Route to Logout   
 @auth.route('/logout', methods=['POST'])
 @jwt_required()
