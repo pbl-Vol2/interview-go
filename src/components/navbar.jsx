@@ -1,12 +1,12 @@
 import React from 'react';
 import monye from "../assets/image/monye.png";
+import { useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
-import { Button, Checkbox, Label, Modal, TextInput } from "flowbite-react";
+import { useAuth } from "../context/AuthContext";
 
 const Navbar = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { isAuthenticated, login, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleSignupButton = () => {
@@ -18,14 +18,12 @@ const Navbar = () => {
   };
 
   const handleLoginButton = () => {
+    login();
     navigate("/login");
-    // Simulating login for demonstration
-    setIsAuthenticated(true);
   };
 
   const handleLogoutButton = () => {
-    // Perform logout logic here
-    setIsAuthenticated(false);
+    logout();
     navigate("/");
   };
 

@@ -15,11 +15,12 @@ import ForgotPassword from "./pages/forgotPassword";
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Summary from "./pages/summary";
 import EditProfile from "./pages/editProfile";
+import { AuthProvider } from "./context/AuthContext";
 
 function App() {
   return (
     <div className="App">
-      {/* <AuthProvider> */}
+      <AuthProvider>
       <Router>
         <Navbar />
         <Routes>
@@ -43,6 +44,7 @@ function App() {
         </Routes>
         <Footer />
       </Router>
+      </AuthProvider>
     </div>
   );
 }

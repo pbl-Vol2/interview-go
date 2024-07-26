@@ -1,10 +1,11 @@
+// src/components/Login.js
 import { FloatingLabel, Checkbox, Label } from "flowbite-react";
 import { useState, useEffect } from "react";
 import Logo from "../assets/image/logo.png";
 import axios from "axios";
 import "../assets/style.css";
+import { useAuth } from '../context/AuthContext';
 
-// Define colors array
 const colors = [
   "bg-red-500",
   "bg-blue-500",
@@ -20,44 +21,42 @@ const Login = ({ onLogin }) => {
   const [activeColors, setActiveColors] = useState([]);
   const [cursorPosition, setCursorPosition] = useState({ x: -100, y: -100 });
 
-  // Function to handle mouse move
+  const { login } = useAuth();
+
   const handleMouseMove = (e) => {
     setCursorPosition({ x: e.clientX, y: e.clientY });
   };
 
-  // Function to handle login form submission
   const handleLoginButton = async (e) => {
-    e.preventDefault(); // Prevent default form submission
+    e.preventDefault();
 
     try {
-      console.log("Attempting to login with email:", email); // Log the email for debugging
+      console.log('Attempting to login with email:', email);
 
-      // Send a POST request to the backend server
-      const response = await axios.post("http://localhost:5000/login", {
+      const response = await axios.post('http://localhost:5000/login', {
         email_give: email,
         password_give: password,
       });
 
-      // Check the response from the server
-      if (response.data.result === "success") {
-        setMessage("Login successful!"); // Set success message
-        localStorage.setItem("token", response.data.token); // Store token in localStorage
+      if (response.data.result === 'success') {
+        setMessage('Login successful!');
+        const { token } = response.data;
 
-        // Perform action upon successful login (e.g., redirect to dashboard)
-        onLogin(); // Assuming this function navigates to the dashboard
+        login(token); // Update authentication state with token
+
+        onLogin(); // Navigate to dashboard or other post-login action
       } else {
-        setMessage(response.data.msg || "Unknown error occurred"); // Display error message from backend
+        setMessage(response.data.msg || 'Unknown error occurred');
       }
     } catch (error) {
       console.log(
-        "Login error:",
-        error.response?.data?.msg || "An error occurred"
-      ); // Log and display error message
-      setMessage(error.response?.data?.msg || "An error occurred"); // Display error message to user
+        'Login error:',
+        error.response?.data?.msg || 'An error occurred'
+      );
+      setMessage(error.response?.data?.msg || 'An error occurred');
     }
   };
 
-  // UseEffect to set interval for color change animation
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveColors((prevColors) => {
@@ -68,7 +67,7 @@ const Login = ({ onLogin }) => {
         newColors.push(colors[Math.floor(Math.random() * colors.length)]);
         return newColors;
       });
-    }, 6000); // Interval update every 6 seconds
+    }, 6000);
 
     return () => clearInterval(interval);
   }, []);
