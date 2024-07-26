@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import mic from "../assets/image/mic.jpg";
-import { Accordion, Button, Modal } from "flowbite-react";
+import { Accordion, Button, Modal, Spinner } from "flowbite-react";
 import { HiOutlineExclamationCircle } from "react-icons/hi";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
@@ -15,6 +15,7 @@ function Interview() {
   const [timeLeft, setTimeLeft] = useState(120);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [isFeedback, setIsFeedback] = useState(false); // (menampilkan feedback)
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false); // menampilkan spinner
   const [recordedBlobs, setRecordedBlobs] = useState([]);
   const [openModal, setOpenModal] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
@@ -117,6 +118,7 @@ function Interview() {
       mediaRecorder.stop();
       setIsRecording(false);
       setIsFeedback(true);
+      setIsLoadingPreview(true);
       mediaRecorder.onstop = async () => {
         const blob = new Blob(recordedBlobs, { type: "audio/webm" });
         const wavBlob = await convertWebmToWav(blob);
@@ -144,8 +146,10 @@ function Interview() {
 
           setFeedback(feedbackResponse.feedback);
           setRating(feedbackResponse.rating);
+          setIsLoadingPreview(false);
         } else {
           console.error("Failed to get feedback and rating.");
+          setIsLoadingPreview(false);
         }
       };
     }
@@ -389,28 +393,51 @@ function Interview() {
                   <Accordion.Panel>
                     <Accordion.Title>Your Answer</Accordion.Title>
                     <Accordion.Content>
-                      <p className="mb-2 text-gray-500 dark:text-gray-400">
-                        {answer}
-                      </p>
+                      {isLoadingPreview ? (
+                        <div className="flex items-center justify-center">
+                          <Spinner size="md" /> 
+                          <span className="pl-3">Please Wait...</span>
+                        </div>
+                      ) : (
+                        <p className="mb-2 text-gray-500 dark:text-gray-400">
+                          {answer}
+                        </p>
+                      )}
                     </Accordion.Content>
                   </Accordion.Panel>
                   <Accordion.Panel>
                     <Accordion.Title>Feedback</Accordion.Title>
                     <Accordion.Content>
-                      <div className="mb-2">
-                        <StarRating rating={rating} />
-                      </div>
-                      <p className="mb-2 text-gray-500 dark:text-gray-400">
-                        {feedback}
-                      </p>
+                      {isLoadingPreview ? (
+                        <div className="flex items-center justify-center">
+                          <Spinner size="md" />
+                          <span className="pl-3">Please Wait...</span>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="mb-2">
+                            <StarRating rating={rating} />
+                          </div>
+                          <p className="mb-2 text-gray-500 dark:text-gray-400">
+                            {feedback}
+                          </p>
+                        </>
+                      )}
                     </Accordion.Content>
                   </Accordion.Panel>
                   <Accordion.Panel>
                     <Accordion.Title>Sample Answer</Accordion.Title>
                     <Accordion.Content>
-                      <p className="mb-2 text-gray-500 dark:text-gray-400">
-                        {sampleAnswer}
-                      </p>
+                      {isLoadingPreview ? (
+                        <div className="flex items-center justify-center">
+                          <Spinner size="md" />
+                          <span className="pl-3">Please Wait...</span>
+                        </div>
+                      ) : (
+                        <p className="mb-2 text-gray-500 dark:text-gray-400">
+                          {sampleAnswer}
+                        </p>
+                      )}
                     </Accordion.Content>
                   </Accordion.Panel>
                 </Accordion>
