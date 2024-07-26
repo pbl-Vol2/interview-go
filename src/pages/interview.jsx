@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import mic from "../assets/image/mic.jpg";
-import { Accordion, Button, Modal } from "flowbite-react";
+import { Accordion, Button, Modal, Spinner } from "flowbite-react";
 import { HiOutlineExclamationCircle } from "react-icons/hi";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
@@ -15,19 +15,20 @@ function Interview() {
   const [timeLeft, setTimeLeft] = useState(120);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [isFeedback, setIsFeedback] = useState(false); // (menampilkan feedback)
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false); // menampilkan spinner
   const [recordedBlobs, setRecordedBlobs] = useState([]);
   const [openModal, setOpenModal] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
   const { code } = useParams();
   const navigate = useNavigate();
   const [category, setCategory] = useState("");
-//   save array questions, answers, feedback, rating, sample_answer as an array
+  //   save array questions, answers, feedback, rating, sample_answer as an array
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState([]);
   const [feedbacks, setFeedbacks] = useState([]);
   const [ratings, setRatings] = useState([]);
-  const [sampleAnswers,setSampleAnswers] = useState([]);
-// save all as an index
+  const [sampleAnswers, setSampleAnswers] = useState([]);
+  // save all as an index
   const [question, setQuestion] = useState("");
   const [feedback, setFeedback] = useState("");
   const [answer, setAnswer] = useState("");
@@ -37,7 +38,9 @@ function Interview() {
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
-        const response = await axios.post('http://127.0.0.1:5000/questions', { code });
+        const response = await axios.post("http://127.0.0.1:5000/questions", {
+          code,
+        });
         console.log("Fetched questions:", response.data.questions);
         // set array question dan sample answer
         setQuestions(response.data.questions);
@@ -115,46 +118,50 @@ function Interview() {
       mediaRecorder.stop();
       setIsRecording(false);
       setIsFeedback(true);
+      setIsLoadingPreview(true);
       mediaRecorder.onstop = async () => {
         const blob = new Blob(recordedBlobs, { type: "audio/webm" });
         const wavBlob = await convertWebmToWav(blob);
         const answer = await sendAudioToFlask(wavBlob);
         const feedbackResponse = await postFeedbackToAPI(question, answer);
 
-          if (feedbackResponse) {
-            setAnswers((prevAnswers) => {
-              const newAnswers = [...prevAnswers];
-              newAnswers[currentQuestionIndex] = answer;
-              return newAnswers;
-            });
+        if (feedbackResponse) {
+          setAnswers((prevAnswers) => {
+            const newAnswers = [...prevAnswers];
+            newAnswers[currentQuestionIndex] = answer;
+            return newAnswers;
+          });
 
-            setFeedbacks((prevFeedbacks) => {
-              const newFeedbacks = [...prevFeedbacks];
-              newFeedbacks[currentQuestionIndex] = feedbackResponse.feedback;
-              return newFeedbacks;
-            });
+          setFeedbacks((prevFeedbacks) => {
+            const newFeedbacks = [...prevFeedbacks];
+            newFeedbacks[currentQuestionIndex] = feedbackResponse.feedback;
+            return newFeedbacks;
+          });
 
-            setRatings((prevRatings) => {
-              const newRatings = [...prevRatings];
-              newRatings[currentQuestionIndex] = feedbackResponse.rating;
-              return newRatings;
-            });
+          setRatings((prevRatings) => {
+            const newRatings = [...prevRatings];
+            newRatings[currentQuestionIndex] = feedbackResponse.rating;
+            return newRatings;
+          });
 
-            setFeedback(feedbackResponse.feedback);
-            setRating(feedbackResponse.rating);
-          } else {
-            console.error("Failed to get feedback and rating.");
-          }
+          setFeedback(feedbackResponse.feedback);
+          setRating(feedbackResponse.rating);
+          setIsLoadingPreview(false);
+        } else {
+          console.error("Failed to get feedback and rating.");
+          setIsLoadingPreview(false);
+        }
       };
     }
   };
 
   const handleNextQuestion = () => {
-    console.log(
-      "Feedback for question ${currentQuestionIndex + 1}: ${feedback}"
-    );
-    setIsFeedback(false); // Selesai feedback session
-    goToNextQuestion(); // Lanjut ke pertanyaan berikutnya
+    if (currentQuestionIndex + 1 < questions.length) {
+      setIsFeedback(false); // Selesai feedback session
+      goToNextQuestion(); // Lanjut ke pertanyaan berikutnya
+    } else {
+      handleFinishInterview();
+    }
   };
 
   const goToNextQuestion = () => {
@@ -188,22 +195,22 @@ function Interview() {
   };
 
   const handleModalConfirm = async () => {
-      setOpenModal(false);
-      if (modalMessage.includes("keluar dari sesi latihan")) {
-        navigate("/features");
-      } else if (modalMessage.includes("mengakhiri sesi interview")) {
-          // generate random uniqueId
-        const uniqueId = uuidv4();
-        // Collect the interview summary data
-        const summaryData = questions.map((question, index) => ({
-          category,
-          question: question,
-          answer: answers[index],
-          feedback: feedbacks[index],
-          timestamp: new Date().toISOString(),
-          rating: ratings[index],
-          sample_ans: sampleAnswers[index],
-        }));
+    setOpenModal(false);
+    if (modalMessage.includes("keluar dari sesi latihan")) {
+      navigate("/features");
+    } else if (modalMessage.includes("mengakhiri sesi interview")) {
+      // generate random uniqueId
+      const uniqueId = uuidv4();
+      // Collect the interview summary data
+      const summaryData = questions.map((question, index) => ({
+        category,
+        question: question,
+        answer: answers[index],
+        feedback: feedbacks[index],
+        timestamp: new Date().toISOString(),
+        rating: ratings[index],
+        sample_ans: sampleAnswers[index],
+      }));
 
       try {
         await axios.post("http://127.0.0.1:5000/summary", {
@@ -319,12 +326,11 @@ function Interview() {
       console.log("Feedback posted to API:", response.data);
       const feedback = response.data.feedback;
       const rating = response.data.rating;
-      return {feedback, rating};
+      return { feedback, rating };
     } catch (error) {
       console.error("Error posting feedback to API:", error);
     }
   };
-
 
   return (
     <div className="bg-gradient-to-b from-sky-100 to-white h-full">
@@ -387,28 +393,51 @@ function Interview() {
                   <Accordion.Panel>
                     <Accordion.Title>Your Answer</Accordion.Title>
                     <Accordion.Content>
-                      <p className="mb-2 text-gray-500 dark:text-gray-400">
-                        {answer}
-                      </p>
+                      {isLoadingPreview ? (
+                        <div className="flex items-center justify-center">
+                          <Spinner size="md" /> 
+                          <span className="pl-3 text-gray-400">Please Wait...</span>
+                        </div>
+                      ) : (
+                        <p className="mb-2 text-gray-500 dark:text-gray-400">
+                          {answer}
+                        </p>
+                      )}
                     </Accordion.Content>
                   </Accordion.Panel>
                   <Accordion.Panel>
                     <Accordion.Title>Feedback</Accordion.Title>
                     <Accordion.Content>
-                      <div className="mb-2">
-                        <StarRating rating={rating} />
-                      </div>
-                      <p className="mb-2 text-gray-500 dark:text-gray-400">
-                        {feedback}
-                      </p>
+                      {isLoadingPreview ? (
+                        <div className="flex items-center justify-center">
+                          <Spinner size="md" />
+                          <span className="pl-3 text-gray-400">Please Wait...</span>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="mb-2">
+                            <StarRating rating={rating} />
+                          </div>
+                          <p className="mb-2 text-gray-500 dark:text-gray-400">
+                            {feedback}
+                          </p>
+                        </>
+                      )}
                     </Accordion.Content>
                   </Accordion.Panel>
                   <Accordion.Panel>
                     <Accordion.Title>Sample Answer</Accordion.Title>
                     <Accordion.Content>
-                      <p className="mb-2 text-gray-500 dark:text-gray-400">
-                        {sampleAnswer}
-                      </p>
+                      {isLoadingPreview ? (
+                        <div className="flex items-center justify-center">
+                          <Spinner size="md" />
+                          <span className="pl-3 text-gray-400">Please Wait...</span>
+                        </div>
+                      ) : (
+                        <p className="mb-2 text-gray-500 dark:text-gray-400">
+                          {sampleAnswer}
+                        </p>
+                      )}
                     </Accordion.Content>
                   </Accordion.Panel>
                 </Accordion>

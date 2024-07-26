@@ -1,9 +1,10 @@
+// src/components/Login.js
 import { FloatingLabel, Checkbox, Label } from "flowbite-react";
+import { useState, useEffect } from "react";
 import Logo from "../assets/image/logo.png";
 import axios from "axios";
 import "../assets/style.css";
-import React, {useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 // Define colors array
 const colors = [
@@ -14,13 +15,11 @@ const colors = [
   "bg-purple-500",
 ];
 
-const Login = () => {
-  const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
-  const [message, setMessage] = useState('');
-    const [activeColors, setActiveColors] = useState([]);
+const Login = ({ onLogin }) => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [message, setMessage] = useState("");
+  const [activeColors, setActiveColors] = useState([]);
   const [cursorPosition, setCursorPosition] = useState({ x: -100, y: -100 });
 
   useEffect(() => {

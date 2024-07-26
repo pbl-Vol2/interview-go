@@ -5,7 +5,7 @@ const Landing = () => {
   const navigate = useNavigate();
   
   const handleGetStarted = () => {
-    navigate('/dashboard');
+    navigate('/login');
   };
 
   return (
