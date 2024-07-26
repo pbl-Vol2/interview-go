@@ -396,7 +396,7 @@ function Interview() {
                       {isLoadingPreview ? (
                         <div className="flex items-center justify-center">
                           <Spinner size="md" /> 
-                          <span className="pl-3">Please Wait...</span>
+                          <span className="pl-3 text-gray-400">Please Wait...</span>
                         </div>
                       ) : (
                         <p className="mb-2 text-gray-500 dark:text-gray-400">
@@ -411,7 +411,7 @@ function Interview() {
                       {isLoadingPreview ? (
                         <div className="flex items-center justify-center">
                           <Spinner size="md" />
-                          <span className="pl-3">Please Wait...</span>
+                          <span className="pl-3 text-gray-400">Please Wait...</span>
                         </div>
                       ) : (
                         <>
@@ -431,7 +431,7 @@ function Interview() {
                       {isLoadingPreview ? (
                         <div className="flex items-center justify-center">
                           <Spinner size="md" />
-                          <span className="pl-3">Please Wait...</span>
+                          <span className="pl-3 text-gray-400">Please Wait...</span>
                         </div>
                       ) : (
                         <p className="mb-2 text-gray-500 dark:text-gray-400">
