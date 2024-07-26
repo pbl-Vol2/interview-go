@@ -15,6 +15,7 @@ import ForgotPassword from "./pages/forgotPassword";
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Summary from "./pages/summary";
 import EditProfile from "./pages/editProfile";
+import Pricing from "./pages/pricing";
 import { AuthProvider } from "./context/AuthContext";
 
 function App() {
@@ -41,6 +42,7 @@ function App() {
           <Route path="/" element={<Interview />} />
           <Route path="/summary/:id" element={<Summary />} />
           <Route path="/editProfile" element={<EditProfile />} />
+          <Route path="/pricing" element={<Pricing />} />
         </Routes>
         <Footer />
       </Router>
