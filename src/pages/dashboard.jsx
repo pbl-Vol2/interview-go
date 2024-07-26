@@ -4,6 +4,7 @@ import { FiAlertCircle } from 'react-icons/fi';
 import chatbot from '../assets/image/chatbot.jpg';
 import speaking from '../assets/image/speaking.jpg';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 
 const Dashboard = () => {
   const cardData = [
@@ -23,11 +24,62 @@ const Dashboard = () => {
     },
   ];
 
+  const [fullname, setFullname] = useState('');
   const [helloText, setHelloText] = useState('');
   const [typing, setTyping] = useState(false);
+  const [loading, setLoading] = useState(true); // Add loading state
 
   useEffect(() => {
-    const helloUserText = 'Hello User!';
+    const fetchFullname = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          console.log('Token is missing!');
+          // Handle case where token is missing
+          return;
+        }
+
+        const response = await axios.get('http://localhost:5000/get_user_info', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        // Handle response based on status
+        if (response.status === 200) {
+          setFullname(response.data.user.fullname);
+          setLoading(false);
+        } else {
+          console.error('Error fetching full name:', response.statusText);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Error fetching full name:', error.message);
+        setLoading(false);
+        // Handle specific error cases (e.g., token expired)
+        if (axios.isCancel(error)) {
+          console.log('Request canceled:', error.message);
+        } else if (error.response && error.response.status === 401) {
+          console.log('Token is expired or invalid, redirecting to login page...');
+          // Clear token and redirect to login page
+          localStorage.removeItem('token');
+          window.location.href = '/login'; // Redirect to login page
+        } else {
+          console.error('Unexpected error:', error.message);
+        }
+      }
+    };
+
+    fetchFullname();
+
+    return () => {
+      // Cleanup function if needed
+    };
+  }, []); // Empty dependency array to run only once on mount
+
+  useEffect(() => {
+    const helloUserText = `Hello ${fullname || 'User'}!`;
     let i = 0;
     const typingInterval = setInterval(() => {
       setHelloText(helloUserText.substring(0, i + 1));
@@ -40,8 +92,11 @@ const Dashboard = () => {
       }
     }, 100);
     setTyping(true);
-    return () => clearInterval(typingInterval);
-  }, []);
+
+    return () => {
+      clearInterval(typingInterval);
+    };
+  }, [fullname]); // Run effect when fullname changes
 
   return (
     <div className="min-h-screen bg-customBiru4 py-8 px-4">
@@ -60,45 +115,49 @@ const Dashboard = () => {
         </AnimatePresence>
         {!typing && (
           <h1 className="text-3xl md:text-4xl font-bold text-white mb-8">
-            Hello User!
+            Hello {fullname || 'User'}!
           </h1>
         )}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-          className="grid grid-cols-1 md:grid-cols-2 gap-6"
-        >
-          {cardData.map((card, index) => (
-            <motion.div
-              key={index}
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="bg-white rounded-lg shadow-md hover:shadow-lg"
-            >
-              <Link to={card.link} className="block">
-                <img src={card.image} alt="" className="rounded-t-lg w-full h-48 object-cover" />
-              </Link>
-              <div className="p-6">
+        {loading ? (
+          <p className="text-white">Loading...</p>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="grid grid-cols-1 md:grid-cols-2 gap-6"
+          >
+            {cardData.map((card, index) => (
+              <motion.div
+                key={index}
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className="bg-white rounded-lg shadow-md hover:shadow-lg"
+              >
                 <Link to={card.link} className="block">
-                  <h2 className="text-xl md:text-2xl font-bold text-gray-800 hover:text-blue-600 transition duration-300">
-                    {card.title}
-                  </h2>
+                  <img src={card.image} alt={`${card.title} Image`} className="rounded-t-lg w-full h-48 object-cover" />
                 </Link>
-                <p className="text-sm text-gray-600 mb-4">
-                  {card.description}
-                </p>
-                <Link
-                  to={card.link}
-                  className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition duration-300"
-                >
-                  {card.buttonText}
-                </Link>
-              </div>
-            </motion.div>
-          ))}
-        </motion.div>
+                <div className="p-6">
+                  <Link to={card.link} className="block">
+                    <h2 className="text-xl md:text-2xl font-bold text-gray-800 hover:text-blue-600 transition duration-300">
+                      {card.title}
+                    </h2>
+                  </Link>
+                  <p className="text-sm text-gray-600 mb-4">
+                    {card.description}
+                  </p>
+                  <Link
+                    to={card.link}
+                    className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition duration-300"
+                  >
+                    {card.buttonText}
+                  </Link>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
       </div>
     </div>
   );
