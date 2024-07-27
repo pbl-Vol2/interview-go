@@ -33,13 +33,14 @@ const Landing = () => {
           </button>
         </div>
       </div>
-      <div className="max-w-7xl mx-auto mt-12 p-4 sm:px-6 lg:px-8 text-center">
-        <div className="flex">
-          
+      <div className="max-w-7xl mx-auto mt-10 p-4 sm:px-6 lg:px-8 text-center">
+        <div className="justify-center">
+          <h1 className="text-2xl font-bold text-customBiru3">How It Works</h1>
+          <p>Give yourself an unfair advantage in interviews</p>
         </div>
-        <div className="flex flex-row ">
-          <div className="flex-1 text-black text-2xl font-semibold">
-            <h1>Step 1 - Generate questions</h1>
+        <div className="flex flex-row mt-8">
+          <div className="flex-1 text-black text-xl font-semibold">
+            <h1 className="">Step 1 - Generate questions</h1>
             <p></p>
           </div>
           <div className="flex-1">

@@ -72,7 +72,7 @@ const About = () => {
                   src={person.imageUrl}
                   className="rounded-full object-cover mb-4 grayscale-img"
                   style={{ width: '100px', height: '100px' }}
-                  whileHover={{ scale: 1.1, rotate: 3 }}
+                  whileHover={{ scale: 1.1, rotate: 3}}
                   transition={{ duration: 0.2 }}
                 />
                 <div className="text-center">
