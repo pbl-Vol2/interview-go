@@ -30,7 +30,7 @@ const people = [
 
 const About = () => {
   return (
-    <div className="bg-gradient-to-b from-white to-blue-100 min-h-screen py-20">
+    <div className="bg-gradient-to-b from-white via-blue-100 to-white min-h-screen py-20">
       {/* About Us Section */}
       <div className="flex items-center justify-center py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative">

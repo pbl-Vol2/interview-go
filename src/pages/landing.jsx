@@ -1,15 +1,16 @@
 import logo from "../assets/image/logo.png";
 import { useNavigate } from "react-router-dom";
+import demoDashboard from "../assets/video/demoDashboard.mp4";
 
 const Landing = () => {
   const navigate = useNavigate();
-  
+
   const handleGetStarted = () => {
-    navigate('/login');
+    navigate("/login");
   };
 
   return (
-    <div className="bg-gradient-to-b from-sky-100 to-white min-h-screen flex items-center justify-center">
+    <div className="pt-20 bg-gradient-to-b from-sky-100 to-white min-h-screen items-center justify-center">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <div className="flex justify-center items-center mb-8">
           <img src={logo} alt="Logo" className="h-48 w-auto" />
@@ -32,9 +33,18 @@ const Landing = () => {
           </button>
         </div>
       </div>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <div className="flex flex-row">
-          <img src="" alt="" />
+      <div className="max-w-7xl mx-auto mt-12 p-4 sm:px-6 lg:px-8 text-center">
+        <div className="flex">
+          
+        </div>
+        <div className="flex flex-row ">
+          <div className="flex-1 text-black text-2xl font-semibold">
+            <h1>Step 1 - Generate questions</h1>
+            <p></p>
+          </div>
+          <div className="flex-1">
+            <video src={demoDashboard} alt="demo1" autoPlay loop muted />
+          </div>
         </div>
       </div>
     </div>

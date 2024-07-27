@@ -1,13 +1,17 @@
-import React from "react";
+import React, { useEffect } from "react";
 import monye from "../assets/image/monye.png";
-import { useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { useAuth } from "../context/AuthContext";
+import { useState } from "react";
 
 const Navbar = () => {
-  const { isAuthenticated, login, logout } = useAuth();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    setIsAuthenticated(!!token);
+  }, []);// Empty dependency array means this runs once when the component mounts
 
   const handleSignupButton = () => {
     navigate("/registration");
@@ -18,12 +22,14 @@ const Navbar = () => {
   };
 
   const handleLoginButton = () => {
-    login();
     navigate("/login");
+    // Simulating login for demonstration
+    // setIsAuthenticated(true); // Uncomment this if you want to simulate login
   };
 
   const handleLogoutButton = () => {
-    logout();
+    localStorage.removeItem('token');
+    setIsAuthenticated(false);
     navigate("/");
   };
 
@@ -50,10 +56,10 @@ const Navbar = () => {
                   ABOUT
                 </a>
               </li>
-              <li className="nav-item">
-                <FlyoutLink href="/features" FlyoutContent={FeaturesContent}>
-                  FEATURES
-                </FlyoutLink>
+              <li className="nav-item font-semibold">
+                  <FlyoutLink href="/features" FlyoutContent={FeaturesContent}>
+                    FEATURES
+                  </FlyoutLink>
               </li>
               <li className="nav-item font-semibold">
                 <a href="/pricing" className="text-black hover:underline">
@@ -137,7 +143,6 @@ const FlyoutLink = ({ children, href, FlyoutContent }) => {
             className="absolute left-1/2 top-12 bg-white text-black"
           >
             <div className="absolute -top-6 left-0 right-0 h-6 bg-transparent" />
-            {/* <div className="absolute left-1/2 top-0 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rotate-45 bg-white" /> */}
             <FlyoutContent />
           </motion.div>
         )}
@@ -147,19 +152,21 @@ const FlyoutLink = ({ children, href, FlyoutContent }) => {
 };
 
 const FeaturesContent = () => {
+  const [isLanding, setIsLanding] = useState(true);
+  
   return (
     <div className="w-64 bg-white p-6 shadow-xl">
-      <div className="mb-3 space-y-3">
-        <h3 className="font-semibold">Our Services</h3>
-        <a href="/interview" className="block text-sm hover:underline">
-          <i className="ri-mic-line mx-2"></i>
-          Interview Test
-        </a>
-        <a href="/chatbot" className="block text-sm hover:underline">
-          <i className="ri-chat-smile-3-fill mx-2"></i>
-          MonBot
-        </a>
-      </div>
+        <div className="mb-3 space-y-3">
+          <h3 className="font-semibold">Our Services</h3>
+          <a href="/interview" className="block text-sm hover:underline">
+            <i className="ri-mic-line mx-2"></i>
+            Interview Test
+          </a>
+          <a href="/chatbot" className="block text-sm hover:underline">
+            <i className="ri-chat-smile-3-fill mx-2"></i>
+            MonBot
+          </a>
+        </div>
     </div>
   );
 };

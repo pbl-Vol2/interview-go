@@ -48,39 +48,45 @@ const Login = ({ onLogin }) => {
     e.preventDefault();
 
     if (!email || !password) {
-      setMessage('Email and password are required.');
+      setMessage("Email and password are required.");
       return;
     }
 
+    // Send a POST request to the backend server
     try {
-      const response = await axios.post('http://localhost:5000/login', {
+      const response = await axios.post("http://localhost:5000/login", {
         email: email,
         password: password,
       });
 
-      if (response.data.result === 'success') {
-        setMessage('Login successful!');
+      // Check the response from the server
+      if (response.data.result === "success") {
+        setMessage("Login successful!");
         const token = response.data.token;
 
-        // Store token securely, consider using HttpOnly cookie for security
-        localStorage.setItem('token', token);
+        // Store token securely in localStorage, consider using HttpOnly cookie for security
+        localStorage.setItem("token", token);
 
         if (rememberMe) {
-          localStorage.setItem('email', email);
-          localStorage.setItem('rememberMe', 'true');
+          localStorage.setItem("email", email);
+          localStorage.setItem("rememberMe", "true");
         } else {
-          sessionStorage.setItem('email', email);
-          sessionStorage.setItem('rememberMe', 'false');
+          sessionStorage.setItem("email", email);
+          sessionStorage.setItem("rememberMe", "false");
         }
 
         // Redirect to dashboard
-        navigate('/dashboard');
+        navigate("/dashboard");
+        window.location.reload();
       } else {
-        setMessage(response.data.msg || 'Invalid email or password');
+        setMessage(response.data.msg || "Invalid email or password");
       }
     } catch (error) {
-      console.error('Login error:', error.response?.data?.msg || 'An error occurred');
-      setMessage(error.response?.data?.msg || 'An error occurred');
+      console.error(
+        "Login error:",
+        error.response?.data?.msg || "An error occurred"
+      );
+      setMessage(error.response?.data?.msg || "An error occurred");
     }
   };
 

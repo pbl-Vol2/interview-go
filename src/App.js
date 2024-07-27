@@ -2,9 +2,9 @@ import Navbar from "./components/navbar";
 import Landing from "./pages/landing";
 import About from "./pages/about";
 import Registration from "./pages/registration";
-import Dashboard from "./pages/dashboard"
-import Footer from "./components/footer"
-import Features  from "./pages/features"
+import Dashboard from "./pages/dashboard";
+import Footer from "./components/footer";
+import Features from "./pages/features";
 import Chatbot from "./pages/chatbot";
 import Interview from "./pages/interview";
 import Login from "./pages/login";
@@ -12,23 +12,32 @@ import Profile from "./pages/profile";
 import Verif from "./pages/verif";
 import History from "./pages/history";
 import ForgotPassword from "./pages/forgotPassword";
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Summary from "./pages/summary";
 import EditProfile from "./pages/editProfile";
+import Pricing from "./pages/pricing";
+import FeaturesLanding from "./pages/featuresLanding";
+import { useState } from "react";
 import { AuthProvider } from "./context/AuthContext";
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem("token"));
+
   return (
     <div className="App">
-      <AuthProvider>
+      {/* <AuthProvider> */}
       <Router>
-        <Navbar />
+        <Navbar
+          isAuthenticated={isAuthenticated}
+          setIsAuthenticated={setIsAuthenticated}
+        />
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/about" element={<About />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/registration" element={<Registration />} />
           <Route path="/features" element={<Features />} />
+          <Route path="/featuresLanding" element={<FeaturesLanding />} />
           <Route path="/chatbot" element={<Chatbot />} />
           <Route path="/interview" element={<Interview />} />
           <Route path="/login" element={<Login />} />
@@ -41,10 +50,12 @@ function App() {
           <Route path="/" element={<Interview />} />
           <Route path="/summary/:id" element={<Summary />} />
           <Route path="/editProfile" element={<EditProfile />} />
+          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/pricing" element={<Pricing />} />
         </Routes>
         <Footer />
       </Router>
-      </AuthProvider>
+      {/* </AuthProvider> */}
     </div>
   );
 }
