@@ -1,3 +1,4 @@
+// authContext.js
 import React, { createContext, useState, useContext } from 'react';
 import axios from 'axios';
 
@@ -5,7 +6,7 @@ import axios from 'axios';
 const AuthContext = createContext();
 
 // Provide Context
-export const AuthProvider = ({ children }) => {
+const AuthProvider = ({ children }) => {
   const [auth, setAuth] = useState({
     isAuthenticated: !!localStorage.getItem('token'),
     token: localStorage.getItem('token') || null,
@@ -35,4 +36,6 @@ export const AuthProvider = ({ children }) => {
 };
 
 // Custom hook to use Auth context
-export const useAuth = () => useContext(AuthContext);
+const useAuth = () => useContext(AuthContext);
+
+export { AuthProvider, useAuth, AuthContext };

@@ -1,13 +1,17 @@
-import React from "react";
+import React, { useState, useEffect } from 'react';
 import monye from "../assets/image/monye.png";
-import { useState } from 'react';
 import { useNavigate } from "react-router-dom";
-import { AnimatePresence, motion } from "framer-motion";
-import { useAuth } from "../context/AuthContext";
+import { motion } from "framer-motion";
 
 const Navbar = () => {
-  const { isAuthenticated, login, logout } = useAuth();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    setIsAuthenticated(!!token);
+  }, []);
 
   const handleSignupButton = () => {
     navigate("/registration");
@@ -18,13 +22,40 @@ const Navbar = () => {
   };
 
   const handleLoginButton = () => {
-    login();
     navigate("/login");
   };
 
   const handleLogoutButton = () => {
-    logout();
-    navigate("/");
+    setShowLogoutConfirm(true);
+  };
+
+  const confirmLogout = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:5000/auth/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        localStorage.removeItem('token');
+        setIsAuthenticated(false);
+        setShowLogoutConfirm(false);
+        navigate("/");
+      } else {
+        console.error('Failed to logout');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
+  const handleLogoutCancel = () => {
+    setShowLogoutConfirm(false);
   };
 
   return (
@@ -39,23 +70,21 @@ const Navbar = () => {
             />
           </div>
           <div className="hidden md:flex md:space-x-8 md:items-center">
-            <ul className="flex navbar gap-8 justify-center items-center">
-              <li className="nav-item font-semibold">
+            <ul className="flex navbar gap-8">
+              <li className="nav-item">
                 <a href="/" className="text-black hover:underline">
                   HOME
                 </a>
               </li>
-              <li className="nav-item font-semibold">
+              <li className="nav-item">
                 <a href="/about" className="text-black hover:underline">
                   ABOUT
                 </a>
               </li>
+              <FlyoutLink href="/features" FlyoutContent={FeaturesContent}>
+                FEATURES
+              </FlyoutLink>
               <li className="nav-item">
-                <FlyoutLink href="/features" FlyoutContent={FeaturesContent}>
-                  FEATURES
-                </FlyoutLink>
-              </li>
-              <li className="nav-item font-semibold">
                 <a href="/pricing" className="text-black hover:underline">
                   PRICING
                 </a>
@@ -108,6 +137,12 @@ const Navbar = () => {
           </div>
         </div>
       </div>
+      {showLogoutConfirm && (
+        <LogoutConfirmPopup
+          onConfirm={confirmLogout}
+          onCancel={handleLogoutCancel}
+        />
+      )}
     </nav>
   );
 };
@@ -121,27 +156,24 @@ const FlyoutLink = ({ children, href, FlyoutContent }) => {
     <div
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
-      className="relative w-fit h-fit"
+      className="relative nav-item"
     >
-      <a href={href} className="relative hover:underline font-semibold">
+      <a href={href} className="text-black hover:underline">
         {children}
       </a>
-      <AnimatePresence>
-        {showFlyout && (
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 15 }}
-            style={{ translateX: "-50%" }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
-            className="absolute left-1/2 top-12 bg-white text-black"
-          >
-            <div className="absolute -top-6 left-0 right-0 h-6 bg-transparent" />
-            {/* <div className="absolute left-1/2 top-0 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rotate-45 bg-white" /> */}
+      {showFlyout && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.85 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.85 }}
+          transition={{ duration: 0.15 }}
+          className="absolute left-0 w-64 pt-2"
+        >
+          <div className="bg-white shadow-lg border p-4">
             <FlyoutContent />
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 };
@@ -150,7 +182,11 @@ const FeaturesContent = () => {
   return (
     <div className="w-64 bg-white p-6 shadow-xl">
       <div className="mb-3 space-y-3">
-        <h3 className="font-semibold">Our Services</h3>
+        <h3 className="font-semibold">For Individuals</h3>
+        <a href="/" className="block text-sm hover:underline">
+          <i className="ri-rocket-fill mx-2"></i>
+          Introduction
+        </a>
         <a href="/interview" className="block text-sm hover:underline">
           <i className="ri-mic-line mx-2"></i>
           Interview Test
@@ -160,6 +196,45 @@ const FeaturesContent = () => {
           MonBot
         </a>
       </div>
+      <div className="mb-6 space-y-3">
+        <h3 className="font-semibold">For Companies</h3>
+        <a href="/" className="block text-sm hover:underline">
+          Startups
+        </a>
+      </div>
+      <button className="w-full rounded-lg border-2 border-neutral-950 px-4 py-2 font-semibold transition-colors hover:bg-neutral-950 hover:text-white">
+        Contact Us
+      </button>
+    </div>
+  );
+};
+
+const LogoutConfirmPopup = ({ onConfirm, onCancel }) => {
+  return (
+    <div className="fixed inset-0 flex items-center justify-center bg-gray-600 bg-opacity-50">
+      <motion.div
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.8, opacity: 0 }}
+        transition={{ type: "spring", stiffness: 300 }}
+        className="bg-white p-6 rounded-lg shadow-lg"
+      >
+        <h3 className="mb-4 text-lg font-semibold text-gray-800 text-center">Are you sure you want to logout?</h3>
+        <div className="flex justify-center mt-6">
+          <button
+            onClick={onConfirm}
+            className="flex justify-center font-medium text-sm bg-gradient-to-r from-red-500 to-red-700 text-white rounded-full shadow-lg hover:from-red-600 hover:to-red-800 px-5 py-2.5 me-2 mb-2"
+          >
+            Yes
+          </button>
+          <button
+            onClick={onCancel}
+            className="flex justify-center font-medium text-sm bg-gradient-to-r from-gray-300 to-gray-400 text-gray-800 rounded-full shadow-lg hover:from-gray-400 hover:to-gray-500 px-5 py-2.5 ms-2 mb-2"
+          >
+            No
+          </button>
+        </div>
+      </motion.div>
     </div>
   );
 };
