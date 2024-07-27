@@ -1,12 +1,12 @@
 import logo from "../assets/image/logo.png";
 import { useNavigate } from "react-router-dom";
-import Chatbot from "../assets/image/chatbot.jpg"
+import demoDashboard from "../assets/video/demoDashboard.mp4";
 
 const Landing = () => {
   const navigate = useNavigate();
-  
+
   const handleGetStarted = () => {
-    navigate('/login');
+    navigate("/login");
   };
 
   return (
@@ -34,13 +34,17 @@ const Landing = () => {
         </div>
       </div>
       <div className="max-w-7xl mx-auto mt-12 p-4 sm:px-6 lg:px-8 text-center">
-        <div className="flex flex-row">
-          <div className="text-gray-500">
-          <h1></h1>
-          <p></p>
-          </div>
-          <img src={Chatbot} alt="" />
+        <div className="flex">
           
+        </div>
+        <div className="flex flex-row ">
+          <div className="flex-1 text-black text-2xl font-semibold">
+            <h1>Step 1 - Generate questions</h1>
+            <p></p>
+          </div>
+          <div className="flex-1">
+            <video src={demoDashboard} alt="demo1" autoPlay loop muted />
+          </div>
         </div>
       </div>
     </div>

@@ -1,19 +1,17 @@
 import React, { useEffect } from "react";
 import monye from "../assets/image/monye.png";
-import { useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
-import { Button, Checkbox, Label, Modal, TextInput } from "flowbite-react";
 
 const Navbar = () => {
-  const { isAuthenticated, login, logout } = useAuth();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem('token');
     setIsAuthenticated(!!token);
-  }, []); // Empty dependency array means this runs once when the component mounts
+  }, []);// Empty dependency array means this runs once when the component mounts
 
   const handleSignupButton = () => {
     navigate("/registration");
@@ -24,14 +22,13 @@ const Navbar = () => {
   };
 
   const handleLoginButton = () => {
-    login();
     navigate("/login");
     // Simulating login for demonstration
-    setIsAuthenticated(true);
+    // setIsAuthenticated(true); // Uncomment this if you want to simulate login
   };
 
   const handleLogoutButton = () => {
-    // Perform logout logic here
+    localStorage.removeItem('token');
     setIsAuthenticated(false);
     navigate("/");
   };
@@ -60,9 +57,9 @@ const Navbar = () => {
                 </a>
               </li>
               <li className="nav-item font-semibold">
-                <FlyoutLink href="/features" FlyoutContent={FeaturesContent}>
-                  FEATURES
-                </FlyoutLink>
+                  <FlyoutLink href="/features" FlyoutContent={FeaturesContent}>
+                    FEATURES
+                  </FlyoutLink>
               </li>
               <li className="nav-item font-semibold">
                 <a href="/pricing" className="text-black hover:underline">
@@ -156,20 +153,20 @@ const FlyoutLink = ({ children, href, FlyoutContent }) => {
 
 const FeaturesContent = () => {
   const [isLanding, setIsLanding] = useState(true);
-
+  
   return (
     <div className="w-64 bg-white p-6 shadow-xl">
-      <div className="mb-3 space-y-3">
-        <h3 className="font-semibold">Our Services</h3>
-        <a href="/interview" className="block text-sm hover:underline">
-          <i className="ri-mic-line mx-2"></i>
-          Interview Test
-        </a>
-        <a href="/chatbot" className="block text-sm hover:underline">
-          <i className="ri-chat-smile-3-fill mx-2"></i>
-          MonBot
-        </a>
-      </div>
+        <div className="mb-3 space-y-3">
+          <h3 className="font-semibold">Our Services</h3>
+          <a href="/interview" className="block text-sm hover:underline">
+            <i className="ri-mic-line mx-2"></i>
+            Interview Test
+          </a>
+          <a href="/chatbot" className="block text-sm hover:underline">
+            <i className="ri-chat-smile-3-fill mx-2"></i>
+            MonBot
+          </a>
+        </div>
     </div>
   );
 };
