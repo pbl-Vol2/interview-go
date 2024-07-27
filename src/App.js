@@ -51,6 +51,7 @@ function App() {
           <Route path="/summary/:id" element={<Summary />} />
           <Route path="/editProfile" element={<EditProfile />} />
           <Route path="/pricing" element={<Pricing />} />
+          <Route path="/pricing" element={<Pricing />} />
         </Routes>
         <Footer />
       </Router>
