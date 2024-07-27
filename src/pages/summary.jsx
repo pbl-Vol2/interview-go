@@ -15,7 +15,7 @@ const Summary = () => {
     const fetchSummaryData = async () => {
       try {
         const response = await axios.get(
-          `http://127.0.0.1:5000/get_summary/${id}`
+          `http://localhost:5000/get_summary/${id}`
         );
         setSummaryData(response.data);
       } catch (error) {
@@ -30,7 +30,8 @@ const Summary = () => {
     if (summaryData.length > 0) {
       const totalRating = summaryData.reduce((acc, item) => acc + item.rating, 0);
       const averageRating = totalRating / summaryData.length;
-      setTotalScore(averageRating / 3);
+      const roundedAverageRating = Math.round(averageRating);
+      setTotalScore(roundedAverageRating);
     }
   }, [summaryData]);
 
