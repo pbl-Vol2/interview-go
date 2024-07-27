@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import Logo from "../assets/image/logo.png";
 import axios from "axios";
 import "../assets/style.css";
+import { useNavigate } from "react-router-dom";
 
 // Define colors array
 const colors = [
@@ -17,6 +18,8 @@ const Login = ({ onLogin }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
+  const navigate = useNavigate();
   const [activeColors, setActiveColors] = useState([]);
   const [cursorPosition, setCursorPosition] = useState({ x: -100, y: -100 });
 
@@ -29,31 +32,46 @@ const Login = ({ onLogin }) => {
   const handleLoginButton = async (e) => {
     e.preventDefault(); // Prevent default form submission
 
-    try {
-      console.log("Attempting to login with email:", email); // Log the email for debugging
+    if (!email || !password) {
+      setMessage("Email and password are required.");
+      return;
+    }
 
-      // Send a POST request to the backend server
+    // Send a POST request to the backend server
+    try {
       const response = await axios.post("http://localhost:5000/login", {
-        email_give: email,
-        password_give: password,
+        email: email,
+        password: password,
       });
 
       // Check the response from the server
       if (response.data.result === "success") {
-        setMessage("Login successful!"); // Set success message
-        localStorage.setItem("token", response.data.token); // Store token in localStorage
+        setMessage("Login successful!");
+        const token = response.data.token;
 
-        // Perform action upon successful login (e.g., redirect to dashboard)
-        onLogin(); // Assuming this function navigates to the dashboard
+        // Store token securely in localStorage, consider using HttpOnly cookie for security
+        localStorage.setItem("token", token);
+
+        if (rememberMe) {
+          localStorage.setItem("email", email);
+          localStorage.setItem("rememberMe", "true");
+        } else {
+          sessionStorage.setItem("email", email);
+          sessionStorage.setItem("rememberMe", "false");
+        }
+
+        // Redirect to dashboard
+        navigate("/dashboard");
+        window.location.reload();
       } else {
-        setMessage(response.data.msg || "Unknown error occurred"); // Display error message from backend
+        setMessage(response.data.msg || "Invalid email or password");
       }
     } catch (error) {
-      console.log(
+      console.error(
         "Login error:",
         error.response?.data?.msg || "An error occurred"
-      ); // Log and display error message
-      setMessage(error.response?.data?.msg || "An error occurred"); // Display error message to user
+      );
+      setMessage(error.response?.data?.msg || "An error occurred");
     }
   };
 
@@ -139,7 +157,11 @@ const Login = ({ onLogin }) => {
           </div>
           <div className="flex justify-between">
             <div className="flex items-center gap-2">
-              <Checkbox id="remember" />
+              <Checkbox
+                id="remember"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+              />
               <Label htmlFor="remember">Remember me</Label>
             </div>
             <a

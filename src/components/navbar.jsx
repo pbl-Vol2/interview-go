@@ -1,13 +1,17 @@
-import React from "react";
+import React, { useEffect } from "react";
 import monye from "../assets/image/monye.png";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
-import { Button, Checkbox, Label, Modal, TextInput } from "flowbite-react";
 
 const Navbar = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    setIsAuthenticated(!!token);
+  }, []); // Empty dependency array means this runs once when the component mounts
 
   const handleSignupButton = () => {
     navigate("/registration");
@@ -20,11 +24,11 @@ const Navbar = () => {
   const handleLoginButton = () => {
     navigate("/login");
     // Simulating login for demonstration
-    setIsAuthenticated(true);
+    // setIsAuthenticated(true); // Uncomment this if you want to simulate login
   };
 
   const handleLogoutButton = () => {
-    // Perform logout logic here
+    localStorage.removeItem("token");
     setIsAuthenticated(false);
     navigate("/");
   };
@@ -52,7 +56,7 @@ const Navbar = () => {
                   ABOUT
                 </a>
               </li>
-              <li className="nav-item">
+              <li className="nav-item font-semibold">
                 <FlyoutLink href="/features" FlyoutContent={FeaturesContent}>
                   FEATURES
                 </FlyoutLink>
@@ -139,7 +143,6 @@ const FlyoutLink = ({ children, href, FlyoutContent }) => {
             className="absolute left-1/2 top-12 bg-white text-black"
           >
             <div className="absolute -top-6 left-0 right-0 h-6 bg-transparent" />
-            {/* <div className="absolute left-1/2 top-0 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rotate-45 bg-white" /> */}
             <FlyoutContent />
           </motion.div>
         )}
@@ -149,6 +152,8 @@ const FlyoutLink = ({ children, href, FlyoutContent }) => {
 };
 
 const FeaturesContent = () => {
+  const [isLanding, setIsLanding] = useState(true);
+
   return (
     <div className="w-64 bg-white p-6 shadow-xl">
       <div className="mb-3 space-y-3">
