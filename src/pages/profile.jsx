@@ -1,15 +1,64 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FloatingLabel } from "flowbite-react";
 import AvatarEditor from "react-avatar-edit";
 import { AnimatePresence, motion } from "framer-motion";
 import { FiAlertCircle } from "react-icons/fi";
+import axios from "axios";
 import monye from "../assets/image/monye.png";
 import { useNavigate } from "react-router-dom";
 
 const Profile = () => {
   const [preview, setPreview] = useState(null);
   const [src, setSrc] = useState(null);
+  const [fullname, setFullname] = useState("");
+  const [email, setEmail] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [retypePassword, setRetypePassword] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
+  // Fetch user info from backend upon component mount
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      try {
+        const token = localStorage.getItem('token'); // Example: retrieve token from local storage
+        if (!token) {
+          throw new Error('Missing token');
+        }
+
+        const response = await axios.get("http://localhost:5000/get_user_info", {
+          headers: {
+            Authorization: `Bearer ${token}` // Include token in headers
+          },
+          withCredentials: true, // Ensure credentials are sent if using cookies for authentication
+        });
+        const { fullname, email } = response.data.user; // Assuming backend returns fullname and email
+        setFullname(fullname);
+        setEmail(email); // Set email state with fetched email
+        // Assuming 'profile_pic' is also retrieved and can be used for AvatarEditor
+        // setSrc(user.profile_pic); // Uncomment if profile picture is also fetched
+      } catch (error) {
+        handleFetchError(error);
+      }
+    };
+
+    fetchUserInfo();
+  }, []);
+
+  const handleFetchError = (error) => {
+    if (error.response) {
+      console.log(error.response.data);
+      console.log(error.response.status);
+      setError(`Error: ${error.response.data.msg}`);
+    } else if (error.request) {
+      console.log(error.request);
+      setError("Error: No response received from server");
+    } else {
+      console.log('Error', error.message);
+      setError(`Error: ${error.message}`);
+    }
+  };
+
 
   const onClose = () => {
     setPreview(null);

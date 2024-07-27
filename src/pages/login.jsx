@@ -1,9 +1,11 @@
+// src/components/Login.js
 import { FloatingLabel, Checkbox, Label } from "flowbite-react";
 import { useState, useEffect } from "react";
 import Logo from "../assets/image/logo.png";
 import axios from "axios";
 import "../assets/style.css";
-import { useNavigate } from "react-router-dom";
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 // Define colors array
 const colors = [
@@ -18,19 +20,32 @@ const Login = ({ onLogin }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [activeColors, setActiveColors] = useState([]);
   const [rememberMe, setRememberMe] = useState(false);
   const navigate = useNavigate();
-  const [activeColors, setActiveColors] = useState([]);
   const [cursorPosition, setCursorPosition] = useState({ x: -100, y: -100 });
 
-  // Function to handle mouse move
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveColors(prevColors => {
+        const newColors = [...prevColors];
+        if (newColors.length >= 5) {
+          newColors.shift();
+        }
+        newColors.push(colors[Math.floor(Math.random() * colors.length)]);
+        return newColors;
+      });
+    }, 6000); // Interval pembaruan setiap 6 detik
+
+    return () => clearInterval(interval);
+  }, []);
+
   const handleMouseMove = (e) => {
     setCursorPosition({ x: e.clientX, y: e.clientY });
   };
 
-  // Function to handle login form submission
   const handleLoginButton = async (e) => {
-    e.preventDefault(); // Prevent default form submission
+    e.preventDefault();
 
     if (!email || !password) {
       setMessage("Email and password are required.");

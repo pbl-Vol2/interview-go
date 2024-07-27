@@ -1,57 +1,57 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import Dea from '../assets/image/Dea.jpg';
+import Gianna from '../assets/image/Gianna.png';
+import Daffara from '../assets/image/Daffara.png';
+import Kanira from '../assets/image/Kanira.jpg';
 
 const people = [
   {
     name: 'Daffara Chairunnisa Z.',
     role: 'Back-end Developer',
-    imageUrl:
-      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+    imageUrl: Daffara,
   },
   {
     name: 'Dea Luthfina A.',
     role: 'Back-end Developer',
-    imageUrl:
-      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+    imageUrl: Dea,
   },
   {
     name: 'Gianna Nasya O.I.',
     role: 'Front-end Developer',
-    imageUrl:
-      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+    imageUrl: Gianna,
   },
   {
     name: 'Kanira Erliana A. Z.',
     role: 'Front-end Developer',
-    imageUrl:
-      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+    imageUrl: Kanira,
   },
 ];
 
 const About = () => {
   return (
     <div className="bg-gradient-to-b from-white to-blue-100 min-h-screen py-20">
-    {/* About Us Section */}
-    <div className="flex items-center justify-center py-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative">
-        <motion.div
-          className="relative z-10 p-8 md:p-16 bg-gray-800 shadow-2xl rounded-lg"
-          initial={{ opacity: 0, y: -50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <h1 className="text-4xl md:text-6xl font-bold text-white mb-8 leading-tight">
-            About Us
-          </h1>
-          <p className="text-lg md:text-xl text-gray-300 mb-6 md:mb-12 max-w-3xl mx-auto">
-            We are dedicated to helping professionals succeed in their careers by providing top-notch interview preparation tools and resources.
-          </p>
-          <p className="text-lg md:text-xl text-gray-300 mb-6 md:mb-12 max-w-3xl mx-auto">
-            Our mission is to empower job seekers with the skills and confidence they need to excel in interviews and secure their dream jobs.
-          </p>
-        </motion.div>
+      {/* About Us Section */}
+      <div className="flex items-center justify-center py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative">
+          <motion.div
+            className="relative z-10 p-8 md:p-16 bg-gray-800 shadow-2xl rounded-lg"
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <h1 className="text-4xl md:text-6xl font-bold text-white mb-8 leading-tight">
+              About Us
+            </h1>
+            <p className="text-lg md:text-xl text-gray-300 mb-6 md:mb-12 max-w-3xl mx-auto">
+              We are dedicated to helping professionals succeed in their careers by providing top-notch interview preparation tools and resources.
+            </p>
+            <p className="text-lg md:text-xl text-gray-300 mb-6 md:mb-12 max-w-3xl mx-auto">
+              Our mission is to empower job seekers with the skills and confidence they need to excel in interviews and secure their dream jobs.
+            </p>
+          </motion.div>
+        </div>
       </div>
-    </div>
 
       {/* Team Section */}
       <div className="text-center py-20">
@@ -68,7 +68,7 @@ const About = () => {
                 whileHover={{ scale: 1.0 }}
               >
                 <motion.img
-                  alt=""
+                  alt={person.name}
                   src={person.imageUrl}
                   className="rounded-full object-cover mb-4 grayscale-img"
                   style={{ width: '100px', height: '100px' }}

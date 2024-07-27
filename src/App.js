@@ -18,6 +18,7 @@ import EditProfile from "./pages/editProfile";
 import Pricing from "./pages/pricing";
 import FeaturesLanding from "./pages/featuresLanding";
 import { useState } from "react";
+import { AuthProvider } from "./context/AuthContext";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(
@@ -55,6 +56,7 @@ function App() {
         </Routes>
         <Footer />
       </Router>
+      {/* </AuthProvider> */}
     </div>
   );
 }
