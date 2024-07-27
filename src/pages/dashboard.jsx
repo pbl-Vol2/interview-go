@@ -27,7 +27,7 @@ const Dashboard = () => {
   const [fullname, setFullname] = useState('');
   const [helloText, setHelloText] = useState('');
   const [typing, setTyping] = useState(false);
-  const [loading, setLoading] = useState(true); // Add loading state
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchFullname = async () => {
@@ -35,7 +35,6 @@ const Dashboard = () => {
         const token = localStorage.getItem('token');
         if (!token) {
           console.log('Token is missing!');
-          // Handle case where token is missing
           return;
         }
 
@@ -46,37 +45,25 @@ const Dashboard = () => {
           }
         });
 
-        // Handle response based on status
         if (response.status === 200) {
           setFullname(response.data.user.fullname);
-          setLoading(false);
         } else {
           console.error('Error fetching full name:', response.statusText);
-          setLoading(false);
         }
       } catch (error) {
         console.error('Error fetching full name:', error.message);
-        setLoading(false);
-        // Handle specific error cases (e.g., token expired)
-        if (axios.isCancel(error)) {
-          console.log('Request canceled:', error.message);
-        } else if (error.response && error.response.status === 401) {
+        if (error.response && error.response.status === 401) {
           console.log('Token is expired or invalid, redirecting to login page...');
-          // Clear token and redirect to login page
           localStorage.removeItem('token');
-          window.location.href = '/login'; // Redirect to login page
-        } else {
-          console.error('Unexpected error:', error.message);
+          window.location.href = '/login';
         }
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchFullname();
-
-    return () => {
-      // Cleanup function if needed
-    };
-  }, []); // Empty dependency array to run only once on mount
+  }, []);
 
   useEffect(() => {
     const helloUserText = `Hello ${fullname || 'User'}!`;
@@ -96,7 +83,7 @@ const Dashboard = () => {
     return () => {
       clearInterval(typingInterval);
     };
-  }, [fullname]); // Run effect when fullname changes
+  }, [fullname]);
 
   return (
     <div className="min-h-screen bg-customBiru4 py-8 px-4">

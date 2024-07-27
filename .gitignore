@@ -2,8 +2,11 @@
 
 # dependencies
 /node_modules
+/flask_session
 /.pnp
 .pnp.js
+
+/machine-learning/models/chatbot
 
 # testing
 /coverage

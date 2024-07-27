@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import monye from "../assets/image/monye.png";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 
 const Navbar = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -23,6 +23,8 @@ const Navbar = () => {
 
   const handleLoginButton = () => {
     navigate("/login");
+    // Simulating login for demonstration
+    // setIsAuthenticated(true); // Uncomment this if you want to simulate login
   };
 
   const handleLogoutButton = () => {
@@ -32,27 +34,33 @@ const Navbar = () => {
   const confirmLogout = async () => {
     try {
       const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No token found for logout');
+        return;
+      }
+  
       const response = await fetch('http://localhost:5000/auth/logout', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        credentials: 'include',
       });
-
+  
       if (response.ok) {
         localStorage.removeItem('token');
         setIsAuthenticated(false);
         setShowLogoutConfirm(false);
         navigate("/");
       } else {
-        console.error('Failed to logout');
+        const errorMessage = await response.text();
+        console.error('Failed to logout:', errorMessage);
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error during logout:', error);
     }
   };
+ 
 
   const handleLogoutCancel = () => {
     setShowLogoutConfirm(false);
@@ -66,7 +74,7 @@ const Navbar = () => {
             <img
               src={monye}
               alt="Logo"
-              className="inline-block pl-5 mr-2 h-12 w"
+              className="inline-block pl-5 mr-2 h-12"
             />
           </div>
           <div className="hidden md:flex md:space-x-8 md:items-center">
@@ -81,10 +89,12 @@ const Navbar = () => {
                   ABOUT
                 </a>
               </li>
-              <FlyoutLink href="/features" FlyoutContent={FeaturesContent}>
-                FEATURES
-              </FlyoutLink>
-              <li className="nav-item">
+              <li className="nav-item font-semibold">
+                <FlyoutLink href="/features" FlyoutContent={FeaturesContent}>
+                  FEATURES
+                </FlyoutLink>
+              </li>
+              <li className="nav-item font-semibold">
                 <a href="/pricing" className="text-black hover:underline">
                   PRICING
                 </a>
@@ -161,19 +171,21 @@ const FlyoutLink = ({ children, href, FlyoutContent }) => {
       <a href={href} className="text-black hover:underline">
         {children}
       </a>
-      {showFlyout && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.85 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.85 }}
-          transition={{ duration: 0.15 }}
-          className="absolute left-0 w-64 pt-2"
-        >
-          <div className="bg-white shadow-lg border p-4">
+      <AnimatePresence>
+        {showFlyout && (
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 15 }}
+            style={{ translateX: "-50%" }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="absolute left-1/2 top-12 bg-white text-black"
+          >
+            <div className="absolute -top-6 left-0 right-0 h-6 bg-transparent" />
             <FlyoutContent />
-          </div>
-        </motion.div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

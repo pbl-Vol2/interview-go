@@ -1,46 +1,76 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Card, Button } from "flowbite-react";
 import axios from "axios";
 import monye from "../assets/image/monye.png";
-import profile from "../assets/image/profile-chatbot.png"
+import profile from "../assets/image/profile-chatbot.png";
 import userImage from "../assets/image/user.png";
 
 const Chatbot = () => {
-  const [messages, setMessages] = useState([
-    // Initial greeting
-    {
-      text: "Hallo! Bagaimana saya bisa membantu Anda?",
-      sender: "bot",
-      time: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    },
-  ]);
-  
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
+  const [sessionId, setSessionId] = useState(null);
+  const [userId, setUserId] = useState("your-user-id"); // Replace with actual user ID
+  const [fullname, setFullname] = useState("User"); // Replace with actual user's full name
+  const [error, setError] = useState(null);
+  const inactivityLimit = 30000; // 30 seconds
 
-  const handleSend = () => {
-    if (input.trim()) {
-      const userMessage = input.trim();
-      const currentTime = new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-      setMessages([
-        ...messages,
-        { text: userMessage, sender: "user", time: currentTime },
-      ]);
-      setInput("");
+  const timerRef = useRef(null);
 
-      // Call Flask backend
-      axios
-        .post("http://127.0.0.1:5000/predict", { message: userMessage })
-        .then((response) => {
-          setMessages((prevMessages) => [
-            ...prevMessages,
+  useEffect(() => {
+    const fetchFullname = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          setError('Token is missing!');
+          return;
+        }
+
+        const response = await axios.get('http://localhost:5000/get_user_info', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.status === 200) {
+          setFullname(response.data.user.fullname);
+        } else {
+          setError('Error fetching full name.');
+        }
+      } catch (error) {
+        setError('Error fetching full name.');
+        if (error.response && error.response.status === 401) {
+          localStorage.removeItem('token');
+          window.location.href = '/login';
+        }
+      }
+    };
+
+    fetchFullname();
+  }, []);
+
+  useEffect(() => {
+    const initializeSession = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token is missing');
+        }
+  
+        const response = await axios.post("http://127.0.0.1:5000/start_session", {
+          user_id: userId,
+        }, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+  
+        if (response.status === 200) {
+          setSessionId(response.data.session_id);
+          setMessages([
             {
-              text: response.data.response,
+              text: `Hello ${fullname}, how can I assist you today?`,
               sender: "bot",
               time: new Date().toLocaleTimeString([], {
                 hour: "2-digit",
@@ -48,32 +78,146 @@ const Chatbot = () => {
               }),
             },
           ]);
-        })
-        .catch((error) => {
-          console.error("There was an error with the Flask API:", error);
-        });
+        } else {
+          throw new Error(`Unexpected response status: ${response.status}`);
+        }
+      } catch (error) {
+        console.error('Error initializing session:', error);
+        setError('Error initializing session. Please try again later.');
+      }
+    };
+  
+    initializeSession();
+  
+    return () => {
+      // Cleanup code, if needed
+    };
+  }, [userId, fullname]);
+  
+  const resetInactivityTimer = () => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
+    timerRef.current = setTimeout(endSession, inactivityLimit);
+  };
+
+  const endSession = async () => {
+    try {
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        {
+          text: "Session chat has ended.",
+          sender: "bot",
+          time: new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+        },
+      ]);
+      setSessionId(null);
+      setMessages([]);
+
+      const response = await axios.post("http://127.0.0.1:5000/start_session", {
+        user_id: userId,
+      });
+
+      setSessionId(response.data.session_id);
+      setMessages([
+        {
+          text: `Hello ${fullname}, how can I assist you today?`,
+          sender: "bot",
+          time: new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+        },
+      ]);
+    } catch (error) {
+      setError('Error ending session.');
     }
   };
 
-  const postFeedbackToAPI = async (question, answer) => {
-    try {
-      const response = await axios.post('http://127.0.0.1:5000/feedback', {
-        question,
-        answer,
+  const handleSend = async () => {
+    if (input.trim() && sessionId) {
+      const userMessage = input.trim();
+      const currentTime = new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
       });
-      console.log('Feedback posted to API:', response.data);
-    } catch (error) {
-      console.error('Error posting feedback to API:', error);
+  
+      setMessages([...messages, { text: userMessage, sender: "user", time: currentTime }]);
+      setInput("");
+  
+      resetInactivityTimer();
+  
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          console.error('Token is missing!');
+          return;
+        }
+  
+        // Send user message
+        await axios.post("http://127.0.0.1:5000/send_message", {
+          session_id: sessionId,
+          user_id: userId,
+          message: userMessage,
+          sender: "user",
+        }, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+  
+        // Get bot response
+        const response = await axios.post("http://127.0.0.1:5000/predict", { message: userMessage }, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+  
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          {
+            text: response.data.response,
+            sender: "bot",
+            time: new Date().toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+          },
+        ]);
+  
+        // Send bot response
+        await axios.post("http://127.0.0.1:5000/send_message", {
+          session_id: sessionId,
+          user_id: userId,
+          message: response.data.response,
+          sender: "bot",
+        }, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+      } catch (error) {
+        console.error("Error with the Flask API:", error);
+        console.error("Error details:", error.response ? error.response.data : error.message);
+        setError('Error with the Flask API.');
+      }
     }
   };
+  
 
   return (
     <div className="flex flex-col items-center p-4 h-screen">
       <Card className="w-1/3 max-w-full h-full flex flex-col">
         <div className="flex items-center p-4 bg-customBiru6 rounded-t-lg gap-4">
-          <div class="relative">
-            <img class="w-12 h-12 rounded-full" src={profile} alt="" />
-            <span class="absolute bottom-0 left-9 transform translate-y-1/5 w-3.5 h-3.5 bg-green-400 border-2 border-white dark:border-gray-800 rounded-full"></span>
+          <div className="relative">
+            <img className="w-12 h-12 rounded-full" src={profile} alt="" />
+            <span className="absolute bottom-0 left-9 transform translate-y-1/5 w-3.5 h-3.5 bg-green-400 border-2 border-white dark:border-gray-800 rounded-full"></span>
           </div>
           <div>
             <h2 className="text-lg font-semibold text-gray-900">Monbot</h2>
@@ -81,6 +225,7 @@ const Chatbot = () => {
           </div>
         </div>
         <div className="flex-grow overflow-y-auto p-4">
+          {error && <div className="text-red-500">{error}</div>}
           {messages.map((message, index) => (
             <div
               key={index}
@@ -93,7 +238,7 @@ const Chatbot = () => {
                 src={message.sender === "user" ? userImage : monye}
                 alt={message.sender === "user" ? "User" : "Logo"}
               />
-              <div class="flex flex-col gap-1 max-w-[320px]">
+              <div className="flex flex-col gap-1 max-w-[320px]">
                 <div
                   className={`flex items-center space-x-2 rtl:space-x-reverse ${
                     message.sender === "user" ? "gap-2 flex-row-reverse" : ""
@@ -102,7 +247,7 @@ const Chatbot = () => {
                   <span className="text-sm font-semibold text-gray-900 dark:text-white">
                     {message.sender === "user" ? "You" : "Monbot"}
                   </span>
-                  <span class="text-sm font-normal text-gray-500 dark:text-gray-400">
+                  <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
                     {message.time}
                   </span>
                 </div>

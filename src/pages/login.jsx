@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { FloatingLabel, Checkbox, Label } from "flowbite-react";
-import Logo from "../assets/image/logo.png";
+import { FloatingLabel, Checkbox, Label } from 'flowbite-react';
+import Logo from '../assets/image/logo.png';
 import '../assets/style.css';
 
-const Login = () => {
+const Login = ({ setIsAuthenticated }) => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -14,30 +14,28 @@ const Login = () => {
 
   const handleLoginButton = async (e) => {
     e.preventDefault();
-
+  
     if (!email || !password) {
       setMessage('Email and password are required.');
       return;
     }
-
+  
     try {
       const response = await axios.post('http://localhost:5000/login', {
-        email: email,
-        password: password,
+        email,
+        password,
       });
-
+  
       if (response.data.result === 'success') {
         setMessage('Login successful!');
         const token = response.data.token;
-        const expiresIn = response.data.expiresIn; // Assume server returns token expiration time in seconds
-
-        // Store token securely, consider using HttpOnly cookie for security
+        const expiresIn = response.data.expiresIn;
+  
+        // Store token securely
         localStorage.setItem('token', token);
-
-        // Save token expiration time
         const expirationTime = new Date().getTime() + expiresIn * 1000;
-        localStorage.setItem('tokenExpiration', expirationTime);
-
+        localStorage.setItem('tokenExpiration', expirationTime.toString());
+  
         if (rememberMe) {
           localStorage.setItem('email', email);
           localStorage.setItem('rememberMe', 'true');
@@ -45,11 +43,9 @@ const Login = () => {
           sessionStorage.setItem('email', email);
           sessionStorage.setItem('rememberMe', 'false');
         }
-
-        // Redirect to dashboard
+  
+        setIsAuthenticated(true);
         navigate('/dashboard');
-        window.location.reload();
-        
       } else {
         setMessage(response.data.msg || 'Invalid email or password');
       }
@@ -58,6 +54,7 @@ const Login = () => {
       setMessage(error.response?.data?.msg || 'An error occurred');
     }
   };
+  
 
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-center from-sky-100 to-white">
@@ -66,9 +63,7 @@ const Login = () => {
           <img src={Logo} alt="InterviewGo Logo" className="h-20" />
         </div>
         <h1 className="text-2xl font-bold text-center mb-2">InterviewGo!</h1>
-        <h2 className="text-lg text-center mb-6">
-          Hello, Welcome Back
-        </h2>
+        <h2 className="text-lg text-center mb-6">Hello, Welcome Back</h2>
         {message && <p className="text-center text-red-500">{message}</p>}
         <form className="space-y-4" onSubmit={handleLoginButton}>
           <div>
@@ -109,7 +104,7 @@ const Login = () => {
               <Label htmlFor="remember">Remember me</Label>
             </div>
             <a
-              href="/forgotPassword"
+              href="/forgot-password"
               className="text-sm text-cyan-700 hover:underline dark:text-cyan-500"
             >
               Lost Password?
