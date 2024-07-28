@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Card, Button } from "flowbite-react";
 import axios from "axios";
 import monye from "../assets/image/monye.png";
@@ -13,8 +13,8 @@ const Chatbot = () => {
   const [userId, setUserId] = useState("your-user-id"); // Replace with actual user ID
   const [fullname, setFullname] = useState("User"); // Replace with actual user's full name
   const [error, setError] = useState(null);
+  const [chatHistory, setChatHistory] = useState([]);
   const inactivityLimit = 30000; // 30 seconds
-
   const timerRef = useRef(null);
 
   useEffect(() => {
@@ -50,49 +50,46 @@ const Chatbot = () => {
     fetchFullname();
   }, []);
 
-  useEffect(() => {
-    const initializeSession = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          throw new Error('Token is missing');
-        }
-  
-        const response = await axios.post("http://127.0.0.1:5000/start_session", {
-          user_id: userId,
-        }, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-  
-        if (response.status === 200) {
-          setSessionId(response.data.session_id);
-          setMessages([
-            {
-              text: `Hello ${fullname}, how can I assist you today?`,
-              sender: "bot",
-              time: new Date().toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              }),
-            },
-          ]);
-        } else {
-          throw new Error(`Unexpected response status: ${response.status}`);
-        }
-      } catch (error) {
-        console.error('Error initializing session:', error);
-        setError('Error initializing session. Please try again later.');
+  const initializeSession = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Token is missing');
       }
-    };
-  
+
+      const response = await axios.post("http://127.0.0.1:5000/start_session", {
+        user_id: userId,
+      }, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.status === 200) {
+        setSessionId(response.data.session_id);
+        setMessages([
+          {
+            text: `Hello ${fullname}, how can I assist you today?`,
+            sender: "bot",
+            time: new Date().toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+          },
+        ]);
+        setChatHistory(response.data.chat_history || []); // Fetch and set chat history
+      } else {
+        throw new Error(`Unexpected response status: ${response.status}`);
+      }
+    } catch (error) {
+      console.error('Error initializing session:', error);
+      setError('Error initializing session. Please try again later.');
+    }
+  };
+
+  useEffect(() => {
     initializeSession();
-  
-    return () => {
-      // Cleanup code, if needed
-    };
   }, [userId, fullname]);
   
   const resetInactivityTimer = () => {

@@ -20,6 +20,7 @@ import ForgotPassword from './pages/forgotPassword';
 import Summary from './pages/summary';
 import LoginRequired from './pages/loginRequired';
 import withAuth from './components/withAuth'; // Import the withAuth HOC
+import Pricing from './pages/pricing';
 
 // Wrap protected components with HOC here
 const ProtectedDashboard = withAuth(Dashboard);
@@ -47,6 +48,7 @@ function App() {
           <Route path="/registration" element={<Registration />} />
           <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/pricing" element={<Pricing />} />
           
           {/* Protected routes */}
           <Route path="/dashboard" element={<ProtectedDashboard />} />
