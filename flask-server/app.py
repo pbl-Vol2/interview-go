@@ -40,6 +40,8 @@ import uuid
 
 
 app = Flask(__name__)
+
+# Configure CORS
 CORS(app, supports_credentials=True)
 app.config.from_object(Config)
 Session(app)
@@ -903,7 +905,7 @@ class TestEntry:
         self.question = question
         self.answer = answer
         self.feedback = feedback
-        self.timestamp = timestamp if timestamp else datetime.datetime.now().isoformat()
+        self.timestamp = timestamp # if timestamp else datetime.datetime.now().isoformat()
         self.rate = rate
         self.sample_ans = sample_ans
         
@@ -989,20 +991,21 @@ def feedback():
     }
     return jsonify(response)
 
+# Route to Summary
 @app.route('/summary', methods=['POST'])
 def summary():
     data = request.json
     user_id = data.get('user_id')
-    summary_id = data.get('id')
-    summary_content = data.get('summary')
+    session_id = data.get('session_id')
+    summaries = data.get('summaries')
 
-    if not user_id or not summary_id or not summary_content:
-        return jsonify({"message": "User ID, summary ID, and summary content are required"}), 400
+    if not user_id or not session_id or not summaries:
+        return jsonify({"message": "User ID, session ID, and summaries are required"}), 400
 
     # Save the summary to the database
     result = db.summaries.update_one(
-        {'user_id': user_id, 'summary_id': summary_id},
-        {'$set': {'summary': summary_content}},
+        {'user_id': user_id, 'session_id': session_id},
+        {'$set': {'summaries': summaries}},
         upsert=True
     )
 
@@ -1013,9 +1016,10 @@ def summary():
 
     return jsonify({"message": message}), 200
 
-@app.route('/get_summary/<user_id>/<summary_id>', methods=['GET'])
-def get_summary(user_id, summary_id):
-    summary = db.summaries.find_one({'user_id': user_id, 'summary_id': summary_id})
+
+@app.route('/get_summary/<user_id>/<session_id>', methods=['GET'])
+def get_summary(user_id, session_id):
+    summary = db.summaries.find_one({'user_id': user_id, 'session_id': session_id})
 
     if summary:
         return jsonify(summary), 200
