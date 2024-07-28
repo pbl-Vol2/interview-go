@@ -59,7 +59,7 @@ function App() {
           <Route path="/verif" element={<ProtectedVerif />} />
           <Route path="/history" element={<ProtectedHistory />} />
           <Route path="/summary/:id" element={<ProtectedSummary />} />
-          <Route path="/interview/:id" element={<ProtectedInterview />} />
+          <Route path="/interview/:code" element={<ProtectedInterview />} />
 
           
           {/* Login Required Page */}

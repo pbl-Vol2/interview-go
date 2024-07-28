@@ -15,7 +15,7 @@ const Summary = () => {
     const fetchSummaryData = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:5000/get_summary/${id}`
+          `http://localhost:3000/get_summary/${id}`
         );
         setSummaryData(response.data);
       } catch (error) {

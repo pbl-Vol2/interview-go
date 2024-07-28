@@ -903,7 +903,7 @@ class TestEntry:
         self.question = question
         self.answer = answer
         self.feedback = feedback
-        self.timestamp = timestamp if timestamp else datetime.datetime.now().isoformat()
+        self.timestamp = timestamp
         self.rate = rate
         self.sample_ans = sample_ans
         
@@ -934,39 +934,99 @@ def questions():
     }
     return jsonify(response)
     
+# @app.route('/answer', methods=['POST'])
+# def answer():
+#     r = sr.Recognizer()
+#     audio = request.files.get('audio')
+#     question = request.form.get('question')
+#     if audio:
+#         temp_dir = tempfile.mkdtemp()
+#         temp_path = os.path.join(temp_dir, 'temp_audio.wav')
+#         audio.save(temp_path)
+#     else:
+#         return jsonify({"error": "No audio file provided"}), 400
+#     try:
+#         with sr.AudioFile(temp_path) as source:
+#             audio_data = r.record(source)
+#         # Recognize speech using Google Web Speech API
+#         answer = r.recognize_google(audio_data, language="id-ID")
+#         for entry in user_test_data:
+#             if entry.question == question:
+#                 entry.answer = answer
+#                 break
+#         response = {
+#             'answer': answer
+#         }
+#     except sr.UnknownValueError:
+#         response = {
+#             'error': "Could not understand the audio. Please try again with clearer speech or check for background noise."
+#         }
+#     except sr.RequestError:
+#         response = {
+#             'error': "Could not request results from Google Web Speech API. Check your internet connection."
+#         }
+#     finally:
+#         shutil.rmtree(temp_dir)
+#     return jsonify(response)
+
+
+# Load your Google Cloud credentials
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "interview-go-c446f6da2165.json"
+from google.cloud import speech
+import io
+
+# Initialize Google Cloud Speech client
+speech_client = speech.SpeechClient()
+
 @app.route('/answer', methods=['POST'])
 def answer():
-    r = sr.Recognizer()
     audio = request.files.get('audio')
     question = request.form.get('question')
+
     if audio:
         temp_dir = tempfile.mkdtemp()
         temp_path = os.path.join(temp_dir, 'temp_audio.wav')
         audio.save(temp_path)
     else:
         return jsonify({"error": "No audio file provided"}), 400
+
     try:
-        with sr.AudioFile(temp_path) as source:
-            audio_data = r.record(source)
-        # Recognize speech using Google Web Speech API
-        answer = r.recognize_google(audio_data, language="id-ID")
+        with io.open(temp_path, "rb") as audio_file:
+            content = audio_file.read()
+
+        # Configure audio and recognition settings
+        audio = speech.RecognitionAudio(content=content)
+        config = speech.RecognitionConfig(
+            encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
+            language_code="id-ID",
+            enable_automatic_punctuation=True,
+        )
+
+        # Perform the transcription
+        response = speech_client.recognize(config=config, audio=audio)
+
+        # Extract the transcript
+        answer = response.results[0].alternatives[0].transcript
+
         for entry in user_test_data:
             if entry.question == question:
                 entry.answer = answer
                 break
+
         response = {
             'answer': answer
         }
-    except sr.UnknownValueError:
+    except IndexError:
         response = {
-            'error': "Could not understand the audio. Please try again with clearer speech or check for background noise."
+            'error': "No speech detected in the audio. Please try again with clearer speech or check for background noise."
         }
-    except sr.RequestError:
+    except Exception as e:
         response = {
-            'error': "Could not request results from Google Web Speech API. Check your internet connection."
+            'error': f"An error occurred: {str(e)}"
         }
     finally:
         shutil.rmtree(temp_dir)
+
     return jsonify(response)
 
 @app.route('/feedback', methods=['POST'])
@@ -1021,7 +1081,6 @@ def get_summary(user_id, summary_id):
         return jsonify(summary), 200
     else:
         return jsonify({"message": "Summary not found"}), 404
-
 
 if __name__ == "__main__":
     app.run(host='localhost', port=5000, debug=True)

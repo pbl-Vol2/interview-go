@@ -216,7 +216,7 @@ function Interview() {
       }));
 
       try {
-        await axios.post("http://localhost:5000/summary", {
+        await axios.post("http://localhost:3000/summary", {
           id: uniqueId,
           summary: summaryData,
         });
