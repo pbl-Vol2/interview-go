@@ -6,8 +6,6 @@
 /.pnp
 .pnp.js
 
-/machine-learning/models/chatbot
-
 # testing
 /coverage
 
