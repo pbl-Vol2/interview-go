@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import demoDashboard from "../assets/video/demoDashboard.mp4";
 import demoInterview from "../assets/video/demoInterview.mp4";
 import demoFeedback from "../assets/video/demoFeedback.mp4";
-import { List } from "flowbite-react";
-import { HiCheckCircle } from "react-icons/hi";
+import { Badge, List } from "flowbite-react";
+import { HiCheckCircle, HiOutlineMicrophone, HiArrowSmRight, HiOutlineXCircle } from "react-icons/hi";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -98,7 +98,7 @@ const Landing = () => {
             </List>
           </div>
         </div>
-        <div className="flex flex-row my-24 items-center">
+        <div className="flex flex-row mt-24 items-center">
           <div className="flex-1 text-black font-semibold px-10">
             <h1 className="text-start text-xl">
               Step 3 - Improve with Feedback
@@ -111,13 +111,19 @@ const Landing = () => {
             </h1>
             <List className="font-light text-base mt-4 text-green-400">
               <List.Item icon={HiCheckCircle}>
-              <span className="text-gray-500">Receive constructive criticism</span>
+                <span className="text-gray-500">
+                  Receive constructive criticism
+                </span>
               </List.Item>
               <List.Item icon={HiCheckCircle}>
-              <span className="text-gray-500">Identify areas for improvement</span>
+                <span className="text-gray-500">
+                  Identify areas for improvement
+                </span>
               </List.Item>
               <List.Item icon={HiCheckCircle}>
-              <span className="text-gray-500">Implement feedback effectively</span>
+                <span className="text-gray-500">
+                  Implement feedback effectively
+                </span>
               </List.Item>
             </List>
           </div>
@@ -126,6 +132,43 @@ const Landing = () => {
           </div>
         </div>
       </div>
+      <div className="mt-8 flex justify-center">
+        <button
+          onClick={handleGetStarted}
+          className="mt-6 outline outline-offset-2 outline-4 outline-customBiru3 bg-gradient-to-r from-customBiru3 to-customBiru6 text-white py-3 px-8 rounded-full shadow-lg transform transition-transform hover:scale-105 hover:from-customBiru4 hover:to-customBiru3 flex flex-row items-center gap-2"
+        >
+          {" "}
+          <HiOutlineMicrophone className="text-xl" />
+          Start an interview
+        </button>
+      </div>
+      <Badge color="gray" className="m-16 p-12">
+        <div className="flex flex-row items-center">
+          <h1 className="flex-1 text-4xl font-extrabold">
+            Make your next job interview stress free thanks to InterviewGo!
+          </h1>
+          <div className="flex flex-1 flex-row items-center">
+            <div className="grow flex flex-col gap-2">
+              <Badge color="failure" className="p-6 text-xl justify-center">
+                <HiOutlineXCircle />
+                Unprepared
+              </Badge>
+              <Badge color="failure" className="p-6 text-xl justify-center">Nervous</Badge>
+              <Badge color="failure" className="p-6 text-xl justify-center">Ghosted</Badge>
+            </div>
+            <div className="grow-0 flex flex-col gap-16 text-xl justify-center">
+              <HiArrowSmRight />
+              <HiArrowSmRight />
+              <HiArrowSmRight />
+            </div>
+            <div className="grow flex flex-col gap-2">
+              <Badge color="success" className="p-6 text-xl justify-center">Organized and ready</Badge>
+              <Badge color="success" className="p-6 text-xl justify-center">Confident answers</Badge>
+              <Badge color="success" className="p-6 text-xl justify-center">Receive final offers</Badge>
+            </div>
+          </div>
+        </div>
+      </Badge>
     </div>
   );
 };
