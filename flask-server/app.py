@@ -971,7 +971,7 @@ def questions():
 
 
 # Load your Google Cloud credentials
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "interview-go-c446f6da2165.json"
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "insert here"
 from google.cloud import speech
 import io
 

@@ -6,6 +6,8 @@
 /.pnp
 .pnp.js
 
+/flask-server/interview-go-c446f6da2165.json
+
 # testing
 /coverage
 
