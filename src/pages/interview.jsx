@@ -38,20 +38,23 @@ function Interview() {
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
-        const response = await axios.post("http://localhost:5000/questions", {
-          code,
-        });
+        const response = await axios.post("http://localhost:5000/questions", { code });
         console.log("Fetched questions:", response.data.questions);
-        // set array question dan sample answer
         setQuestions(response.data.questions);
         setSampleAnswers(response.data.sample_ans);
-        // set category
-        const category = response.data.category;
-        setCategory(category);
+        setCategory(response.data.category);
       } catch (error) {
         console.error("Error fetching questions:", error);
+        if (error.response) {
+          console.error("Error response data:", error.response.data);
+          console.error("Error response status:", error.response.status);
+        } else {
+          console.error("Error message:", error.message);
+        }
       }
     };
+    
+   
 
     fetchQuestions();
   }, [code]);

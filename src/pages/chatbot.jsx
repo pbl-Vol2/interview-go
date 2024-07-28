@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 import { Card, Button } from "flowbite-react";
 import axios from "axios";
 import monye from "../assets/image/monye.png";
@@ -13,39 +13,36 @@ const Chatbot = () => {
   const [userId, setUserId] = useState("your-user-id"); // Replace with actual user ID
   const [fullname, setFullname] = useState("User"); // Replace with actual user's full name
   const [error, setError] = useState(null);
-  const [chatHistory, setChatHistory] = useState([]);
   const inactivityLimit = 30000; // 30 seconds
+
   const timerRef = useRef(null);
 
   useEffect(() => {
     const fetchFullname = async () => {
       try {
-        const token = localStorage.getItem("token");
+        const token = localStorage.getItem('token');
         if (!token) {
-          setError("Token is missing!");
+          setError('Token is missing!');
           return;
         }
 
-        const response = await axios.get(
-          "http://localhost:5000/get_user_info",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
+        const response = await axios.get('http://localhost:5000/get_user_info', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
           }
-        );
+        });
 
         if (response.status === 200) {
           setFullname(response.data.user.fullname);
         } else {
-          setError("Error fetching full name.");
+          setError('Error fetching full name.');
         }
       } catch (error) {
-        setError("Error fetching full name.");
+        setError('Error fetching full name.');
         if (error.response && error.response.status === 401) {
-          localStorage.removeItem("token");
-          window.location.href = "/login";
+          localStorage.removeItem('token');
+          window.location.href = '/login';
         }
       }
     };
@@ -53,52 +50,51 @@ const Chatbot = () => {
     fetchFullname();
   }, []);
 
-  const initializeSession = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        throw new Error("Token is missing");
-      }
-
-      const response = await axios.post(
-        "http://127.0.0.1:5000/start_session",
-        {
-          user_id: userId,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (response.status === 200) {
-        setSessionId(response.data.session_id);
-        setMessages([
-          {
-            text: `Hello ${fullname}, how can I assist you today?`,
-            sender: "bot",
-            time: new Date().toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
-          },
-        ]);
-        setChatHistory(response.data.chat_history || []); // Fetch and set chat history
-      } else {
-        throw new Error(`Unexpected response status: ${response.status}`);
-      }
-    } catch (error) {
-      console.error("Error initializing session:", error);
-      setError("Error initializing session. Please try again later.");
-    }
-  };
-
   useEffect(() => {
+    const initializeSession = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token is missing');
+        }
+  
+        const response = await axios.post("http://127.0.0.1:5000/start_session", {
+          user_id: userId,
+        }, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+  
+        if (response.status === 200) {
+          setSessionId(response.data.session_id);
+          setMessages([
+            {
+              text: `Hello ${fullname}, how can I assist you today?`,
+              sender: "bot",
+              time: new Date().toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+            },
+          ]);
+        } else {
+          throw new Error(`Unexpected response status: ${response.status}`);
+        }
+      } catch (error) {
+        console.error('Error initializing session:', error);
+        setError('Error initializing session. Please try again later.');
+      }
+    };
+  
     initializeSession();
+  
+    return () => {
+      // Cleanup code, if needed
+    };
   }, [userId, fullname]);
-
+  
   const resetInactivityTimer = () => {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
@@ -138,7 +134,7 @@ const Chatbot = () => {
         },
       ]);
     } catch (error) {
-      setError("Error ending session.");
+      setError('Error ending session.');
     }
   };
 
@@ -150,10 +146,8 @@ const Chatbot = () => {
         minute: "2-digit",
       });
 
-      setMessages([
-        ...messages,
-        { text: userMessage, sender: "user", time: currentTime },
-      ]);
+  
+      setMessages([...messages, { text: userMessage, sender: "user", time: currentTime }]);
       setInput("");
 
       resetInactivityTimer();
@@ -242,6 +236,7 @@ const Chatbot = () => {
       handleSend();
     }
   };
+  
 
   return (
     <div className="flex flex-row items-start h-screen p-4">

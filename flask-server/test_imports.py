@@ -1,13 +1,21 @@
-import sys
 import os
+from keras.models import load_model
 
-# Set up paths
-sys.path.append(os.path.abspath("../machine-learning/models/chatbot"))
-sys.path.append(os.path.abspath("../machine-learning/models/scoring"))
+# Get the directory where this script is located
+current_dir = os.path.dirname(os.path.abspath(__file__))
 
-# Test imports
+# Construct the path to the model
+model_path = os.path.join(current_dir, "..", "machine-learning", "assets", "model_chatbot.h5")
+
+# Convert to an absolute path
+model_path = os.path.abspath(model_path)
+
+# Print the model path to verify
+print("Model path:", model_path)
+
+# Test importing/loading the model
 try:
-    from speaking_test_model import df_field_values
-    print("Successfully imported df_field_values.")
-except ImportError as e:
-    print(f"ImportError for df_field_values: {e}")
+    model = load_model(model_path)
+    print("Model loaded successfully.")
+except Exception as e:
+    print("Error loading model:", e)

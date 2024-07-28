@@ -18,8 +18,9 @@ from flask_cors import CORS
 import json
 import numpy as np
 import os
-from tensorflow.keras.preprocessing.text import Tokenizer
-from tensorflow.keras.preprocessing.sequence import pad_sequences
+import logging
+from keras.preprocessing.text import Tokenizer
+from keras.preprocessing.sequence import pad_sequences
 from sklearn.preprocessing import LabelEncoder
 import re
 import nltk
@@ -30,10 +31,13 @@ from sklearn.feature_extraction.text import CountVectorizer
 from nltk.tokenize import word_tokenize
 import random
 import shutil
-import datetime
 import tempfile
 from collections import Counter
 import pandas as pd
+import datetime
+from datetime import datetime, timedelta
+import uuid
+
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
@@ -42,7 +46,11 @@ Session(app)
 bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
 
-auth = Blueprint('auth', __name__)
+auth = Blueprint('auth', __name__)\
+    
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Ensure the upload folder exists
 UPLOAD_FOLDER = 'uploads'
@@ -53,6 +61,7 @@ if not os.path.exists(UPLOAD_FOLDER):
 # MongoDB client setup
 client = MongoClient(Config.MONGO_URI)
 db = client.db_interviewgo
+sessions = db['sessions']
 
 # Secret key for JWT generation
 app.config['SECRET_KEY'] = 'VIEWGO'
@@ -121,7 +130,7 @@ def register():
     except Exception as e:
         return jsonify({'result': 'fail', 'msg': str(e)}), 500
 
-# Route for user Login
+#Route to Login
 @app.route('/login', methods=['POST'])
 def login():
     try:
@@ -132,21 +141,44 @@ def login():
         user = db.users.find_one({'email': email})
 
         if user and bcrypt.check_password_hash(user['password'], password):
-            # Create token
-            access_token = create_access_token(identity=email)
-            return jsonify({'result': 'success', 'msg': 'Login successful', 'token': access_token}), 200
+            # Create token with user ID and expiration
+            expires = timedelta(hours=5)  # Set token expiration time
+            access_token = create_access_token(identity={
+                'email': email,
+                'user_id': str(user['_id'])  # Include user ID in the token payload
+            }, expires_delta=expires)
+            expires_in = expires.total_seconds()  # Get expiration time in seconds
+
+            return jsonify({
+                'result': 'success',
+                'msg': 'Login successful',
+                'token': access_token,
+                'expiresIn': expires_in
+            }), 200
         else:
-            return jsonify({'result': 'fail', 'msg': 'Invalid email or password'}), 401
+            return jsonify({
+                'result': 'fail',
+                'msg': 'Invalid email or password'
+            }), 401
 
     except Exception as e:
-        return jsonify({'result': 'fail', 'msg': str(e)}), 500
+        return jsonify({
+            'result': 'fail',
+            'msg': str(e)
+        }), 500
 
-# Protected route example
+
+# Protected Route
 @app.route('/protected', methods=['GET'])
-@token_required
-def protected(current_user):
-    user_id = current_user['id']
-    user = db.users.find_one({'_id': ObjectId(user_id)}, {'_id': False, 'password': False})
+@jwt_required()
+def protected():
+    # Get the JWT payload
+    jwt_identity = get_jwt_identity()
+    # Extract user ID from the payload
+    current_user_id = jwt_identity.get('user_id')
+    
+    # Fetch the user from the database
+    user = db.users.find_one({'_id': ObjectId(current_user_id)}, {'_id': False, 'password': False})
 
     if user:
         return jsonify({'result': 'success', 'user': user}), 200
@@ -159,7 +191,9 @@ def protected(current_user):
 @cross_origin(supports_credentials=True)
 def get_user_info():
     current_user = get_jwt_identity()
-    user = db.users.find_one({'email': current_user}, {'_id': False, 'password': False})
+    user_email = current_user.get('email')  # Extract email from JWT payload
+    
+    user = db.users.find_one({'email': user_email}, {'_id': False, 'password': False})
 
     if user:
         return jsonify({
@@ -233,7 +267,7 @@ def update_profile():
 
 
 # Route to Logout
-@auth.route('/logout', methods=['POST'])
+@app.route('/auth/logout', methods=['POST'])
 @jwt_required()
 def logout():
     # Invalidate the token by unsetting JWT cookies
@@ -241,26 +275,25 @@ def logout():
     unset_jwt_cookies(response)
     return response
 
-
-@app.route('/logout', methods=['OPTIONS', 'POST'])
+@app.route('/auth/logout', methods=['OPTIONS'])
 def handle_options():
-    if request.method == 'OPTIONS':
-        response = jsonify({'msg': 'Preflight request'})
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Methods', 'POST, OPTIONS')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
-        return response
-    else:
-        # Handle the POST request as usual
-        return logout()
+    response = jsonify({'msg': 'Preflight request'})
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Methods', 'POST, OPTIONS')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+    return response
 
-# Route to get chatbot history for a specific user
-@app.route('/chatbot_history/<user_id>', methods=['GET'])
-def get_chatbot_history(user_id):
-    history = list(db.chatbot.find({'user_id': user_id}))
-    for item in history:
-        item['_id'] = str(item['_id'])  # Convert ObjectId to string for JSON serialization
-    return jsonify(history), 200
+
+# # Register the blueprint
+# app.register_blueprint(auth, url_prefix='/auth')
+
+# # Route to get chatbot history for a specific user
+# @app.route('/chatbot_history/<user_id>', methods=['GET'])
+# def get_chatbot_history(user_id):
+#     history = list(db.chatbot.find({'user_id': user_id}))
+#     for item in history:
+#         item['_id'] = str(item['_id'])  # Convert ObjectId to string for JSON serialization
+#     return jsonify(history), 200
 
 # #Route to Feedabck
 # @app.route('/feedback', methods=['POST'])
@@ -327,30 +360,30 @@ def get_chatbot_history(user_id):
 #     except Exception as e:
 #         return jsonify({'error': str(e)}), 500
 
-# Route to Summary
-@app.route('/summary', methods=['POST'])
-def save_summary():
-    data = request.json
-    user_id = data.get('user_id')
-    summary_id = data.get('summary_id')
-    summary_content = data.get('summary')
+# # Route to Summary
+# @app.route('/summary', methods=['POST'])
+# def save_summary():
+#     data = request.json
+#     user_id = data.get('user_id')
+#     summary_id = data.get('summary_id')
+#     summary_content = data.get('summary')
 
-    if not user_id:
-        return jsonify({"message": "User ID is required"}), 400
+#     if not user_id:
+#         return jsonify({"message": "User ID is required"}), 400
 
-    summary = {
-        "_id": ObjectId(summary_id) if summary_id else ObjectId(),
-        "user_id": user_id,
-        "summary": summary_content
-    }
+#     summary = {
+#         "_id": ObjectId(summary_id) if summary_id else ObjectId(),
+#         "user_id": user_id,
+#         "summary": summary_content
+#     }
 
-    result = db.summaries.replace_one(
-        {"_id": summary["_id"], "user_id": user_id},
-        summary,
-        upsert=True
-    )
+#     result = db.summaries.replace_one(
+#         {"_id": summary["_id"], "user_id": user_id},
+#         summary,
+#         upsert=True
+#     )
 
-    return jsonify({"message": "Summary saved successfully", "id": str(summary["_id"])}), 200
+#     return jsonify({"message": "Summary saved successfully", "id": str(summary["_id"])}), 200
 
 #
 # @app.route('/get_summary/<user_id>', methods=['GET'])
@@ -480,7 +513,11 @@ def delete_user():
 
 # Load the trained chatbot model
 current_dir = os.path.dirname(os.path.realpath(__file__))
+# Assuming your machine learning directory is two levels up from flask-server
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
+model_path = os.path.join(project_root, "machine-learning", "assets", "model_chatbot.h5")
 model = load_model(current_dir + "/../machine-learning/assets/model_chatbot.h5")
+
 
 blacklist_word = ['saya']
 replace_words = [
@@ -553,6 +590,77 @@ def predict_response():
         'response': random.choice(responses.get(response_tag, ['Maaf, saya tidak mengerti. Bisa kamu ulangi lagi dengan kata lain?']))
     }
     return jsonify(response)
+
+# Chat Session
+@app.route('/start_session', methods=['POST'])
+@jwt_required()
+def start_session():
+    current_user = get_jwt_identity()
+    user_id = current_user.get('user_id')  # Extract user_id from JWT token
+
+    session_id = str(uuid.uuid4())
+    db.sessions.insert_one({"session_id": session_id, "user_id": user_id})
+
+    return jsonify({"session_id": session_id}), 200
+
+@app.route('/send_message', methods=['POST'])
+@jwt_required()
+def send_message():
+    try:
+        data = request.json
+        session_id = data.get('session_id')
+        message = data.get('message')
+        sender = data.get('sender')
+
+        if not all([session_id, message, sender]) or sender not in ['user', 'bot']:
+            logger.warning('Invalid request data: %s', data)
+            return jsonify({"error": "Invalid request data"}), 400
+
+        current_user = get_jwt_identity()
+        user_id = current_user.get('user_id')  # Extract user_id from JWT token
+
+        timestamp = datetime.utcnow().isoformat()  # Get current UTC time in ISO format
+
+        chat_document = {
+            'session_id': session_id,
+            'user_id': user_id,
+            'messages': [{
+                'timestamp': timestamp,
+                'sender': sender,
+                'content': message
+            }]
+        }
+
+        # Check if session exists
+        existing_chat = db.chat_history.find_one({'session_id': session_id})
+        if existing_chat:
+            # Append new message to existing chat history
+            db.chat_history.update_one(
+                {'session_id': session_id},
+                {'$push': {'messages': chat_document['messages'][0]}}
+            )
+            logger.info('Message appended to session %s', session_id)
+        else:
+            # Create a new session
+            db.chat_history.insert_one(chat_document)
+            logger.info('New session created with ID %s', session_id)
+
+        return jsonify({'status': 'success'}), 200
+    except Exception as e:
+        logger.error('Error processing message: %s', str(e))
+        return jsonify({"error": str(e)}), 500
+
+
+
+# @app.route('/get_chat_history/<user_id>', methods=['GET'])
+# def get_chat_history(user_id):
+#     messages = list(db.chat_history.find({'user_id': user_id}).sort('timestamp', 1))
+#     chat_history = [{
+#         'text': msg['message'],
+#         'sender': msg['sender'],
+#         'time': msg['timestamp'].strftime('%H:%M')
+#     } for msg in messages]
+#     return jsonify({'messages': chat_history})
 
 model_sentence = load_model(current_dir + "/../machine-learning/assets/model_sentence.h5")
 model_scoring = load_model(current_dir + "/../machine-learning/assets/model_scoring.h5")
@@ -798,7 +906,8 @@ class TestEntry:
         self.timestamp = timestamp if timestamp else datetime.datetime.now().isoformat()
         self.rate = rate
         self.sample_ans = sample_ans
-
+        
+#Route to Queestion
 @app.route('/questions', methods=['POST'])
 def questions():
     data = request.get_json(force=True)
@@ -824,7 +933,7 @@ def questions():
         'sample_ans': sample_ans
     }
     return jsonify(response)
-
+    
 @app.route('/answer', methods=['POST'])
 def answer():
     r = sr.Recognizer()
@@ -883,17 +992,36 @@ def feedback():
 @app.route('/summary', methods=['POST'])
 def summary():
     data = request.json
+    user_id = data.get('user_id')
     summary_id = data.get('id')
-    summaries[summary_id] = data.get('summary')
-    return jsonify({"message": "Summary saved successfully"}), 200
+    summary_content = data.get('summary')
 
-@app.route('/get_summary/<summary_id>', methods=['GET'])
-def get_summary(summary_id):
-    summary = summaries.get(summary_id)
+    if not user_id or not summary_id or not summary_content:
+        return jsonify({"message": "User ID, summary ID, and summary content are required"}), 400
+
+    # Save the summary to the database
+    result = db.summaries.update_one(
+        {'user_id': user_id, 'summary_id': summary_id},
+        {'$set': {'summary': summary_content}},
+        upsert=True
+    )
+
+    if result.upserted_id:
+        message = "Summary saved successfully"
+    else:
+        message = "Summary updated successfully"
+
+    return jsonify({"message": message}), 200
+
+@app.route('/get_summary/<user_id>/<summary_id>', methods=['GET'])
+def get_summary(user_id, summary_id):
+    summary = db.summaries.find_one({'user_id': user_id, 'summary_id': summary_id})
+
     if summary:
         return jsonify(summary), 200
     else:
         return jsonify({"message": "Summary not found"}), 404
+
 
 if __name__ == "__main__":
     app.run(host='localhost', port=5000, debug=True)

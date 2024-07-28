@@ -1,3 +1,4 @@
+import React from 'react';
 import logo from "../assets/image/logo.png";
 import { useNavigate } from "react-router-dom";
 import demoDashboard from "../assets/video/demoDashboard.mp4";

@@ -5,6 +5,8 @@ class Config:
     MONGO_URI = os.environ.get('MONGODB_URI') or 'mongodb+srv://daffarach:Kimjisoo95@cluster0.wkwtpvh.mongodb.net/db_interviewgo?retryWrites=true&w=majority'
     SESSION_TYPE = 'filesystem'  # Example session type
     TOKEN_KEY = 'interviewGo'
+    UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads')  # Menggunakan path relatif
+    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # Limit file uploads to 16MB
     
 # # Flask-Mail configuration
 #     MAIL_SERVER = 'smtp.example.com'
