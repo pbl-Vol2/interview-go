@@ -5,7 +5,12 @@ import demoDashboard from "../assets/video/demoDashboard.mp4";
 import demoInterview from "../assets/video/demoInterview.mp4";
 import demoFeedback from "../assets/video/demoFeedback.mp4";
 import { Badge, List } from "flowbite-react";
-import { HiCheckCircle, HiOutlineMicrophone, HiArrowSmRight, HiOutlineXCircle } from "react-icons/hi";
+import {
+  HiCheckCircle,
+  HiOutlineMicrophone,
+  HiArrowSmRight,
+  HiOutlineXCircle,
+} from "react-icons/hi";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -144,28 +149,33 @@ const Landing = () => {
         </button>
       </div>
       <Badge color="gray" className="m-16 p-12">
-        <div className="flex flex-row items-center">
+        <div className="flex flex-row items-center justify-center">
           <h1 className="flex-1 text-4xl font-extrabold">
             Make your next job interview stress free thanks to InterviewGo!
           </h1>
-          <div className="flex flex-1 flex-row items-center">
-            <div className="grow flex flex-col gap-2">
-              <Badge color="failure" className="p-6 text-xl justify-center">
-                <HiOutlineXCircle />
-                Unprepared
-              </Badge>
-              <Badge color="failure" className="p-6 text-xl justify-center">Nervous</Badge>
-              <Badge color="failure" className="p-6 text-xl justify-center">Ghosted</Badge>
-            </div>
-            <div className="grow-0 flex flex-col gap-16 text-xl justify-center">
-              <HiArrowSmRight />
-              <HiArrowSmRight />
-              <HiArrowSmRight />
-            </div>
-            <div className="grow flex flex-col gap-2">
-              <Badge color="success" className="p-6 text-xl justify-center">Organized and ready</Badge>
-              <Badge color="success" className="p-6 text-xl justify-center">Confident answers</Badge>
-              <Badge color="success" className="p-6 text-xl justify-center">Receive final offers</Badge>
+          <div className="flex-1 gap-2 ms-10">
+            <div className="flex flex-col">
+              <div className="flex flex-row text-center w-5/6 mb-4 font-normal text-base">
+                <p className="flex-1">Without InterviewGo!</p>
+                <p className="flex-1">With InterviewGo!</p>
+              </div>
+              <div className="flex flex-row gap-2 items-center">
+                <div className="grow flex flex-col gap-4">
+                  <Badge color="failure" className="p-6 text-xl justify-center">Unprepared</Badge>
+                  <Badge color="failure" className="p-6 text-xl justify-center">Nervous</Badge>
+                  <Badge color="failure" className="p-6 text-xl justify-center">Ghosted</Badge>
+                </div>
+                <div className="grow-0 flex flex-col gap-16 text-xl justify-center">
+                  <HiArrowSmRight />
+                  <HiArrowSmRight />
+                  <HiArrowSmRight />
+                </div>
+                <div className="grow flex flex-col gap-4">
+                  <Badge color="success" className="p-6 text-xl justify-center w-64">Organized and ready</Badge>
+                  <Badge color="success" className="p-6 text-xl justify-center w-64">Confident answers</Badge>
+                  <Badge color="success" className="p-6 text-xl justify-center w-64">Receive final offers</Badge>
+                </div>
+              </div>
             </div>
           </div>
         </div>
