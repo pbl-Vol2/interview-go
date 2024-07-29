@@ -1,8 +1,38 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 
 function History() {
+  const [historyData, setHistoryData] = useState([]);
+  const [error, setError] = useState(null);
+  const navigate = useNavigate(); // Initialize useNavigate
+
+  useEffect(() => {
+    const fetchHistoryData = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        console.log("Fetching history data with token:", token); // Log the token
+        const response = await axios.get("http://localhost:5000/history", {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        console.log("History data:", response.data); // Log the response
+        setHistoryData(response.data);
+      } catch (error) {
+        console.error("Error fetching history data:", error);
+        setError("Failed to load history data. Please try again later.");
+      }
+    };
+
+    fetchHistoryData();
+  }, []);
+
+  const handleRowClick = (session_id) => {
+    navigate(`/summary/${session_id}`);
+  };
+
   return (
     <div className="min-h-screen bg-customBiru4 py-10 px-10">
       <div className="nav-page mb-4">
@@ -35,9 +65,9 @@ function History() {
               >
                 <path
                   stroke="currentColor"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
                   d="m1 9 4-4-4-4"
                 />
               </svg>
@@ -61,17 +91,18 @@ function History() {
               <p className="italic text-sm">All your history interview</p>
             </div>
           </div>
-          <div className="p-2 me-3">
+            <div className="mt-8 flex justify-center">
             <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="mt-6 outline outline-offset-2 outline-4 outline-customBiru3 bg-gradient-to-r from-customBiru3 to-customBiru6 text-white py-3 px-8 rounded-full shadow-lg transform transition-transform hover:scale-105 hover:from-customBiru4 hover:to-customBiru3"
             >
               <Link to="/features">Test Now</Link>
             </motion.button>
           </div>
         </div>
         <div className="mt-10">
+          {error && <div className="error-message text-red-500">{error}</div>}
           <div className="mt-4 max-h-96 overflow-y-auto">
             <table className="w-full border-collapse">
               <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400 sticky top-0">
@@ -82,76 +113,32 @@ function History() {
                 </tr>
               </thead>
               <tbody className="text-base">
-                <motion.tr
-                  whileHover={{ backgroundColor: "rgba(0, 0, 0, 0.1)" }}
-                  className="odd:bg-white odd:dark:bg-gray-900 even:bg-gray-50 even:dark:bg-gray-800 border-b dark:border-gray-700"
-                >
-                  <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                    Hiburan
-                  </td>
-                  <td className="text-center py-4 px-6 text-green-600">Good</td>
-                  <td className="text-right py-4 px-6">07 Desember 2023</td>
-                </motion.tr>
-                <motion.tr
-                  whileHover={{ backgroundColor: "rgba(0, 0, 0, 0.1)" }}
-                  className="odd:bg-white odd:dark:bg-gray-900 even:bg-gray-50 even:dark:bg-gray-800 border-b dark:border-gray-700"
-                >
-                  <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                    General-Perusahaan
-                  </td>
-                  <td className="text-center py-4 px-6 text-red-600">Bad</td>
-                  <td className="text-right py-4 px-6">07 Desember 2023</td>
-                </motion.tr>
-                <motion.tr
-                  whileHover={{ backgroundColor: "rgba(0, 0, 0, 0.1)" }}
-                  className="odd:bg-white odd:dark:bg-gray-900 even:bg-gray-50 even:dark:bg-gray-800 border-b dark:border-gray-700"
-                >
-                  <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                    Kuliner dan Restoran
-                  </td>
-                  <td className="text-center py-4 px-6 text-green-600">Good</td>
-                  <td className="text-right py-4 px-6">04 Desember 2023</td>
-                </motion.tr>
-                <motion.tr
-                  whileHover={{ backgroundColor: "rgba(0, 0, 0, 0.1)" }}
-                  className="odd:bg-white odd:dark:bg-gray-900 even:bg-gray-50 even:dark:bg-gray-800 border-b dark:border-gray-700"
-                >
-                  <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                    Kuliner dan Restoran
-                  </td>
-                  <td className="text-center py-4 px-6 text-green-600">Good</td>
-                  <td className="text-right py-4 px-6">04 Desember 2023</td>
-                </motion.tr>
-                <motion.tr
-                  whileHover={{ backgroundColor: "rgba(0, 0, 0, 0.1)" }}
-                  className="odd:bg-white odd:dark:bg-gray-900 even:bg-gray-50 even:dark:bg-gray-800 border-b dark:border-gray-700"
-                >
-                  <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                    Kuliner dan Restoran
-                  </td>
-                  <td className="text-center py-4 px-6 text-green-600">Good</td>
-                  <td className="text-right py-4 px-6">04 Desember 2023</td>
-                </motion.tr>
-                <motion.tr
-                  whileHover={{ backgroundColor: "rgba(0, 0, 0, 0.1)" }}
-                  className="odd:bg-white odd:dark:bg-gray-900 even:bg-gray-50 even:dark:bg-gray-800 border-b dark:border-gray-700"
-                >
-                  <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                    Kuliner dan Restoran
-                  </td>
-                  <td className="text-center py-4 px-6 text-green-600">Good</td>
-                  <td className="text-right py-4 px-6">04 Desember 2023</td>
-                </motion.tr>
-                <motion.tr
-                  whileHover={{ backgroundColor: "rgba(0, 0, 0, 0.1)" }}
-                  className="odd:bg-white odd:dark:bg-gray-900 even:bg-gray-50 even:dark:bg-gray-800 border-b dark:border-gray-700"
-                >
-                  <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                    Kuliner dan Restoran
-                  </td>
-                  <td className="text-center py-4 px-6 text-green-600">Good</td>
-                  <td className="text-right py-4 px-6">04 Desember 2023</td>
-                </motion.tr>
+                {historyData.length > 0 ? (
+                  historyData.map((item) => (
+                    <motion.tr
+                      key={item.session_id} // Ensure session_id is used here
+                      whileHover={{ backgroundColor: "rgba(0, 0, 0, 0.1)" }}
+                      className="odd:bg-white odd:dark:bg-gray-900 even:bg-gray-50 even:dark:bg-gray-800 border-b dark:border-gray-700 cursor-pointer"
+                      onClick={() => handleRowClick(item.session_id)} // Corrected parameter
+                    >
+                      <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                        {item.category}
+                      </td>
+                      <td className="text-center py-4 px-6 text-green-600">
+                        {item.grade}
+                      </td>
+                      <td className="text-right py-4 px-6">
+                        {new Date(item.date).toLocaleDateString()}
+                      </td>
+                    </motion.tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="3" className="py-4 px-6 text-center text-gray-500">
+                      No history data available
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

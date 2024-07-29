@@ -19,6 +19,8 @@ import History from './pages/history';
 import ForgotPassword from './pages/forgotPassword';
 import Summary from './pages/summary';
 import LoginRequired from './pages/loginRequired';
+import Pricing from './pages/pricing';
+import SessionSummary from './pages/sessionSummary';
 import withAuth from './components/withAuth'; // Import the withAuth HOC
 import Pricing from './pages/pricing';
 
@@ -48,6 +50,7 @@ function App() {
           <Route path="/registration" element={<Registration />} />
           <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/summary/:uniqueId" element={<SessionSummary />} />
           <Route path="/pricing" element={<Pricing />} />
           
           {/* Protected routes */}

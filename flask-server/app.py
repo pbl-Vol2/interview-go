@@ -40,6 +40,8 @@ import uuid
 
 
 app = Flask(__name__)
+
+# Configure CORS
 CORS(app, supports_credentials=True)
 app.config.from_object(Config)
 Session(app)
@@ -903,7 +905,7 @@ class TestEntry:
         self.question = question
         self.answer = answer
         self.feedback = feedback
-        self.timestamp = timestamp
+        self.timestamp = timestamp if timestamp else datetime.datetime.now().isoformat()
         self.rate = rate
         self.sample_ans = sample_ans
         
@@ -934,99 +936,39 @@ def questions():
     }
     return jsonify(response)
     
-# @app.route('/answer', methods=['POST'])
-# def answer():
-#     r = sr.Recognizer()
-#     audio = request.files.get('audio')
-#     question = request.form.get('question')
-#     if audio:
-#         temp_dir = tempfile.mkdtemp()
-#         temp_path = os.path.join(temp_dir, 'temp_audio.wav')
-#         audio.save(temp_path)
-#     else:
-#         return jsonify({"error": "No audio file provided"}), 400
-#     try:
-#         with sr.AudioFile(temp_path) as source:
-#             audio_data = r.record(source)
-#         # Recognize speech using Google Web Speech API
-#         answer = r.recognize_google(audio_data, language="id-ID")
-#         for entry in user_test_data:
-#             if entry.question == question:
-#                 entry.answer = answer
-#                 break
-#         response = {
-#             'answer': answer
-#         }
-#     except sr.UnknownValueError:
-#         response = {
-#             'error': "Could not understand the audio. Please try again with clearer speech or check for background noise."
-#         }
-#     except sr.RequestError:
-#         response = {
-#             'error': "Could not request results from Google Web Speech API. Check your internet connection."
-#         }
-#     finally:
-#         shutil.rmtree(temp_dir)
-#     return jsonify(response)
-
-
-# Load your Google Cloud credentials
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "insert here"
-from google.cloud import speech
-import io
-
-# Initialize Google Cloud Speech client
-speech_client = speech.SpeechClient()
-
 @app.route('/answer', methods=['POST'])
 def answer():
+    r = sr.Recognizer()
     audio = request.files.get('audio')
     question = request.form.get('question')
-
     if audio:
         temp_dir = tempfile.mkdtemp()
         temp_path = os.path.join(temp_dir, 'temp_audio.wav')
         audio.save(temp_path)
     else:
         return jsonify({"error": "No audio file provided"}), 400
-
     try:
-        with io.open(temp_path, "rb") as audio_file:
-            content = audio_file.read()
-
-        # Configure audio and recognition settings
-        audio = speech.RecognitionAudio(content=content)
-        config = speech.RecognitionConfig(
-            encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
-            language_code="id-ID",
-            enable_automatic_punctuation=True,
-        )
-
-        # Perform the transcription
-        response = speech_client.recognize(config=config, audio=audio)
-
-        # Extract the transcript
-        answer = response.results[0].alternatives[0].transcript
-
+        with sr.AudioFile(temp_path) as source:
+            audio_data = r.record(source)
+        # Recognize speech using Google Web Speech API
+        answer = r.recognize_google(audio_data, language="id-ID")
         for entry in user_test_data:
             if entry.question == question:
                 entry.answer = answer
                 break
-
         response = {
             'answer': answer
         }
-    except IndexError:
+    except sr.UnknownValueError:
         response = {
-            'error': "No speech detected in the audio. Please try again with clearer speech or check for background noise."
+            'error': "Could not understand the audio. Please try again with clearer speech or check for background noise."
         }
-    except Exception as e:
+    except sr.RequestError:
         response = {
-            'error': f"An error occurred: {str(e)}"
+            'error': "Could not request results from Google Web Speech API. Check your internet connection."
         }
     finally:
         shutil.rmtree(temp_dir)
-
     return jsonify(response)
 
 @app.route('/feedback', methods=['POST'])
@@ -1049,20 +991,23 @@ def feedback():
     }
     return jsonify(response)
 
+#Route to Summary
 @app.route('/summary', methods=['POST'])
+@jwt_required()
 def summary():
     data = request.json
-    user_id = data.get('user_id')
-    summary_id = data.get('id')
-    summary_content = data.get('summary')
+    current_user = get_jwt_identity()
+    user_id = current_user.get('user_id')
+    session_id = data.get('session_id')
+    summaries = data.get('summaries')
 
-    if not user_id or not summary_id or not summary_content:
-        return jsonify({"message": "User ID, summary ID, and summary content are required"}), 400
+    if not user_id or not session_id or not summaries:
+        return jsonify({"message": "User ID, session ID, and summaries are required"}), 400
 
     # Save the summary to the database
     result = db.summaries.update_one(
-        {'user_id': user_id, 'summary_id': summary_id},
-        {'$set': {'summary': summary_content}},
+        {'user_id': user_id, 'session_id': session_id},
+        {'$set': {'summaries': summaries}},
         upsert=True
     )
 
@@ -1073,14 +1018,98 @@ def summary():
 
     return jsonify({"message": message}), 200
 
-@app.route('/get_summary/<user_id>/<summary_id>', methods=['GET'])
-def get_summary(user_id, summary_id):
-    summary = db.summaries.find_one({'user_id': user_id, 'summary_id': summary_id})
+
+@app.route('/get_summary/<user_id>/<session_id>', methods=['GET'])
+@jwt_required()
+def get_summary(user_id, session_id):
+    summary = db.summaries.find_one({'user_id': user_id, 'session_id': session_id})
 
     if summary:
+        # Convert ObjectId to string
+        summary['_id'] = str(summary['_id'])
         return jsonify(summary), 200
     else:
         return jsonify({"message": "Summary not found"}), 404
+
+@app.route('/save_history', methods=['POST'])
+@jwt_required()
+def save_history():
+    current_user = get_jwt_identity()
+    user_id = current_user.get('user_id')
+
+    # Get data from request JSON
+    data = request.get_json()
+
+    # Validate required data
+    if not all(k in data for k in ('category', 'grade', 'date', 'session_id')):
+        return jsonify({"error": "Category, grade, date, and session_id are required"}), 400
+
+    category = data['category']
+    grade = data['grade']
+    date_str = data['date']
+    session_id = data['session_id']
+
+    # Parse and validate the date
+    try:
+        date = datetime.strptime(date_str, '%Y-%m-%d')  # Convert date string to datetime
+    except ValueError:
+        return jsonify({"error": "Invalid date format. Use 'YYYY-MM-DD'"}), 400
+
+    # Prepare history entry
+    history_entry = {
+        "user_id": user_id,
+        "category": category,
+        "grade": grade,
+        "date": date,
+        "session_id": session_id  # Include session_id in the history entry
+    }
+
+    # Save to MongoDB
+    try:
+        result = db.history.update_one(
+            {'user_id': user_id, 'category': category, 'date': date},
+            {'$set': history_entry},
+            upsert=True
+        )
+
+        if result.upserted_id:
+            message = "History entry saved successfully"
+        else:
+            message = "History entry updated successfully"
+
+        return jsonify({"message": message}), 201
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/history', methods=['GET'])
+@jwt_required()
+def get_history():
+    current_user = get_jwt_identity()
+    user_id = current_user.get('user_id')
+    print(f"Fetching history for user_id: {user_id}")  # Debug line
+
+    try:
+        history_entries = db.history.find({"user_id": user_id})
+        history_list = []
+
+        for entry in history_entries:
+            entry['_id'] = str(entry['_id'])
+            history_list.append(entry)
+
+        return jsonify(history_list), 200
+
+    except Exception as e:
+        print(f"Error: {str(e)}")  # Debug line
+        return jsonify({"error": str(e)}), 500
+
+
+    except Exception as e:
+        print(f"Error: {str(e)}")  # Debug line
+        return jsonify({"error": str(e)}), 500
+
+
+
 
 if __name__ == "__main__":
     app.run(host='localhost', port=5000, debug=True)

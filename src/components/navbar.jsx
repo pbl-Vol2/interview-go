@@ -191,19 +191,21 @@ const FlyoutLink = ({ children, href, FlyoutContent }) => {
 };
 
 const FeaturesContent = () => {
+  const [isLanding, setIsLanding] = useState(true);
+  
   return (
     <div className="w-64 bg-white p-6 shadow-xl">
-      <div className="mb-3 space-y-3">
-        <h3 className="font-semibold">Our Services</h3>
-        <a href="/interview" className="block text-sm hover:underline">
-          <i className="ri-mic-line mx-2"></i>
-          Interview Test
-        </a>
-        <a href="/chatbot" className="block text-sm hover:underline">
-          <i className="ri-chat-smile-3-fill mx-2"></i>
-          MonBot
-        </a>
-      </div>
+        <div className="mb-3 space-y-3">
+          <h3 className="font-semibold">Our Services</h3>
+          <a href="/interview" className="block text-sm hover:underline">
+            <i className="ri-mic-line mx-2"></i>
+            Interview Test
+          </a>
+          <a href="/chatbot" className="block text-sm hover:underline">
+            <i className="ri-chat-smile-3-fill mx-2"></i>
+            MonBot
+          </a>
+        </div>
     </div>
   );
 };
