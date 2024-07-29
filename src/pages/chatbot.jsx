@@ -1,19 +1,22 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Card, Button } from "flowbite-react";
 import axios from "axios";
 import monye from "../assets/image/monye.png";
 import profile from "../assets/image/profile-chatbot.png";
 import userImage from "../assets/image/user.png";
+import { IoSend, IoLogoWechat } from "react-icons/io5";
+import { IoTrashOutline } from "react-icons/io5";
 
 const Chatbot = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [sessionId, setSessionId] = useState(null);
-  const [userId, setUserId] = useState("your-user-id"); // Replace with actual user ID
-  const [fullname, setFullname] = useState("User"); // Replace with actual user's full name
+  const [userId, setUserId] = useState("your-user-id"); // Ganti dengan ID pengguna yang sebenarnya
+  const [fullname, setFullname] = useState("User"); // Ganti dengan nama lengkap pengguna yang sebenarnya
   const [error, setError] = useState(null);
-  const inactivityLimit = 30000; // 30 seconds
-
+  const [sessions, setSessions] = useState([]);
+  const [selectedSession, setSelectedSession] = useState(null);
+  const inactivityLimit = 30000; // 30 detik
   const timerRef = useRef(null);
 
   useEffect(() => {
@@ -50,50 +53,102 @@ const Chatbot = () => {
   }, []);
 
   useEffect(() => {
-    const initializeSession = async () => {
+    const fetchChatSessions = async () => {
       try {
         const token = localStorage.getItem('token');
         if (!token) {
           throw new Error('Token is missing');
         }
-  
-        const response = await axios.post("http://127.0.0.1:5000/start_session", {
-          user_id: userId,
-        }, {
+
+        const response = await axios.get("http://localhost:5000/get_chat_session", {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           }
         });
-  
+
         if (response.status === 200) {
-          setSessionId(response.data.session_id);
-          setMessages([
-            {
-              text: `Hello ${fullname}, how can I assist you today?`,
-              sender: "bot",
-              time: new Date().toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              }),
-            },
-          ]);
+          setSessions(response.data.sessions);
         } else {
           throw new Error(`Unexpected response status: ${response.status}`);
         }
       } catch (error) {
-        console.error('Error initializing session:', error);
-        setError('Error initializing session. Please try again later.');
+        console.error('Error fetching chat sessions:', error);
+        setError('Error fetching chat sessions.');
       }
     };
+
+    fetchChatSessions();
+  }, []);
+
+  useEffect(() => {
+    if (selectedSession) {
+      const fetchChatHistory = async () => {
+        try {
+          const token = localStorage.getItem('token');
+          if (!token) {
+            throw new Error('Token is missing');
+          }
   
-    initializeSession();
+          const response = await axios.get(`http://localhost:5000/get_chat_history/${selectedSession}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
   
-    return () => {
-      // Cleanup code, if needed
-    };
-  }, [userId, fullname]);
+          if (response.status === 200) {
+            setMessages(response.data.chat_history || []);
+          } else {
+            throw new Error(`Unexpected response status: ${response.status}`);
+          }
+        } catch (error) {
+          console.error('Error fetching chat history:', error);
+          setError('Error fetching chat history.');
+        }
+      };
   
+      fetchChatHistory();
+    }
+  }, [selectedSession]);
+
+  const initializeSession = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Token is missing');
+      }
+
+      const response = await axios.post("http://127.0.0.1:5000/start_session", {
+        user_id: userId,
+      }, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.status === 200) {
+        setSessionId(response.data.session_id);
+        setMessages([
+          {
+            text: `Hello ${fullname}, how can I assist you today?`,
+            sender: "bot",
+            time: new Date().toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+          },
+        ]);
+      } else {
+        throw new Error(`Unexpected response status: ${response.status}`);
+      }
+    } catch (error) {
+      console.error('Error initializing session:', error);
+      setError('Error initializing session. Please try again later.');
+    }
+  };
+
   const resetInactivityTimer = () => {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
@@ -144,40 +199,48 @@ const Chatbot = () => {
         hour: "2-digit",
         minute: "2-digit",
       });
-  
+
       setMessages([...messages, { text: userMessage, sender: "user", time: currentTime }]);
       setInput("");
-  
+
       resetInactivityTimer();
-  
+
       try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem("token");
         if (!token) {
-          console.error('Token is missing!');
+          console.error("Token is missing!");
           return;
         }
-  
+
         // Send user message
-        await axios.post("http://127.0.0.1:5000/send_message", {
-          session_id: sessionId,
-          user_id: userId,
-          message: userMessage,
-          sender: "user",
-        }, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+        await axios.post(
+          "http://127.0.0.1:5000/send_message",
+          {
+            session_id: sessionId,
+            user_id: userId,
+            message: userMessage,
+            sender: "user",
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
           }
-        });
-  
+        );
+
         // Get bot response
-        const response = await axios.post("http://127.0.0.1:5000/predict", { message: userMessage }, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+        const response = await axios.post(
+          "http://127.0.0.1:5000/predict",
+          { message: userMessage },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
           }
-        });
-  
+        );
+
         setMessages((prevMessages) => [
           ...prevMessages,
           {
@@ -189,94 +252,182 @@ const Chatbot = () => {
             }),
           },
         ]);
-  
+
         // Send bot response
-        await axios.post("http://127.0.0.1:5000/send_message", {
-          session_id: sessionId,
-          user_id: userId,
-          message: response.data.response,
-          sender: "bot",
-        }, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+        await axios.post(
+          "http://127.0.0.1:5000/send_message",
+          {
+            session_id: sessionId,
+            user_id: userId,
+            message: response.data.response,
+            sender: "bot",
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
           }
-        });
+        );
       } catch (error) {
         console.error("Error with the Flask API:", error);
-        console.error("Error details:", error.response ? error.response.data : error.message);
-        setError('Error with the Flask API.');
+        setError("Error with the Flask API.");
       }
     }
   };
+
+  const handleNewChat = () => {
+    initializeSession();
+  };
+
+  const handleKeyPress = (event) => {
+    if (event.key === "Enter") {
+      handleSend();
+    }
+  };
+
+  const handleSessionClick = (session_id) => {
+    setSelectedSession(session_id);
+  };
+
+  const handleDeleteChat = async () => {
+    if (!selectedSession) {
+      console.error('No session selected');
+      return;
+    }
+  
+    // Confirmation dialog
+    const isConfirmed = window.confirm('Are you sure you want to delete this chat session?');
+    if (!isConfirmed) {
+      return; // Exit if the user cancels the operation
+    }
+  
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('Token is missing');
+        return;
+      }
+  
+      // Make a request to delete the chat session
+      const response = await axios.delete(`http://localhost:5000/delete_chat_session/${selectedSession}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+  
+      if (response.status === 200) {
+        // Successfully deleted session
+        setSessions(sessions.filter(session => session.session_id !== selectedSession));
+        setSelectedSession(null); // Clear the selected session
+        setMessages([]); // Clear chat messages
+      } else {
+        console.error(`Failed to delete chat session: ${response.status}`);
+      }
+    } catch (error) {
+      console.error('Error deleting chat session:', error);
+      setError('Error deleting chat session.');
+    }
+  };
+  
   
 
   return (
-    <div className="flex flex-col items-center p-4 h-screen">
-      <Card className="w-1/3 max-w-full h-full flex flex-col">
-        <div className="flex items-center p-4 bg-customBiru6 rounded-t-lg gap-4">
+    <div className="flex flex-row items-start h-screen p-4">
+      {/* Panel Riwayat Chat */}
+      <div className="w-1/4 max-w-full h-full p-2">
+        <Card className="h-full flex flex-col bg-slate-300">
+          <div className="p-4 pb-0 flex flex-row items-center text-2xl text-gray-700">
+            <IoLogoWechat />
+            <h2 className="font-bold ms-2">Chat History</h2>
+          </div>
+          <div className="p-4">
+            <Button onClick={handleNewChat} color="light" size="lg" className="w-60" pill>
+              Chat Monbot
+            </Button>
+          </div>
+          <div className="overflow-y-auto">
+            {sessions.length > 0 ? (
+              sessions.map((session) => (
+                <Button
+                  key={session.session_id}
+                  className="block w-full text-left mt-2"
+                  onClick={() => handleSessionClick(session.session_id)}
+                >
+                  Session {session.session_id}
+                </Button>
+              ))
+            ) : (
+              <p>No sessions available</p>
+            )}
+          </div>
+        </Card>
+      </div>
+
+      {/* Chatbot Panel */}
+      <div className="flex-1 max-w-full h-full p-2">
+        <Card className="h-full flex flex-col bg-slate-100">
+         <div className="flex items-center p-4 bg-customBiru6 rounded-t-lg gap-4">
+          <div className="p-4 pb-0 flex flex-row items-center text-2xl text-gray-700">
           <div className="relative">
-            <img className="w-12 h-12 rounded-full" src={profile} alt="" />
-            <span className="absolute bottom-0 left-9 transform translate-y-1/5 w-3.5 h-3.5 bg-green-400 border-2 border-white dark:border-gray-800 rounded-full"></span>
-          </div>
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">Monbot</h2>
-            <p className="text-sm text-white">Online</p>
-          </div>
-        </div>
-        <div className="flex-grow overflow-y-auto p-4">
-          {error && <div className="text-red-500">{error}</div>}
-          {messages.map((message, index) => (
-            <div
-              key={index}
-              className={`flex items-start gap-2.5 mb-2 ${
-                message.sender === "user" ? "flex-row-reverse" : ""
-              }`}
-            >
-              <img
-                className="w-7 h-7 ring-2 ring-gray-300 dark:ring-gray-500 rounded-full"
-                src={message.sender === "user" ? userImage : monye}
-                alt={message.sender === "user" ? "User" : "Logo"}
-              />
-              <div className="flex flex-col gap-1 max-w-[320px]">
-                <div
-                  className={`flex items-center space-x-2 rtl:space-x-reverse ${
-                    message.sender === "user" ? "gap-2 flex-row-reverse" : ""
-                  }`}
-                >
-                  <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                    {message.sender === "user" ? "You" : "Monbot"}
-                  </span>
-                  <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
-                    {message.time}
-                  </span>
-                </div>
-                <div
-                  className={`flex flex-col w-full max-w-[500px] leading-1.5 py-0 p-4 border-gray-200 rounded-e-xl rounded-es-xl ${
-                    message.sender === "user"
-                      ? "bg-blue-100 dark:bg-blue-700 rounded-l-xl rounded-tr-none"
-                      : "bg-gray-100 dark:bg-gray-700"
-                  }`}
-                >
-                  <p className="text-sm font-normal py-2.5 text-gray-900 dark:text-white break-words">
-                    {message.text}
-                  </p>
-                </div>
-              </div>
+              <img className="w-12 h-12 rounded-full" src={profile} alt="" />
+              <span className="absolute bottom-0 left-9 transform translate-y-1/5 w-3.5 h-3.5 bg-green-400 border-2 border-white dark:border-gray-800 rounded-full"></span>
             </div>
-          ))}
-        </div>
-        <div className="flex items-center space-x-2">
-          <input
-            type="text"
-            className="flex-grow border rounded-lg px-4 py-2"
-            placeholder="Type a message..."
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-          />
-          <Button onClick={handleSend}>Send</Button>
-        </div>
-      </Card>
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 ml-3">Monbot</h2>
+              <p className="text-sm text-white ml-3">Online</p>
+            </div>
+          <h2 className="ml-10">{selectedSession ? `Chat - Session ${selectedSession}` : "Select a session"}</h2>
+            </div>
+            <div className="ml-auto">
+              <button onClick={handleDeleteChat} className="p-2 bg-transparent border-none cursor-pointer">
+                <IoTrashOutline size={30} color="gray" />
+              </button>
+            </div>
+          </div>
+          <div className="flex-grow overflow-y-auto p-4">
+            {messages.length > 0 ? (
+              messages.map((message, index) => (
+                <div key={index} className={`flex items-start gap-2.5 mb-2 ${message.sender === 'user' ? 'justify-end' : 'justify-start'} mb-2`}>
+                <img
+                  className="w-7 h-7 ring-2 ring-gray-300 dark:ring-gray-500 rounded-full"
+                  src={message.sender === "user" ? userImage : monye}
+                  alt={message.sender === "user" ? "User" : "Logo"}
+                />
+                  <div className={`p-2 rounded-lg max-w-xs ${message.sender === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-300 text-black'}`}>
+                    <div className="text-sm">{message.content}</div>
+                    <div className="text-xs text-gray-500 text-right">
+                      {new Date(message.timestamp).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p>No messages yet</p>
+            )}
+          </div>
+          <div className="p-4 flex items-center">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyPress={handleKeyPress}
+              className="flex-1 p-2 border rounded-lg"
+              placeholder="Type a message..."
+            />
+            <button
+              onClick={handleSend}
+              className="ml-2 p-2 bg-blue-500 text-white rounded-lg"
+            >
+              <IoSend size={24} />
+            </button>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 };

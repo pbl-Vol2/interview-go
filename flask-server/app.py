@@ -593,17 +593,37 @@ def predict_response():
     }
     return jsonify(response)
 
-# Chat Session
 @app.route('/start_session', methods=['POST'])
 @jwt_required()
 def start_session():
-    current_user = get_jwt_identity()
-    user_id = current_user.get('user_id')  # Extract user_id from JWT token
+    try:
+        current_user = get_jwt_identity()
+        user_id = current_user.get('user_id')  # Extract user_id from JWT token
 
-    session_id = str(uuid.uuid4())
-    db.sessions.insert_one({"session_id": session_id, "user_id": user_id})
+        session_id = str(uuid.uuid4())
+        db.sessions.insert_one({"session_id": session_id, "user_id": user_id})
 
-    return jsonify({"session_id": session_id}), 200
+        logger.info('New session started with ID %s for user %s', session_id, user_id)
+        return jsonify({"session_id": session_id}), 200
+    except Exception as e:
+        logger.error('Error starting session: %s', str(e))
+        return jsonify({"error": "Error starting session"}), 500
+
+@app.route('/get_chat_session', methods=['GET'])
+@jwt_required()
+def get_chat_session():
+    try:
+        current_user = get_jwt_identity()
+        user_id = current_user.get('user_id')
+
+        sessions = db.sessions.find({'user_id': user_id})
+        session_list = [{'session_id': session['session_id']} for session in sessions]
+
+        return jsonify({'sessions': session_list}), 200
+    except Exception as e:
+        logger.error('Error retrieving chat sessions: %s', str(e))
+        return jsonify({"error": "Error retrieving chat sessions"}), 500
+
 
 @app.route('/send_message', methods=['POST'])
 @jwt_required()
@@ -650,8 +670,39 @@ def send_message():
         return jsonify({'status': 'success'}), 200
     except Exception as e:
         logger.error('Error processing message: %s', str(e))
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Error processing message"}), 500
 
+@app.route('/get_chat_history/<session_id>', methods=['GET'])
+@jwt_required()
+def get_chat_history(session_id):
+    try:
+        # Access the identity of the current user with get_jwt_identity
+        current_user = get_jwt_identity()
+
+        # Fetch chat history from the database
+        chat_history = db.chat_history.find_one({"session_id": session_id})
+        if chat_history:
+            return jsonify({"chat_history": chat_history["messages"]}), 200
+        else:
+            return jsonify({"message": "No chat history found."}), 404
+    except ExpiredSignatureError:
+        return jsonify({"message": "Token has expired."}), 401
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@app.route('/delete_chat_session/<session_id>', methods=['DELETE'])
+@jwt_required()
+def delete_chat_session(session_id):
+    try:
+        result = db.chat_history.delete_one({'session_id': session_id})
+        if result.deleted_count == 1:
+            return jsonify({"message": "Session deleted successfully"}), 200
+        else:
+            return jsonify({"message": "Session not found"}), 404
+    except ExpiredSignatureError:
+        return jsonify({"message": "Token has expired."}), 401
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 # @app.route('/get_chat_history/<user_id>', methods=['GET'])
@@ -908,7 +959,13 @@ class TestEntry:
         self.timestamp = timestamp # if timestamp else datetime.datetime.now().isoformat()
         self.rate = rate
         self.sample_ans = sample_ans
-        
+
+@app.route('/get_user_id', methods=['GET'])
+@jwt_required()
+def get_user_id():
+    current_user = get_jwt_identity()
+    return jsonify({'user_id': current_user['user_id']}), 200
+       
 #Route to Queestion
 @app.route('/questions', methods=['POST'])
 def questions():
@@ -991,11 +1048,13 @@ def feedback():
     }
     return jsonify(response)
 
-# Route to Summary
+#Route to Summary
 @app.route('/summary', methods=['POST'])
+@jwt_required()
 def summary():
     data = request.json
-    user_id = data.get('user_id')
+    current_user = get_jwt_identity()
+    user_id = current_user.get('user_id')
     session_id = data.get('session_id')
     summaries = data.get('summaries')
 
@@ -1018,13 +1077,95 @@ def summary():
 
 
 @app.route('/get_summary/<user_id>/<session_id>', methods=['GET'])
+@jwt_required()
 def get_summary(user_id, session_id):
     summary = db.summaries.find_one({'user_id': user_id, 'session_id': session_id})
 
     if summary:
+        # Convert ObjectId to string
+        summary['_id'] = str(summary['_id'])
         return jsonify(summary), 200
     else:
         return jsonify({"message": "Summary not found"}), 404
+
+@app.route('/save_history', methods=['POST'])
+@jwt_required()
+def save_history():
+    current_user = get_jwt_identity()
+    user_id = current_user.get('user_id')
+    
+    # Get data from request JSON
+    data = request.get_json()
+
+    # Validate required data
+    if not all(k in data for k in ('category', 'grade', 'date', 'session_id')):
+        return jsonify({"error": "Category, grade, date, and session_id are required"}), 400
+
+    category = data['category']
+    grade = data['grade']
+    date_str = data['date']
+    session_id = data['session_id']
+
+    # Parse and validate the date
+    try:
+        date = datetime.strptime(date_str, '%Y-%m-%d')  # Convert date string to datetime
+    except ValueError:
+        return jsonify({"error": "Invalid date format. Use 'YYYY-MM-DD'"}), 400
+
+    # Prepare history entry
+    history_entry = {
+        "user_id": user_id,
+        "category": category,
+        "grade": grade,
+        "date": date,
+        "session_id": session_id  # Include session_id in the history entry
+    }
+
+    # Save to MongoDB
+    try:
+        result = db.history.update_one(
+            {'user_id': user_id, 'category': category, 'date': date},
+            {'$set': history_entry},
+            upsert=True
+        )
+        
+        if result.upserted_id:
+            message = "History entry saved successfully"
+        else:
+            message = "History entry updated successfully"
+        
+        return jsonify({"message": message}), 201
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/history', methods=['GET'])
+@jwt_required()
+def get_history():
+    current_user = get_jwt_identity()
+    user_id = current_user.get('user_id')
+    print(f"Fetching history for user_id: {user_id}")  # Debug line
+    
+    try:
+        history_entries = db.history.find({"user_id": user_id})
+        history_list = []
+        
+        for entry in history_entries:
+            entry['_id'] = str(entry['_id'])
+            history_list.append(entry)
+        
+        return jsonify(history_list), 200
+
+    except Exception as e:
+        print(f"Error: {str(e)}")  # Debug line
+        return jsonify({"error": str(e)}), 500
+    
+
+    except Exception as e:
+        print(f"Error: {str(e)}")  # Debug line
+        return jsonify({"error": str(e)}), 500
+
+
 
 
 if __name__ == "__main__":
