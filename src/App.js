@@ -22,6 +22,7 @@ import LoginRequired from './pages/loginRequired';
 import Pricing from './pages/pricing';
 import SessionSummary from './pages/sessionSummary';
 import withAuth from './components/withAuth'; // Import the withAuth HOC
+import Pricing from './pages/pricing';
 
 // Wrap protected components with HOC here
 const ProtectedDashboard = withAuth(Dashboard);

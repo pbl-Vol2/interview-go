@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Card, Button } from "flowbite-react";
 import axios from "axios";
 import monye from "../assets/image/monye.png";
@@ -203,16 +204,34 @@ const Chatbot = () => {
       setMessages([...messages, { text: userMessage, sender: "user", time: currentTime }]);
       setInput("");
 
+
       resetInactivityTimer();
+
 
       try {
         const token = localStorage.getItem("token");
+        const token = localStorage.getItem("token");
         if (!token) {
+          console.error("Token is missing!");
           console.error("Token is missing!");
           return;
         }
 
+
         // Send user message
+        await axios.post(
+          "http://127.0.0.1:5000/send_message",
+          {
+            session_id: sessionId,
+            user_id: userId,
+            message: userMessage,
+            sender: "user",
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
         await axios.post(
           "http://127.0.0.1:5000/send_message",
           {
@@ -229,6 +248,8 @@ const Chatbot = () => {
           }
         );
 
+        );
+
         // Get bot response
         const response = await axios.post(
           "http://127.0.0.1:5000/predict",
@@ -238,7 +259,17 @@ const Chatbot = () => {
               Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
             },
+        const response = await axios.post(
+          "http://127.0.0.1:5000/predict",
+          { message: userMessage },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
           }
+        );
+
         );
 
         setMessages((prevMessages) => [
@@ -252,6 +283,7 @@ const Chatbot = () => {
             }),
           },
         ]);
+
 
         // Send bot response
         await axios.post(
@@ -267,7 +299,21 @@ const Chatbot = () => {
               Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
             },
+        await axios.post(
+          "http://127.0.0.1:5000/send_message",
+          {
+            session_id: sessionId,
+            user_id: userId,
+            message: response.data.response,
+            sender: "bot",
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
           }
+        );
         );
       } catch (error) {
         console.error("Error with the Flask API:", error);
@@ -330,6 +376,7 @@ const Chatbot = () => {
       setError('Error deleting chat session.');
     }
   };
+  
   
   
 

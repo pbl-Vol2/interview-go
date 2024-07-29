@@ -89,12 +89,12 @@ const Navbar = () => {
                   ABOUT
                 </a>
               </li>
-              <li className="nav-item font-semibold">
+              <li className="nav-item">
                 <FlyoutLink href="/features" FlyoutContent={FeaturesContent}>
                   FEATURES
                 </FlyoutLink>
               </li>
-              <li className="nav-item font-semibold">
+              <li className="nav-item">
                 <a href="/pricing" className="text-black hover:underline">
                   PRICING
                 </a>
