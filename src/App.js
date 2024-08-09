@@ -11,6 +11,7 @@ import Dashboard from './pages/dashboard';
 import Features from './pages/features';
 import FeaturesLanding from './pages/featuresLanding';
 import Chatbot from './pages/chatbot';
+import ChatbotHistory from './pages/chatbotHistory';
 import Interview from './pages/interview';
 import Profile from './pages/profile';
 import EditProfile from './pages/editProfile';
@@ -22,13 +23,13 @@ import LoginRequired from './pages/loginRequired';
 import Pricing from './pages/pricing';
 import SessionSummary from './pages/sessionSummary';
 import withAuth from './components/withAuth'; // Import the withAuth HOC
-import Pricing from './pages/pricing';
 
 // Wrap protected components with HOC here
 const ProtectedDashboard = withAuth(Dashboard);
 const ProtectedFeatures = withAuth(Features);
 const ProtectedFeaturesLanding = withAuth(FeaturesLanding);
 const ProtectedChatbot = withAuth(Chatbot);
+const ProtectedChatbotHistory = withAuth(ChatbotHistory);
 const ProtectedInterview = withAuth(Interview);
 const ProtectedProfile = withAuth(Profile);
 const ProtectedEditProfile = withAuth(EditProfile);
@@ -58,11 +59,13 @@ function App() {
           <Route path="/features" element={<ProtectedFeatures />} />
           <Route path="/featuresLanding" element={<ProtectedFeaturesLanding />} />
           <Route path="/chatbot" element={<ProtectedChatbot />} />
+          <Route path="/chatbotHistory" element={<ProtectedChatbotHistory />} />
           <Route path="/interview" element={<ProtectedInterview />} />
           <Route path="/profile" element={<ProtectedProfile />} />
           <Route path="/editProfile" element={<ProtectedEditProfile />} />
           <Route path="/verif" element={<ProtectedVerif />} />
           <Route path="/history" element={<ProtectedHistory />} />
+          <Route path="/summary" element={<ProtectedSummary />} />
           <Route path="/summary/:id" element={<ProtectedSummary />} />
           <Route path="/interview/:code" element={<ProtectedInterview />} />
 

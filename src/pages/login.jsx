@@ -30,9 +30,11 @@ const Login = ({ setIsAuthenticated }) => {
         setMessage('Login successful!');
         const token = response.data.token;
         const expiresIn = response.data.expiresIn;
+        const userId = response.data.user_id; // Ensure this matches the backend response
   
-        // Store token securely
         localStorage.setItem('token', token);
+        localStorage.setItem('user_id', userId); // Store user_id
+  
         const expirationTime = new Date().getTime() + expiresIn * 1000;
         localStorage.setItem('tokenExpiration', expirationTime.toString());
   
@@ -54,6 +56,9 @@ const Login = ({ setIsAuthenticated }) => {
       setMessage(error.response?.data?.msg || 'An error occurred');
     }
   };
+  
+  
+
   
 
   return (

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import monye from "../assets/image/monye.png";
-import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
+import { useNavigate } from 'react-router-dom';
 
 const Navbar = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -14,15 +14,15 @@ const Navbar = () => {
   }, []);
 
   const handleSignupButton = () => {
-    navigate("/registration");
+    window.location.href = "/registration";
   };
 
   const handleProfileButton = () => {
-    navigate("/profile");
+    window.location.href = "/profile";
   };
 
   const handleLoginButton = () => {
-    navigate("/login");
+    window.location.href = "/login";
     // Simulating login for demonstration
     // setIsAuthenticated(true); // Uncomment this if you want to simulate login
   };
@@ -38,7 +38,7 @@ const Navbar = () => {
         console.error('No token found for logout');
         return;
       }
-  
+
       const response = await fetch('http://localhost:5000/auth/logout', {
         method: 'POST',
         headers: {
@@ -46,12 +46,12 @@ const Navbar = () => {
           'Authorization': `Bearer ${token}`
         },
       });
-  
+
       if (response.ok) {
         localStorage.removeItem('token');
         setIsAuthenticated(false);
         setShowLogoutConfirm(false);
-        navigate("/");
+        window.location.href = "/";
       } else {
         const errorMessage = await response.text();
         console.error('Failed to logout:', errorMessage);
@@ -60,10 +60,17 @@ const Navbar = () => {
       console.error('Error during logout:', error);
     }
   };
- 
 
   const handleLogoutCancel = () => {
     setShowLogoutConfirm(false);
+  };
+
+  const handleHomeClick = () => {
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    } else {
+      navigate('/');
+    }
   };
 
   return (
@@ -80,7 +87,7 @@ const Navbar = () => {
           <div className="hidden md:flex md:space-x-8 md:items-center">
             <ul className="flex navbar gap-8">
               <li className="nav-item">
-                <a href="/" className="text-black hover:underline">
+                <a href="#" onClick={handleHomeClick} className="text-black hover:underline">
                   HOME
                 </a>
               </li>
@@ -192,20 +199,20 @@ const FlyoutLink = ({ children, href, FlyoutContent }) => {
 
 const FeaturesContent = () => {
   const [isLanding, setIsLanding] = useState(true);
-  
+
   return (
     <div className="w-64 bg-white p-6 shadow-xl">
-        <div className="mb-3 space-y-3">
-          <h3 className="font-semibold">Our Services</h3>
-          <a href="/interview" className="block text-sm hover:underline">
-            <i className="ri-mic-line mx-2"></i>
-            Interview Test
-          </a>
-          <a href="/chatbot" className="block text-sm hover:underline">
-            <i className="ri-chat-smile-3-fill mx-2"></i>
-            MonBot
-          </a>
-        </div>
+      <div className="mb-3 space-y-3">
+        <h3 className="font-semibold">Our Services</h3>
+        <a href="/interview" className="block text-sm hover:underline">
+          <i className="ri-mic-line mx-2"></i>
+          Interview Test
+        </a>
+        <a href="/chatbot" className="block text-sm hover:underline">
+          <i className="ri-chat-smile-3-fill mx-2"></i>
+          MonBot
+        </a>
+      </div>
     </div>
   );
 };

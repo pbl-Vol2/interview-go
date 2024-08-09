@@ -123,31 +123,39 @@ function Interview() {
       setIsRecording(false);
       setIsFeedback(true);
       setIsLoadingPreview(true);
+      
       mediaRecorder.onstop = async () => {
+        // Check if no audio was recorded
+        if (recordedBlobs.length === 0) {
+          alert("Please start talking. No audio was recorded.");
+          setIsLoadingPreview(false);
+          return; // Exit early to avoid further processing
+        }
+    
         const blob = new Blob(recordedBlobs, { type: "audio/webm" });
         const wavBlob = await convertWebmToWav(blob);
         const answer = await sendAudioToFlask(wavBlob);
         const feedbackResponse = await postFeedbackToAPI(question, answer);
-
+  
         if (feedbackResponse) {
           setAnswers((prevAnswers) => {
             const newAnswers = [...prevAnswers];
             newAnswers[currentQuestionIndex] = answer;
             return newAnswers;
           });
-
+  
           setFeedbacks((prevFeedbacks) => {
             const newFeedbacks = [...prevFeedbacks];
             newFeedbacks[currentQuestionIndex] = feedbackResponse.feedback;
             return newFeedbacks;
           });
-
+  
           setRatings((prevRatings) => {
             const newRatings = [...prevRatings];
             newRatings[currentQuestionIndex] = feedbackResponse.rating;
             return newRatings;
           });
-
+  
           setFeedback(feedbackResponse.feedback);
           setRating(feedbackResponse.rating);
           setIsLoadingPreview(false);
@@ -158,6 +166,8 @@ function Interview() {
       };
     }
   };
+  
+  
 
   const handleNextQuestion = () => {
     if (currentQuestionIndex + 1 < questions.length) {

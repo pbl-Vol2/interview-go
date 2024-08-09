@@ -132,6 +132,7 @@ def register():
     except Exception as e:
         return jsonify({'result': 'fail', 'msg': str(e)}), 500
 
+
 #Route to Login
 @app.route('/login', methods=['POST'])
 def login():
@@ -143,19 +144,19 @@ def login():
         user = db.users.find_one({'email': email})
 
         if user and bcrypt.check_password_hash(user['password'], password):
-            # Create token with user ID and expiration
-            expires = timedelta(hours=5)  # Set token expiration time
+            expires = timedelta(hours=5)
             access_token = create_access_token(identity={
                 'email': email,
-                'user_id': str(user['_id'])  # Include user ID in the token payload
+                'user_id': str(user['_id'])
             }, expires_delta=expires)
-            expires_in = expires.total_seconds()  # Get expiration time in seconds
+            expires_in = expires.total_seconds()
 
             return jsonify({
                 'result': 'success',
                 'msg': 'Login successful',
                 'token': access_token,
-                'expiresIn': expires_in
+                'expiresIn': expires_in,
+                'user_id': str(user['_id'])
             }), 200
         else:
             return jsonify({
@@ -164,10 +165,12 @@ def login():
             }), 401
 
     except Exception as e:
+        logging.error(f"Exception occurred: {e}")
         return jsonify({
             'result': 'fail',
             'msg': str(e)
         }), 500
+
 
 
 # Protected Route
@@ -285,205 +288,6 @@ def handle_options():
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
     return response
 
-
-# # Register the blueprint
-# app.register_blueprint(auth, url_prefix='/auth')
-
-# # Route to get chatbot history for a specific user
-# @app.route('/chatbot_history/<user_id>', methods=['GET'])
-# def get_chatbot_history(user_id):
-#     history = list(db.chatbot.find({'user_id': user_id}))
-#     for item in history:
-#         item['_id'] = str(item['_id'])  # Convert ObjectId to string for JSON serialization
-#     return jsonify(history), 200
-
-# #Route to Feedabck
-# @app.route('/feedback', methods=['POST'])
-# def feedback():
-#     user_input = request.get_json(force=True)
-#     user_id = user_input.get('user_id')
-#     question = user_input.get('question')
-#     answer = user_input.get('answer')
-#     category = user_input.get('category')  # Add category field
-
-#     # Generate feedback based on question and answer
-#     feedback = generate_feedback(question, answer)
-
-#     # Prepare feedback document with category
-#     feedback_doc = {
-#         'user_id': user_id,
-#         'question': question,
-#         'answer': answer,
-#         'feedback': feedback,
-#         'category': category  # Save the category
-#     }
-
-#     # Replace existing feedback or insert new feedback if not exists
-#     feedback.replace_one(
-#         {'user_id': user_id, 'category': category},
-#         feedback_doc,
-#         upsert=True  # Insert if not exists, otherwise update
-#     )
-
-#     return jsonify({
-#         'message': 'Feedback saved successfully.',
-#         'feedback': feedback,
-#         'answer': answer
-#     })
-
-
-# @app.route("/summary", methods=['POST'])
-# def summary():
-
-#     return 0
-
-# # Save history Chat (Dummy)
-# @app.route('/save_chat', methods=['POST'])
-# def save_chat():
-#     try:
-#         data = request.json
-#         message = data.get('message')
-#         sender = data.get('sender')
-#         time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-
-#         # Validate input
-#         if not message or not sender:
-#             return jsonify({'error': 'Invalid input'}), 400
-
-#         # Save to MongoDB
-#         chat_record = {
-#             'message': message,
-#             'sender': sender,
-#             'time': time
-#         }
-#         db.chat_history.insert_one(chat_record)
-#         return jsonify({'status': 'success'}), 200
-
-#     except Exception as e:
-#         return jsonify({'error': str(e)}), 500
-
-# # Route to Summary
-# @app.route('/summary', methods=['POST'])
-# def save_summary():
-#     data = request.json
-#     user_id = data.get('user_id')
-#     summary_id = data.get('summary_id')
-#     summary_content = data.get('summary')
-
-#     if not user_id:
-#         return jsonify({"message": "User ID is required"}), 400
-
-#     summary = {
-#         "_id": ObjectId(summary_id) if summary_id else ObjectId(),
-#         "user_id": user_id,
-#         "summary": summary_content
-#     }
-
-#     result = db.summaries.replace_one(
-#         {"_id": summary["_id"], "user_id": user_id},
-#         summary,
-#         upsert=True
-#     )
-
-#     return jsonify({"message": "Summary saved successfully", "id": str(summary["_id"])}), 200
-
-#
-# @app.route('/get_summary/<user_id>', methods=['GET'])
-# def get_summary(user_id):
-#     summaries = list(db.summaries.find({"user_id": user_id}))
-#
-#     if summaries:
-#         for summary in summaries:
-#             summary["_id"] = str(summary["_id"])
-#         return jsonify(summaries), 200
-#     else:
-#         return jsonify({"message": "No summaries found for this user"}), 404
-
-
-# # Route to save course history
-# @app.route("/course_history", methods=["POST"])
-# def save_course_history():
-#     token_receive = request.cookies.get(Config.TOKEN_KEY)
-#     try:
-#         payload = jwt.decode(token_receive, Config.SECRET_KEY, algorithms=["HS256"])
-#         username = payload.get('id')
-#         course_id = request.form.get('course_id_give')
-#         timestamp = datetime.utcnow()
-
-#         db.course_history.insert_one({'username': username, 'course_id': course_id, 'timestamp': timestamp})
-
-#         return jsonify({'result': 'success', 'msg': 'Course history saved successfully'})
-
-#     except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
-#         return jsonify({'result': 'fail', 'msg': 'Authentication failed'}), 401
-
-# # Route to get course history
-# @app.route("/get_course_history", methods=["GET"])
-# def get_course_history():
-#     token_receive = request.cookies.get(Config.TOKEN_KEY)
-#     try:
-#         payload = jwt.decode(token_receive, Config.SECRET_KEY, algorithms=["HS256"])
-#         username = payload.get('id')
-
-#         history = list(db.course_history.find({'username': username}, {'_id': False}).sort('timestamp', -1).limit(10))
-
-#         return jsonify({'result': 'success', 'history': history})
-
-#     except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
-#         return jsonify({'result': 'fail', 'msg': 'Authentication failed'}), 401
-
-# # Route to save course progress
-# @app.route("/save_progress", methods=["POST"])
-# def save_progress():
-#     token_receive = request.cookies.get(Config.TOKEN_KEY)
-#     try:
-#         payload = jwt.decode(token_receive, Config.SECRET_KEY, algorithms=["HS256"])
-#         username = payload.get('id')
-#         course_id = request.form.get('course_id_give')
-#         progress = int(request.form.get('progress_give'))
-
-#         db.course_progress.update_one(
-#             {'username': username, 'course_id': course_id},
-#             {'$set': {'progress': progress}},
-#             upsert=True
-#         )
-
-#         return jsonify({'result': 'success', 'msg': 'Progress saved successfully'})
-
-#     except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
-#         return jsonify({'result': 'fail', 'msg': 'Authentication failed'}), 401
-
-# # Route to get total progress
-# @app.route("/get_total_progress", methods=["GET"])
-# def get_total_progress():
-#     token_receive = request.cookies.get(Config.TOKEN_KEY)
-#     try:
-#         payload = jwt.decode(token_receive, Config.SECRET_KEY, algorithms=["HS256"])
-#         username = payload.get('id')
-
-#         courses = list(db.course_progress.find({'username': username}, {'_id': False}))
-#         total_progress = sum(course['progress'] for course in courses)
-
-#         return jsonify({'result': 'success', 'total_progress': total_progress})
-
-#     except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
-#         return jsonify({'result': 'fail', 'msg': 'Authentication failed'}), 401
-
-# # Route to delete course history
-# @app.route("/delete_course_history", methods=["POST"])
-# def delete_course_history():
-#     token_receive = request.cookies.get(Config.TOKEN_KEY)
-#     try:
-#         payload = jwt.decode(token_receive, Config.SECRET_KEY, algorithms=["HS256"])
-#         username = payload.get('id')
-#         course_id = request.form.get('course_id_give')
-
-#         db.course_history.delete_one({'username': username, 'course_id': course_id})
-
-#         return jsonify({'result': 'success', 'msg': 'Course history deleted successfully'})
-
-#     except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
-#         return jsonify({'result': 'fail', 'msg': 'Authentication failed'}), 401
 
 # Route to delete user profile
 @app.route("/delete_user", methods=["POST"])
@@ -616,7 +420,7 @@ def get_chat_session():
         current_user = get_jwt_identity()
         user_id = current_user.get('user_id')
 
-        sessions = db.sessions.find({'user_id': user_id})
+        sessions = db.chat_history.find({'user_id': user_id})
         session_list = [{'session_id': session['session_id']} for session in sessions]
 
         return jsonify({'sessions': session_list}), 200
@@ -671,16 +475,56 @@ def send_message():
     except Exception as e:
         logger.error('Error processing message: %s', str(e))
         return jsonify({"error": "Error processing message"}), 500
+    
+@app.route('/save_chat_history', methods=['POST'])
+@jwt_required()
+def save_chat_history():
+    data = request.get_json()
+    session_id = data.get('session_id')
+    user_id = data.get('user_id')
+    chat_history = data.get('chat_history')
+
+    print(f"Received data: session_id={session_id}, user_id={user_id}, chat_history={chat_history}")
+
+    if not session_id or not user_id or not chat_history:
+        return jsonify({'error': 'Missing data'}), 400
+
+    try:
+        if not isinstance(chat_history, list):
+            return jsonify({'error': 'Invalid chat history format'}), 400
+
+        for message in chat_history:
+            if not isinstance(message, dict) or 'text' not in message or 'sender' not in message or 'time' not in message:
+                return jsonify({'error': 'Invalid message format in chat history'}), 400
+
+        db.chat_history.insert_one({
+            'session_id': session_id,
+            'user_id': user_id,
+            'chat_history': chat_history
+        })
+
+        return jsonify({'message': 'Chat history saved successfully'}), 200
+
+    except Exception as e:
+        print(f"Error occurred: {str(e)}")  # Debugging statement
+        return jsonify({'error': str(e)}), 500
+
+
 
 @app.route('/get_chat_history/<session_id>', methods=['GET'])
 @jwt_required()
 def get_chat_history(session_id):
     try:
-        # Access the identity of the current user with get_jwt_identity
         current_user = get_jwt_identity()
 
-        # Fetch chat history from the database
+        # Debugging: log session_id
+        print(f"Fetching chat history for session_id: {session_id}")
+
         chat_history = db.chat_history.find_one({"session_id": session_id})
+        
+        # Debugging: log chat_history
+        print(f"Fetched chat history: {chat_history}")
+
         if chat_history:
             return jsonify({"chat_history": chat_history["messages"]}), 200
         else:
@@ -689,12 +533,18 @@ def get_chat_history(session_id):
         return jsonify({"message": "Token has expired."}), 401
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
+
+
+#Delete Chat History
 @app.route('/delete_chat_session/<session_id>', methods=['DELETE'])
 @jwt_required()
 def delete_chat_session(session_id):
+    print(f"Received request to delete session ID: {session_id}")
     try:
+        session = db.chat_history.find_one({'session_id': session_id})
+        print(f"Session found: {session}")
         result = db.chat_history.delete_one({'session_id': session_id})
+        print(f"Delete result: {result.deleted_count}")
         if result.deleted_count == 1:
             return jsonify({"message": "Session deleted successfully"}), 200
         else:
@@ -703,6 +553,7 @@ def delete_chat_session(session_id):
         return jsonify({"message": "Token has expired."}), 401
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 
 # @app.route('/get_chat_history/<user_id>', methods=['GET'])
@@ -1079,14 +930,17 @@ def summary():
 @app.route('/get_summary/<user_id>/<session_id>', methods=['GET'])
 @jwt_required()
 def get_summary(user_id, session_id):
-    summary = db.summaries.find_one({'user_id': user_id, 'session_id': session_id})
+    try:
+        summary = db.summaries.find_one({'user_id': user_id, 'session_id': session_id})
+        if summary:
+            summary['_id'] = str(summary['_id'])
+            return jsonify(summary), 200
+        else:
+            return jsonify({"message": "Summary not found"}), 404
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({"message": "Internal Server Error"}), 500
 
-    if summary:
-        # Convert ObjectId to string
-        summary['_id'] = str(summary['_id'])
-        return jsonify(summary), 200
-    else:
-        return jsonify({"message": "Summary not found"}), 404
 
 @app.route('/save_history', methods=['POST'])
 @jwt_required()
@@ -1139,6 +993,7 @@ def save_history():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+#Route to Interview History
 @app.route('/history', methods=['GET'])
 @jwt_required()
 def get_history():
@@ -1147,11 +1002,12 @@ def get_history():
     print(f"Fetching history for user_id: {user_id}")  # Debug line
     
     try:
-        history_entries = db.history.find({"user_id": user_id})
+        # Fetch history entries for the user and filter out those with grade <= 0
+        history_entries = db.history.find({"user_id": user_id, "grade": {"$gt": 0}})
         history_list = []
         
         for entry in history_entries:
-            entry['_id'] = str(entry['_id'])
+            entry['_id'] = str(entry['_id'])  # Convert ObjectId to string
             history_list.append(entry)
         
         return jsonify(history_list), 200
@@ -1159,11 +1015,7 @@ def get_history():
     except Exception as e:
         print(f"Error: {str(e)}")  # Debug line
         return jsonify({"error": str(e)}), 500
-    
 
-    except Exception as e:
-        print(f"Error: {str(e)}")  # Debug line
-        return jsonify({"error": str(e)}), 500
 
 
 
