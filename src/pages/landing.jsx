@@ -11,6 +11,7 @@ import {
   HiArrowSmRight,
   HiOutlineXCircle,
 } from "react-icons/hi";
+import Navbar from '../components/navbar';
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -20,8 +21,9 @@ const Landing = () => {
   };
 
   return (
-    <div className="pt-14 bg-gradient-to-b from-sky-100 to-white min-h-screen items-center justify-center">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+    <div className="bg-gradient-to-b from-sky-100 to-white min-h-screen items-center justify-center">
+      <Navbar/>
+      <div className="pt-14 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <div className="flex justify-center items-center mb-8">
           <img src={logo} alt="Logo" className="h-48 w-auto" />
         </div>

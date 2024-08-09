@@ -40,7 +40,7 @@ function App() {
   return (
     <div className="App">
       <Router>
-        <Navbar isAuthenticated={isAuthenticated} setIsAuthenticated={setIsAuthenticated} />
+        {/* <Navbar isAuthenticated={isAuthenticated} setIsAuthenticated={setIsAuthenticated} /> */}
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<Landing />} />

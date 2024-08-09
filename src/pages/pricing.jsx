@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Card, Button } from 'flowbite-react';
+import Navbar from '../components/navbar';
 
 const pricingPlans = [
   {
@@ -49,6 +50,7 @@ const Pricing = () => {
 
   return (
     <div className="bg-gradient-to-b from-white via-blue-100 to-white min-h-screen py-20">
+      <Navbar/>
       <div className="text-center mb-16">
         <h1 className="text-4xl font-bold mb-4">Our Pricing Plans</h1>
         <p className="text-lg text-gray-600">

@@ -4,6 +4,7 @@ import Dea from '../assets/image/Dea.jpg';
 import Gianna from '../assets/image/Gianna.png';
 import Daffara from '../assets/image/Daffara.png';
 import Kanira from '../assets/image/Kanira.jpg';
+import Navbar from '../components/navbar';
 
 const people = [
   {
@@ -30,7 +31,8 @@ const people = [
 
 const About = () => {
   return (
-    <div className="bg-gradient-to-b from-white via-blue-100 to-white min-h-screen py-20">
+    <div className="bg-gradient-to-b from-white via-blue-100 to-white min-h-screen pb-20">
+      <Navbar/>
       {/* About Us Section */}
       <div className="flex items-center justify-center py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative">
