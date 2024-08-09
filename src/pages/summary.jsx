@@ -7,16 +7,15 @@ import StarRating from "../components/starRating";
 const Summary = () => {
   const { id } = useParams();
   const [summaryData, setSummaryData] = useState([]);
-  const navigate = useNavigate();
   const [rating, setRating] = useState(0);
   const [totalScore, setTotalScore] = useState(0);
+  const navigate = useNavigate();
 
+  // Fetch summary data from the server
   useEffect(() => {
     const fetchSummaryData = async () => {
       try {
-        const response = await axios.get(
-          `http://localhost:5000/get_summary/${id}`
-        );
+        const response = await axios.get(`http://localhost:5000/get_summary/${id}`);
         setSummaryData(response.data);
       } catch (error) {
         console.error("Error fetching summary data:", error);
@@ -26,6 +25,7 @@ const Summary = () => {
     fetchSummaryData();
   }, [id]);
 
+  // Calculate the average rating
   useEffect(() => {
     if (summaryData.length > 0) {
       const totalRating = summaryData.reduce((acc, item) => acc + item.rating, 0);
@@ -35,6 +35,7 @@ const Summary = () => {
     }
   }, [summaryData]);
 
+  // Handle the end review button click
   const handleEndReview = () => {
     navigate("/dashboard");
   };
@@ -46,7 +47,7 @@ const Summary = () => {
           <h2 className="text-3xl text-center font-extrabold mb-6 col-start-2 col-span-4">
             Rating and Reviews
           </h2>
-          <div className="">
+          <div className="col-start-2 col-span-4 text-center">
             <Button onClick={handleEndReview} color="failure" pill>
               End Review
             </Button>
@@ -73,7 +74,7 @@ const Summary = () => {
                   Rating: {item.rating}
                 </p>
                 <p className="mb-2 text-gray-500 dark:text-gray-400">
-                  Timestamp: {item.timestamp}
+                  Timestamp: {new Date(item.timestamp).toLocaleString()}
                 </p>
                 <p className="mb-2 text-gray-500 dark:text-gray-400">
                   Sample Answer: {item.sample_ans}

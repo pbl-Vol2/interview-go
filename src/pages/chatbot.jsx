@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useNavigate } from 'react-router-dom';
 import { Card, Button } from "flowbite-react";
 import axios from "axios";
 import monye from "../assets/image/monye.png";
@@ -16,6 +17,7 @@ const Chatbot = () => {
   const [chatHistory, setChatHistory] = useState([]);
   const inactivityLimit = 30000; // 30 seconds
   const timerRef = useRef(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchFullname = async () => {
@@ -56,7 +58,7 @@ const Chatbot = () => {
       if (!token) {
         throw new Error('Token is missing');
       }
-
+  
       const response = await axios.post("http://127.0.0.1:5000/start_session", {
         user_id: userId,
       }, {
@@ -65,7 +67,7 @@ const Chatbot = () => {
           'Content-Type': 'application/json'
         }
       });
-
+  
       if (response.status === 200) {
         setSessionId(response.data.session_id);
         setMessages([
@@ -78,7 +80,7 @@ const Chatbot = () => {
             }),
           },
         ]);
-        setChatHistory(response.data.chat_history || []); // Fetch and set chat history
+        setChatHistory(response.data.chat_history || []);
       } else {
         throw new Error(`Unexpected response status: ${response.status}`);
       }
@@ -87,6 +89,7 @@ const Chatbot = () => {
       setError('Error initializing session. Please try again later.');
     }
   };
+  
 
   useEffect(() => {
     initializeSession();
@@ -99,7 +102,36 @@ const Chatbot = () => {
     timerRef.current = setTimeout(endSession, inactivityLimit);
   };
 
+  const saveChatHistory = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("Token is missing");
+      }
+  
+      await axios.post(
+        "http://127.0.0.1:5000/save_chat_history",
+        {
+          user_id: userId,
+          session_id: sessionId,
+          chat_history: messages,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+    } catch (error) {
+      console.error("Error saving chat history:", error);
+      setError("Error saving chat history.");
+    }
+  };
+  
+
   const endSession = async () => {
+    await saveChatHistory();
     try {
       setMessages((prevMessages) => [
         ...prevMessages,
@@ -114,26 +146,14 @@ const Chatbot = () => {
       ]);
       setSessionId(null);
       setMessages([]);
-
-      const response = await axios.post("http://127.0.0.1:5000/start_session", {
-        user_id: userId,
-      });
-
-      setSessionId(response.data.session_id);
-      setMessages([
-        {
-          text: `Hello ${fullname}, how can I assist you today?`,
-          sender: "bot",
-          time: new Date().toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-        },
-      ]);
+  
+      // Fetch a new session and update the state
+      await initializeSession();
     } catch (error) {
       setError('Error ending session.');
     }
   };
+  
 
   const handleSend = async () => {
     if (input.trim() && sessionId) {
@@ -233,6 +253,15 @@ const Chatbot = () => {
       handleSend();
     }
   };
+
+  const handleClick = () => {
+    // Navigate to the chatbotHistory section or route
+    navigate('/chatbotHistory');  // Adjust the path according to your routing setup
+  };
+
+  const handleEndSession = () => {
+    endSession();
+  };
   
 
   return (
@@ -242,13 +271,19 @@ const Chatbot = () => {
         <Card className="h-full flex flex-col bg-slate-300">
           <div className="p-4 pb-0 flex flex-row items-center text-2xl text-gray-700">
             <IoLogoWechat />
-            <h2 className="font-bold ms-2">
-              Chat History
+            <div>
+            <h2 
+                className="font-bold ms-2 cursor-pointer text-blue-500 hover:underline" 
+                onClick={handleClick}
+            >
+                Chat History
             </h2>
+            {/* Your other component code */}
+            </div>
           </div>
           <div className="p-4">
             <Button onClick={handleNewChat} color="light" size="lg" className="w-60" pill>
-              Chat Monbot
+              New Chat
             </Button>
           </div>
           <div className="flex-grow overflow-y-auto p-4">
@@ -273,6 +308,17 @@ const Chatbot = () => {
               <h2 className="text-lg font-semibold text-gray-900">Monbot</h2>
               <p className="text-sm text-white">Online</p>
             </div>
+            <div className="flex-grow flex justify-end items-center mr-5">
+            <Button
+                onClick={handleEndSession}
+                color="failure"
+                size="lg"
+                className="rounded-m"
+                pill
+              >
+                End Session
+              </Button>
+              </div>
           </div>
           <div className="flex-grow overflow-y-auto p-4">
             {messages.map((message, index) => (

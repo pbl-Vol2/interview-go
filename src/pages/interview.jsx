@@ -22,6 +22,7 @@ function Interview() {
   const { code } = useParams();
   const navigate = useNavigate();
   const [category, setCategory] = useState("");
+  const token = localStorage.getItem('token');
   //   save array questions, answers, feedback, rating, sample_answer as an array
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState([]);
@@ -122,31 +123,39 @@ function Interview() {
       setIsRecording(false);
       setIsFeedback(true);
       setIsLoadingPreview(true);
+      
       mediaRecorder.onstop = async () => {
+        // Check if no audio was recorded
+        if (recordedBlobs.length === 0) {
+          alert("Please start talking. No audio was recorded.");
+          setIsLoadingPreview(false);
+          return; // Exit early to avoid further processing
+        }
+    
         const blob = new Blob(recordedBlobs, { type: "audio/webm" });
         const wavBlob = await convertWebmToWav(blob);
         const answer = await sendAudioToFlask(wavBlob);
         const feedbackResponse = await postFeedbackToAPI(question, answer);
-
+  
         if (feedbackResponse) {
           setAnswers((prevAnswers) => {
             const newAnswers = [...prevAnswers];
             newAnswers[currentQuestionIndex] = answer;
             return newAnswers;
           });
-
+  
           setFeedbacks((prevFeedbacks) => {
             const newFeedbacks = [...prevFeedbacks];
             newFeedbacks[currentQuestionIndex] = feedbackResponse.feedback;
             return newFeedbacks;
           });
-
+  
           setRatings((prevRatings) => {
             const newRatings = [...prevRatings];
             newRatings[currentQuestionIndex] = feedbackResponse.rating;
             return newRatings;
           });
-
+  
           setFeedback(feedbackResponse.feedback);
           setRating(feedbackResponse.rating);
           setIsLoadingPreview(false);
@@ -157,6 +166,8 @@ function Interview() {
       };
     }
   };
+  
+  
 
   const handleNextQuestion = () => {
     if (currentQuestionIndex + 1 < questions.length) {
@@ -199,34 +210,57 @@ function Interview() {
 
   const handleModalConfirm = async () => {
     setOpenModal(false);
-    if (modalMessage.includes("keluar dari sesi latihan")) {
-      navigate("/features");
-    } else if (modalMessage.includes("mengakhiri sesi interview")) {
-      // generate random uniqueId
+    if (modalMessage.includes("mengakhiri sesi interview")) {
       const uniqueId = uuidv4();
-      // Collect the interview summary data
-      const summaryData = questions.map((question, index) => ({
-        category,
-        question: question,
-        answer: answers[index],
-        feedback: feedbacks[index],
-        timestamp: new Date().toISOString(),
-        rating: ratings[index],
-        sample_ans: sampleAnswers[index],
-      }));
-
+      const summaryData = {
+        user_id: "exampleUserId", // Replace with actual user ID if available
+        session_id: uniqueId,
+        summaries: questions.map((question, index) => ({
+          category,
+          question: question,
+          answer: answers[index],
+          feedback: feedbacks[index],
+          timestamp: new Date().toISOString(),
+          rating: ratings[index],
+          sample_ans: sampleAnswers[index],
+        })),
+      };
+  
+      const historyData = {
+        session_id: uniqueId, // Include session_id in historyData
+        category: category, // Replace with actual category
+        grade: rating, // Replace with actual grade
+        date: new Date().toISOString().split('T')[0], // Format date as 'YYYY-MM-DD'
+      };
+  
       try {
-        await axios.post("http://localhost:5000/summary", {
-          id: uniqueId,
-          summary: summaryData,
+        // Save summary
+        await axios.post("http://localhost:5000/summary", summaryData, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
         });
-        navigate(`/summary/${uniqueId}`);
-        console.log(summaryData);
+  
+        // Save history
+        await axios.post("http://localhost:5000/save_history", historyData, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+  
+        navigate(`/history`);
+        console.log("Summary and history saved successfully:", { summaryData, historyData });
       } catch (error) {
-        console.error("Error posting summary to API:", error);
+        console.error("Error posting summary and history to API:", error);
+        // Optionally show an error message to the user here
       }
     }
   };
+  
+  
+  
 
   const formatTime = (time) => {
     const minutes = Math.floor(time / 60);
