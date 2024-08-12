@@ -112,7 +112,7 @@ function History() {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="mt-6 outline outline-offset-2 outline-4 outline-customBiru3 bg-gradient-to-r from-customBiru3 to-customBiru6 text-white py-3 px-8 rounded-full shadow-lg transform transition-transform hover:scale-105 hover:from-customBiru4 hover:to-customBiru3"
+              className="outline outline-offset-2 outline-customBiru3 bg-gradient-to-r from-customBiru3 to-customBiru6 text-white py-2 px-6 rounded-full shadow-lg transform transition-transform hover:scale-105 hover:from-customBiru4 hover:to-customBiru3"
             >
               <Link to="/features">Test Now</Link>
             </motion.button>
