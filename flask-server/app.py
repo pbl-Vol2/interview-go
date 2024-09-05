@@ -397,21 +397,21 @@ def predict_response():
     }
     return jsonify(response)
 
+# Chat Session
 @app.route('/start_session', methods=['POST'])
 @jwt_required()
 def start_session():
-    try:
-        current_user = get_jwt_identity()
-        user_id = current_user.get('user_id')  # Extract user_id from JWT token
+    current_user = get_jwt_identity()
+    user_id = current_user.get('user_id')  # Extract user_id from JWT token
 
-        session_id = str(uuid.uuid4())
-        db.sessions.insert_one({"session_id": session_id, "user_id": user_id})
+    session_id = str(uuid.uuid4())
+    db.sessions.insert_one({"session_id": session_id, "user_id": user_id})
 
-        logger.info('New session started with ID %s for user %s', session_id, user_id)
-        return jsonify({"session_id": session_id}), 200
-    except Exception as e:
-        logger.error('Error starting session: %s', str(e))
-        return jsonify({"error": "Error starting session"}), 500
+    logger.info('New session started with ID %s for user %s', session_id, user_id)
+    return jsonify({"session_id": session_id}), 200
+except Exception as e:
+    logger.error('Error starting session: %s', str(e))
+    return jsonify({"error": "Error starting session"}), 500
 
 @app.route('/get_chat_session', methods=['GET'])
 @jwt_required()
@@ -420,7 +420,7 @@ def get_chat_session():
         current_user = get_jwt_identity()
         user_id = current_user.get('user_id')
 
-        sessions = db.chat_history.find({'user_id': user_id})
+        sessions = db.sessions.find({'user_id': user_id})
         session_list = [{'session_id': session['session_id']} for session in sessions]
 
         return jsonify({'sessions': session_list}), 200
@@ -807,16 +807,10 @@ class TestEntry:
         self.question = question
         self.answer = answer
         self.feedback = feedback
-        self.timestamp = timestamp # if timestamp else datetime.datetime.now().isoformat()
+        self.timestamp = timestamp if timestamp else datetime.datetime.now().isoformat()
         self.rate = rate
         self.sample_ans = sample_ans
-
-@app.route('/get_user_id', methods=['GET'])
-@jwt_required()
-def get_user_id():
-    current_user = get_jwt_identity()
-    return jsonify({'user_id': current_user['user_id']}), 200
-       
+        
 #Route to Queestion
 @app.route('/questions', methods=['POST'])
 def questions():
@@ -947,7 +941,7 @@ def get_summary(user_id, session_id):
 def save_history():
     current_user = get_jwt_identity()
     user_id = current_user.get('user_id')
-    
+
     # Get data from request JSON
     data = request.get_json()
 
@@ -982,12 +976,12 @@ def save_history():
             {'$set': history_entry},
             upsert=True
         )
-        
+
         if result.upserted_id:
             message = "History entry saved successfully"
         else:
             message = "History entry updated successfully"
-        
+
         return jsonify({"message": message}), 201
 
     except Exception as e:
@@ -1000,16 +994,16 @@ def get_history():
     current_user = get_jwt_identity()
     user_id = current_user.get('user_id')
     print(f"Fetching history for user_id: {user_id}")  # Debug line
-    
+
     try:
         # Fetch history entries for the user and filter out those with grade <= 0
         history_entries = db.history.find({"user_id": user_id, "grade": {"$gt": 0}})
         history_list = []
-        
+
         for entry in history_entries:
             entry['_id'] = str(entry['_id'])  # Convert ObjectId to string
             history_list.append(entry)
-        
+
         return jsonify(history_list), 200
 
     except Exception as e:

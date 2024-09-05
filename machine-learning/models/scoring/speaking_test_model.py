@@ -182,7 +182,7 @@ predict("Ketika saya dihadapkan pada masalah, saya biasanya membuat daftar prior
 
 # Read the dataset
 df = pd.read_excel(current_dir +'/dataset.xlsx', sheet_name='main')
-val_df = pd.read_excel(current_dir +'/dataset.xlsx', sheet_name='archive')
+val_df = pd.read_excel(current_dir +'/dataset.xlsx', sheet_name='val-similarity')
 
 # Declare a class softmax for label
 df_field_values = df['field']
@@ -201,7 +201,7 @@ for i in range(len(dfValue)):
         answers.append(answer)
         labels.append(questionClass[df[dfKey][j]])
 
-dfKey, dfValue = list(val_df)[1], list(val_df)[2:5]
+dfKey, dfValue = list(val_df)[0], list(val_df)[2:5]
 val_answers, val_labels = [], []
 for i in range(len(dfValue)):
     for j in range(len(val_df[dfValue[i]])):
@@ -292,7 +292,7 @@ model_scoring = tf.keras.Sequential([
     tf.keras.layers.Embedding(vocab_size + 10, embedding_dim, input_length=max_length),
     tf.keras.layers.GlobalAveragePooling1D(),
     tf.keras.layers.Dense(16, activation='relu'),
-    tf.keras.layers.Dense(8, activation='relu'),
+    tf.keras.layers.Dropout(0.5),
     tf.keras.layers.Dense(len(questionClass), activation='softmax')
 ])
 
@@ -300,7 +300,7 @@ model_scoring.summary()
 
 model_scoring.compile(loss='SparseCategoricalCrossentropy', optimizer=Adam(0.001), metrics=['accuracy'])
 
-history = model_scoring.fit(training_padded, training_labels, epochs=15, validation_data=(testing_padded, testing_labels), verbose=2)
+history = model_scoring.fit(training_padded, training_labels, epochs=20, validation_data=(testing_padded, testing_labels), verbose=2)
 plot_graphs(history, "accuracy")
 plot_graphs(history, "loss")
 
@@ -404,7 +404,7 @@ def scoring(tes_q, tes_a):
     # cari yang nilainya paling tinggi
     result_similarity = max(scoring_similarity_list)
     # hitung total scorenya
-    total_score = result_field * 0.5 + result_similarity * 0.5
+    total_score = result_field * 0.3 + result_similarity * 0.7
     # apakah jawaban sama pertanyaan yang diajukan nyambung
     # print(f"Your answer is {'Relate' if result_field else 'Not Relate'} with a similarity of {result_similarity}")
     # total scorenya
