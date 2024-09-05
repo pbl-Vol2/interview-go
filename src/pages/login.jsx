@@ -115,14 +115,6 @@ const Login = ({ setIsAuthenticated }) => {
               Lost Password?
             </a>
           </div>
-          <div className="text-center mt-4">
-            <a
-              href="/registration"
-              className="text-sm text-cyan-700 hover:underline dark:text-cyan-500"
-            >
-              Not registered yet? Sign Up
-            </a>
-          </div>
           <div>
             <button
               type="submit"
@@ -130,6 +122,16 @@ const Login = ({ setIsAuthenticated }) => {
             >
               Log In
             </button>
+          </div>
+          <div className="text-center pt-2">
+            Not registered yet?
+            <a
+              href="/registration"
+              className="text-sm text-cyan-700 hover:underline dark:text-cyan-500"
+            >
+              {" "}
+              Sign Up
+            </a>
           </div>
         </form>
       </div>

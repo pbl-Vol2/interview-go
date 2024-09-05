@@ -49,9 +49,9 @@ const Pricing = () => {
   };
 
   return (
-    <div className="bg-gradient-to-b from-white via-blue-100 to-white min-h-screen py-20">
+    <div className="bg-gradient-to-b from-white via-blue-100 to-white min-h-screen">
       <Navbar/>
-      <div className="text-center mb-16">
+      <div className="text-center my-16">
         <h1 className="text-4xl font-bold mb-4">Our Pricing Plans</h1>
         <p className="text-lg text-gray-600">
           Choose a plan that fits your needs. All plans come with a 14-day free trial.

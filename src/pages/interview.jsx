@@ -225,14 +225,14 @@ function Interview() {
           sample_ans: sampleAnswers[index],
         })),
       };
-
+  
       const historyData = {
         session_id: uniqueId, // Include session_id in historyData
         category: category, // Replace with actual category
         grade: rating, // Replace with actual grade
         date: new Date().toISOString().split('T')[0], // Format date as 'YYYY-MM-DD'
       };
-
+  
       try {
         // Save summary
         await axios.post("http://localhost:5000/summary", summaryData, {
@@ -241,7 +241,7 @@ function Interview() {
             'Content-Type': 'application/json',
           },
         });
-
+  
         // Save history
         await axios.post("http://localhost:5000/save_history", historyData, {
           headers: {
@@ -249,8 +249,9 @@ function Interview() {
             'Content-Type': 'application/json',
           },
         });
-
-        navigate(`/history`);
+  
+        // Navigate to history after successful saving
+        navigate('/history');
         console.log("Summary and history saved successfully:", { summaryData, historyData });
       } catch (error) {
         console.error("Error posting summary and history to API:", error);
@@ -259,15 +260,10 @@ function Interview() {
     }
   };
 
-
-
-
   const formatTime = (time) => {
     const minutes = Math.floor(time / 60);
     const seconds = time % 60;
-    return `${minutes.toString().padStart(2, "0")}:${seconds
-      .toString()
-      .padStart(2, "0")}`;
+    return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
   };
 
   const convertWebmToWav = async (webmBlob) => {

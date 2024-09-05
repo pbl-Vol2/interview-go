@@ -5,6 +5,7 @@ import chatbot from '../assets/image/chatbot.jpg';
 import speaking from '../assets/image/speaking.jpg';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import Navbar from '../components/navbar';
 
 const Dashboard = () => {
   const cardData = [
@@ -86,9 +87,10 @@ const Dashboard = () => {
   }, [fullname]);
 
   return (
-    <div className="min-h-screen bg-customBiru4 py-8 px-4">
-      <div className="max-w-6xl mx-auto text-center">
-        <AnimatePresence>
+    <div className="min-h-screen bg-customBiru4">
+      <Navbar/>
+      <div className="max-w-6xl mx-auto text-center py-8 px-4">
+        <AnimatePresence> 
           {typing && (
             <motion.h1
               initial={{ opacity: 0 }}

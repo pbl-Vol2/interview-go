@@ -56,7 +56,7 @@ function History() {
         <ol className="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
           <li className="inline-flex items-center">
             <a
-              href="#"
+              href="/dashboard"
               className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white"
             >
               <svg
