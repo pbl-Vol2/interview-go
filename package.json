@@ -1,6 +1,5 @@
 {
   "name": "interviewgo",
-  "homepage": "https://myusername.github.io/interviewgo.github.io",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
